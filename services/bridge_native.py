@@ -1,0 +1,1 @@
+/adapt/platform/novaops/nova_framework/core/bridge_service.py
