@@ -35,6 +35,7 @@ class AgentConfig(BaseModel):
     max_steps: int = 50
     workspace_dir: str = "./workspace"
     system_prompt_path: str = "system_prompt.md"
+    token_limit: int = 195000  # Context compaction threshold (set below 204800 API max)
 
 
 class ToolsConfig(BaseModel):
@@ -126,6 +127,7 @@ class Config(BaseModel):
             max_steps=data.get("max_steps", 50),
             workspace_dir=data.get("workspace_dir", "./workspace"),
             system_prompt_path=data.get("system_prompt_path", "system_prompt.md"),
+            token_limit=data.get("token_limit", 195000),
         )
 
         # Parse tools configuration
