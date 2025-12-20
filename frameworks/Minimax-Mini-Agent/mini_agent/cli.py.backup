@@ -1,0 +1,877 @@
+"""
+Mini Agent - Interactive Runtime Example
+
+Usage:
+    mini-agent [--workspace DIR]
+
+Examples:
+    mini-agent                              # Use current directory as workspace
+    mini-agent --workspace /path/to/dir     # Use specific workspace directory
+"""
+
+import argparse
+import asyncio
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import List
+
+from prompt_toolkit import PromptSession
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.styles import Style
+
+from mini_agent import LLMClient
+from mini_agent.agent import Agent
+from mini_agent.config import Config
+from mini_agent.schema import LLMProvider
+from mini_agent.tools.base import Tool
+from mini_agent.tools.bash_tool import BashKillTool, BashOutputTool, BashTool
+from mini_agent.tools.file_tools import EditTool, ReadTool, WriteTool
+from mini_agent.tools.mcp_loader import cleanup_mcp_connections, load_mcp_tools_async
+from mini_agent.tools.note_tool import SessionNoteTool
+from mini_agent.tools.skill_tool import create_skill_tools
+from mini_agent.utils import calculate_display_width
+from mini_agent.session_manager import SessionManager
+from mini_agent.rules_loader import RulesLoader, create_system_prompt_with_rules
+
+
+# ANSI color codes
+class Colors:
+    """Terminal color definitions"""
+
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+
+    # Foreground colors
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+    WHITE = "\033[37m"
+
+    # Bright colors
+    BRIGHT_BLACK = "\033[90m"
+    BRIGHT_RED = "\033[91m"
+    BRIGHT_GREEN = "\033[92m"
+    BRIGHT_YELLOW = "\033[93m"
+    BRIGHT_BLUE = "\033[94m"
+    BRIGHT_MAGENTA = "\033[95m"
+    BRIGHT_CYAN = "\033[96m"
+    BRIGHT_WHITE = "\033[97m"
+
+    # Background colors
+    BG_RED = "\033[41m"
+    BG_GREEN = "\033[42m"
+    BG_YELLOW = "\033[43m"
+    BG_BLUE = "\033[44m"
+
+
+def print_banner():
+    """Print welcome banner with proper alignment"""
+    BOX_WIDTH = 58
+    banner_text = f"{Colors.BOLD}🤖 Mini Agent - Multi-turn Interactive Session{Colors.RESET}"
+    banner_width = calculate_display_width(banner_text)
+
+    # Center the text with proper padding
+    total_padding = BOX_WIDTH - banner_width
+    left_padding = total_padding // 2
+    right_padding = total_padding - left_padding
+
+    print()
+    print(f"{Colors.BOLD}{Colors.BRIGHT_CYAN}╔{'═' * BOX_WIDTH}╗{Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.BRIGHT_CYAN}║{Colors.RESET}{' ' * left_padding}{banner_text}{' ' * right_padding}{Colors.BOLD}{Colors.BRIGHT_CYAN}║{Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.BRIGHT_CYAN}╚{'═' * BOX_WIDTH}╝{Colors.RESET}")
+    print()
+
+
+
+def print_session_info(agent: Agent, workspace_dir: Path, model: str):
+    """Print session information with proper alignment"""
+    BOX_WIDTH = 58
+
+    def print_info_line(text: str):
+        """Print a single info line with proper padding"""
+        # Account for leading space
+        text_width = calculate_display_width(text)
+        padding = max(0, BOX_WIDTH - 1 - text_width)
+        print(f"{Colors.DIM}│{Colors.RESET} {text}{' ' * padding}{Colors.DIM}│{Colors.RESET}")
+
+    # Top border
+    print(f"{Colors.DIM}┌{'─' * BOX_WIDTH}┐{Colors.RESET}")
+
+    # Header (centered)
+    header_text = f"{Colors.BRIGHT_CYAN}Session Info{Colors.RESET}"
+    header_width = calculate_display_width(header_text)
+    header_padding_total = BOX_WIDTH - 1 - header_width  # -1 for leading space
+    header_padding_left = header_padding_total // 2
+    header_padding_right = header_padding_total - header_padding_left
+    print(f"{Colors.DIM}│{Colors.RESET} {' ' * header_padding_left}{header_text}{' ' * header_padding_right}{Colors.DIM}│{Colors.RESET}")
+
+    # Divider
+    print(f"{Colors.DIM}├{'─' * BOX_WIDTH}┤{Colors.RESET}")
+
+    # Info lines
+    print_info_line(f"Model: {model}")
+    print_info_line(f"Workspace: {workspace_dir}")
+    print_info_line(f"Message History: {len(agent.messages)} messages")
+    print_info_line(f"Available Tools: {len(agent.tools)} tools")
+
+    # Bottom border
+    print(f"{Colors.DIM}└{'─' * BOX_WIDTH}┘{Colors.RESET}")
+    print()
+    print(f"{Colors.DIM}Type {Colors.BRIGHT_GREEN}/help{Colors.DIM} for help, {Colors.BRIGHT_GREEN}/exit{Colors.DIM} to quit{Colors.RESET}")
+    print()
+
+
+def print_stats(agent: Agent, session_start: datetime):
+    """Print session statistics"""
+    duration = datetime.now() - session_start
+    hours, remainder = divmod(int(duration.total_seconds()), 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    # Count different types of messages
+    user_msgs = sum(1 for m in agent.messages if m.role == "user")
+    assistant_msgs = sum(1 for m in agent.messages if m.role == "assistant")
+    tool_msgs = sum(1 for m in agent.messages if m.role == "tool")
+
+    print(f"\n{Colors.BOLD}{Colors.BRIGHT_CYAN}Session Statistics:{Colors.RESET}")
+    print(f"{Colors.DIM}{'─' * 40}{Colors.RESET}")
+    print(f"  Session Duration: {hours:02d}:{minutes:02d}:{seconds:02d}")
+    print(f"  Total Messages: {len(agent.messages)}")
+    print(f"    - User Messages: {Colors.BRIGHT_GREEN}{user_msgs}{Colors.RESET}")
+    print(f"    - Assistant Replies: {Colors.BRIGHT_BLUE}{assistant_msgs}{Colors.RESET}")
+    print(f"    - Tool Calls: {Colors.BRIGHT_YELLOW}{tool_msgs}{Colors.RESET}")
+    print(f"  Available Tools: {len(agent.tools)}")
+    print(f"{Colors.DIM}{'─' * 40}{Colors.RESET}\n")
+
+
+def print_help():
+    """Print help information"""
+    help_text = f"""
+{Colors.BOLD}{Colors.BRIGHT_YELLOW}Available Commands:{Colors.RESET}
+  {Colors.BRIGHT_GREEN}/help{Colors.RESET}      - Show this help message
+  {Colors.BRIGHT_GREEN}/clear{Colors.RESET}     - Clear session history (keep system prompt)
+  {Colors.BRIGHT_GREEN}/history{Colors.RESET}   - Show current session message count
+  {Colors.BRIGHT_GREEN}/stats{Colors.RESET}     - Show session statistics
+  {Colors.BRIGHT_GREEN}/save{Colors.RESET}      - Save current session manually
+  {Colors.BRIGHT_GREEN}/load{Colors.RESET}      - Load a previous session
+  {Colors.BRIGHT_GREEN}/sessions{Colors.RESET}  - List all saved sessions
+  {Colors.BRIGHT_GREEN}/pause{Colors.RESET}     - Pause agent execution
+  {Colors.BRIGHT_GREEN}/continue{Colors.RESET}  - Resume agent execution
+  {Colors.BRIGHT_GREEN}/exit{Colors.RESET}      - Exit program (also: exit, quit, q)
+
+{Colors.BOLD}{Colors.BRIGHT_YELLOW}Keyboard Shortcuts:{Colors.RESET}
+  {Colors.BRIGHT_CYAN}Ctrl+C{Colors.RESET}     - Pause/resume agent (press twice to force exit)
+  {Colors.BRIGHT_CYAN}Ctrl+U{Colors.RESET}     - Clear current input line
+  {Colors.BRIGHT_CYAN}Ctrl+L{Colors.RESET}     - Clear screen
+  {Colors.BRIGHT_CYAN}Ctrl+J{Colors.RESET}     - Insert newline (also Ctrl+Enter)
+  {Colors.BRIGHT_CYAN}Tab{Colors.RESET}        - Auto-complete commands
+  {Colors.BRIGHT_CYAN}↑/↓{Colors.RESET}        - Browse command history
+  {Colors.BRIGHT_CYAN}→{Colors.RESET}          - Accept auto-suggestion
+
+{Colors.BOLD}{Colors.BRIGHT_YELLOW}Pause/Interject Features:{Colors.RESET}
+  {Colors.BRIGHT_GREEN}During Execution:{Colors.RESET}
+  - Press {Colors.BRIGHT_CYAN}Ctrl+C{Colors.RESET} to pause the agent
+  - While paused, you can type a new message to interject
+  - Or type {Colors.BRIGHT_GREEN}/continue{Colors.RESET} to resume
+  - Press {Colors.BRIGHT_CYAN}Ctrl+C{Colors.RESET} twice to force exit
+
+{Colors.BOLD}{Colors.BRIGHT_YELLOW}Auto-Save & Workspace Sessions:{Colors.RESET}
+  {Colors.BRIGHT_GREEN}Automatic Features:{Colors.RESET}
+  - Sessions are auto-saved after every user message (no /save needed)
+  - Sessions are stored in workspace/.agent-sessions/ directory
+  - Session names are based on workspace directory path (dir-subdir-format)
+  - When you start mini-agent in a directory, it auto-resumes that directory's session
+
+  {Colors.BRIGHT_GREEN}Session Storage:{Colors.RESET}
+  - Sessions in current directory → workspace/.agent-sessions/
+  - Session name format: dir-name or dir-subdir-name (based on path)
+
+  {Colors.BRIGHT_GREEN}Auto-Resume:{Colors.RESET}
+  - Run `mini-agent` in a directory → automatically resumes that session
+  - No --resume flag needed (works automatically by detecting workspace)
+  - Different directories maintain different sessions automatically
+
+  {Colors.BRIGHT_GREEN}Manual Commands:{Colors.RESET}
+  - {Colors.BRIGHT_GREEN}/save name{Colors.RESET} to manually save with custom name
+  - {Colors.BRIGHT_GREEN}/sessions{Colors.RESET} to see all saved sessions
+  - {Colors.BRIGHT_GREEN}/load id{Colors.RESET} to load a specific session
+
+{Colors.BOLD}{Colors.BRIGHT_YELLOW}Usage:{Colors.RESET}
+  - Enter your task directly, Agent will help you complete it
+  - Agent remembers all conversation content in this session
+  - Use {Colors.BRIGHT_GREEN}/clear{Colors.RESET} to start a new session
+  - Press {Colors.BRIGHT_CYAN}Enter{Colors.RESET} to submit your message
+  - Use {Colors.BRIGHT_CYAN}Ctrl+J{Colors.RESET} to insert line breaks within your message
+
+{Colors.BOLD}{Colors.BRIGHT_CYAN}Interrupt Keys (Pause/Interject):{Colors.RESET}
+  {Colors.BRIGHT_GREEN}Ctrl+C (Press Once):{Colors.RESET}
+  - Pauses agent during task execution
+  - Shows options to continue or interject
+
+  {Colors.BRIGHT_GREEN}Ctrl+C (Press Twice):{Colors.RESET}
+  - Force exit (if already paused or during execution)
+  - Use when agent is stuck or you need to stop immediately
+
+  {Colors.BRIGHT_GREEN}After Pausing:{Colors.RESET}
+  - Type a new message to change task direction
+  - Type {Colors.BRIGHT_GREEN}/continue{Colors.RESET} to resume
+  - Sessions are preserved when you pause/interject
+"""
+    print(help_text)
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments
+
+    Returns:
+        Parsed arguments
+    """
+    parser = argparse.ArgumentParser(
+        description="Mini Agent - AI assistant with file tools and MCP support",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  mini-agent                              # Use current directory as workspace
+  mini-agent --workspace /path/to/dir     # Use specific workspace directory
+  mini-agent --resume                     # Resume last session
+        """,
+    )
+    parser.add_argument(
+        "--workspace",
+        "-w",
+        type=str,
+        default=None,
+        help="Workspace directory (default: current directory)",
+    )
+    parser.add_argument(
+        "--version",
+        "-v",
+        action="version",
+        version="mini-agent 0.1.0",
+    )
+    parser.add_argument(
+        "--resume",
+        "-r",
+        action="store_true",
+        help="Resume from last saved session",
+    )
+
+    return parser.parse_args()
+
+
+async def initialize_base_tools(config: Config):
+    """Initialize base tools (independent of workspace)
+
+    These tools are loaded from package configuration and don't depend on workspace.
+    Note: File tools are now workspace-dependent and initialized in add_workspace_tools()
+
+    Args:
+        config: Configuration object
+
+    Returns:
+        Tuple of (list of tools, skill loader if skills enabled)
+    """
+
+    tools = []
+    skill_loader = None
+
+    # 1. Bash tool and Bash Output tool
+    if config.tools.enable_bash:
+        bash_tool = BashTool()
+        tools.append(bash_tool)
+        print(f"{Colors.GREEN}✅ Loaded Bash tool{Colors.RESET}")
+
+        bash_output_tool = BashOutputTool()
+        tools.append(bash_output_tool)
+        print(f"{Colors.GREEN}✅ Loaded Bash Output tool{Colors.RESET}")
+
+        bash_kill_tool = BashKillTool()
+        tools.append(bash_kill_tool)
+        print(f"{Colors.GREEN}✅ Loaded Bash Kill tool{Colors.RESET}")
+
+    # 3. Claude Skills (loaded from package directory)
+    if config.tools.enable_skills:
+        print(f"{Colors.BRIGHT_CYAN}Loading Claude Skills...{Colors.RESET}")
+        try:
+            # Resolve skills directory with priority search
+            skills_dir = config.tools.skills_dir
+            if not Path(skills_dir).is_absolute():
+                # Search in priority order:
+                # 1. Current directory (dev mode: ./skills or ./mini_agent/skills)
+                # 2. Package directory (installed: site-packages/mini_agent/skills)
+                search_paths = [
+                    Path(skills_dir),  # ./skills for backward compatibility
+                    Path("mini_agent") / skills_dir,  # ./mini_agent/skills
+                    Config.get_package_dir() / skills_dir,  # site-packages/mini_agent/skills
+                ]
+
+                # Find first existing path
+                for path in search_paths:
+                    if path.exists():
+                        skills_dir = str(path.resolve())
+                        break
+
+            skill_tools, skill_loader = create_skill_tools(skills_dir)
+            if skill_tools:
+                tools.extend(skill_tools)
+                print(f"{Colors.GREEN}✅ Loaded Skill tool (get_skill){Colors.RESET}")
+            else:
+                print(f"{Colors.YELLOW}⚠️  No available Skills found{Colors.RESET}")
+        except Exception as e:
+            print(f"{Colors.YELLOW}⚠️  Failed to load Skills: {e}{Colors.RESET}")
+
+    # 4. MCP tools (loaded with priority search)
+    if config.tools.enable_mcp:
+        print(f"{Colors.BRIGHT_CYAN}Loading MCP tools...{Colors.RESET}")
+        try:
+            # Use priority search for mcp.json
+            mcp_config_path = Config.find_config_file(config.tools.mcp_config_path)
+            if mcp_config_path:
+                mcp_tools = await load_mcp_tools_async(str(mcp_config_path))
+                if mcp_tools:
+                    tools.extend(mcp_tools)
+                    print(f"{Colors.GREEN}✅ Loaded {len(mcp_tools)} MCP tools (from: {mcp_config_path}){Colors.RESET}")
+                else:
+                    print(f"{Colors.YELLOW}⚠️  No available MCP tools found{Colors.RESET}")
+            else:
+                print(f"{Colors.YELLOW}⚠️  MCP config file not found: {config.tools.mcp_config_path}{Colors.RESET}")
+        except Exception as e:
+            print(f"{Colors.YELLOW}⚠️  Failed to load MCP tools: {e}{Colors.RESET}")
+
+    print()  # Empty line separator
+    return tools, skill_loader
+
+
+def add_workspace_tools(tools: List[Tool], config: Config, workspace_dir: Path):
+    """Add workspace-dependent tools
+
+    These tools need to know the workspace directory.
+
+    Args:
+        tools: Existing tools list to add to
+        config: Configuration object
+        workspace_dir: Workspace directory path
+    """
+    # Ensure workspace directory exists
+    workspace_dir.mkdir(parents=True, exist_ok=True)
+
+    # File tools - need workspace to resolve relative paths
+    if config.tools.enable_file_tools:
+        tools.extend(
+            [
+                ReadTool(workspace_dir=str(workspace_dir)),
+                WriteTool(workspace_dir=str(workspace_dir)),
+                EditTool(workspace_dir=str(workspace_dir)),
+            ]
+        )
+        print(f"{Colors.GREEN}✅ Loaded file operation tools (workspace: {workspace_dir}){Colors.RESET}")
+
+    # Session note tool - needs workspace to store memory file
+    if config.tools.enable_note:
+        tools.append(SessionNoteTool(memory_file=str(workspace_dir / ".agent_memory.json")))
+        print(f"{Colors.GREEN}✅ Loaded session note tool{Colors.RESET}")
+
+
+async def run_agent(workspace_dir: Path):
+    """Run interactive Agent
+
+    Args:
+        workspace_dir: Workspace directory path
+    """
+    session_start = datetime.now()
+
+    # 1. Load configuration from package directory
+    config_path = Config.get_default_config_path()
+
+    if not config_path.exists():
+        print(f"{Colors.RED}❌ Configuration file not found{Colors.RESET}")
+        print()
+        print(f"{Colors.BRIGHT_CYAN}📦 Configuration Search Path:{Colors.RESET}")
+        print(f"  {Colors.DIM}1) mini_agent/config/config.yaml{Colors.RESET} (development)")
+        print(f"  {Colors.DIM}2) ~/.mini-agent/config/config.yaml{Colors.RESET} (user)")
+        print(f"  {Colors.DIM}3) <package>/config/config.yaml{Colors.RESET} (installed)")
+        print()
+        print(f"{Colors.BRIGHT_YELLOW}🚀 Quick Setup (Recommended):{Colors.RESET}")
+        print(f"  {Colors.BRIGHT_GREEN}curl -fsSL https://raw.githubusercontent.com/MiniMax-AI/Mini-Agent/main/scripts/setup-config.sh | bash{Colors.RESET}")
+        print()
+        print(f"{Colors.DIM}  This will automatically:{Colors.RESET}")
+        print(f"{Colors.DIM}    • Create ~/.mini-agent/config/{Colors.RESET}")
+        print(f"{Colors.DIM}    • Download configuration files{Colors.RESET}")
+        print(f"{Colors.DIM}    • Guide you to add your API Key{Colors.RESET}")
+        print()
+        print(f"{Colors.BRIGHT_YELLOW}📝 Manual Setup:{Colors.RESET}")
+        user_config_dir = Path.home() / ".mini-agent" / "config"
+        example_config = Config.get_package_dir() / "config" / "config-example.yaml"
+        print(f"  {Colors.DIM}mkdir -p {user_config_dir}{Colors.RESET}")
+        print(f"  {Colors.DIM}cp {example_config} {user_config_dir}/config.yaml{Colors.RESET}")
+        print(f"  {Colors.DIM}# Then edit {user_config_dir}/config.yaml to add your API Key{Colors.RESET}")
+        print()
+        return
+
+    try:
+        config = Config.from_yaml(config_path)
+    except FileNotFoundError:
+        print(f"{Colors.RED}❌ Error: Configuration file not found: {config_path}{Colors.RESET}")
+        return
+    except ValueError as e:
+        print(f"{Colors.RED}❌ Error: {e}{Colors.RESET}")
+        print(f"{Colors.YELLOW}Please check the configuration file format{Colors.RESET}")
+        return
+    except Exception as e:
+        print(f"{Colors.RED}❌ Error: Failed to load configuration file: {e}{Colors.RESET}")
+        return
+
+    # Initialize session manager with workspace directory for auto-save and context-aware naming
+    session_manager = SessionManager(workspace_dir=str(workspace_dir), auto_save=True)
+
+    # 2. Initialize LLM client
+    from mini_agent.retry import RetryConfig as RetryConfigBase
+
+    # Auto-resume workspace session (always try to load, no flag needed)
+    print(f"{Colors.BRIGHT_CYAN}🔍 Looking for saved session in workspace: {workspace_dir}{Colors.RESET}")
+    loaded_messages = session_manager.load_workspace_session()
+
+    if loaded_messages:
+        print(f"{Colors.GREEN}✅ Auto-resumed workspace session with {len(loaded_messages)} messages{Colors.RESET}\n")
+        initial_messages = loaded_messages
+    else:
+        # Check if --resume flag was explicitly used for old-style session resume
+        if len(sys.argv) > 1 and sys.argv[1] == "--resume":
+            last_session_id = session_manager.get_last_session()
+            if last_session_id:
+                print(f"{Colors.BRIGHT_CYAN}🔄 Resuming last global session: {last_session_id}{Colors.RESET}")
+                loaded_messages = session_manager.load_session(last_session_id)
+                if loaded_messages:
+                    print(f"{Colors.GREEN}✅ Loaded {len(loaded_messages)} messages from global session{Colors.RESET}\n")
+                    initial_messages = loaded_messages
+                else:
+                    initial_messages = None
+            else:
+                print(f"{Colors.YELLOW}⚠️  No previous global session found, starting fresh{Colors.RESET}\n")
+                initial_messages = None
+        else:
+            print(f"{Colors.DIM}💡 No saved session for this workspace. Starting fresh.{Colors.RESET}\n")
+            initial_messages = None
+
+    # Convert configuration format
+    retry_config = RetryConfigBase(
+        enabled=config.llm.retry.enabled,
+        max_retries=config.llm.retry.max_retries,
+        initial_delay=config.llm.retry.initial_delay,
+        max_delay=config.llm.retry.max_delay,
+        exponential_base=config.llm.retry.exponential_base,
+        retryable_exceptions=(Exception,),
+    )
+
+    # Create retry callback function to display retry information in terminal
+    def on_retry(exception: Exception, attempt: int):
+        """Retry callback function to display retry information"""
+        print(f"\n{Colors.BRIGHT_YELLOW}⚠️  LLM call failed (attempt {attempt}): {str(exception)}{Colors.RESET}")
+        next_delay = retry_config.calculate_delay(attempt - 1)
+        print(f"{Colors.DIM}   Retrying in {next_delay:.1f}s (attempt {attempt + 1})...{Colors.RESET}")
+
+    # Convert provider string to LLMProvider enum
+    provider = LLMProvider.ANTHROPIC if config.llm.provider.lower() == "anthropic" else LLMProvider.OPENAI
+
+    llm_client = LLMClient(
+        api_key=config.llm.api_key,
+        provider=provider,
+        api_base=config.llm.api_base,
+        model=config.llm.model,
+        retry_config=retry_config if config.llm.retry.enabled else None,
+    )
+
+    # Set retry callback
+    if config.llm.retry.enabled:
+        llm_client.retry_callback = on_retry
+        print(f"{Colors.GREEN}✅ LLM retry mechanism enabled (max {config.llm.retry.max_retries} retries){Colors.RESET}")
+
+    # 3. Initialize base tools (independent of workspace)
+    tools, skill_loader = await initialize_base_tools(config)
+
+    # 4. Add workspace-dependent tools
+    add_workspace_tools(tools, config, workspace_dir)
+
+    # 5. Load System Prompt (with priority search)
+    system_prompt_path = Config.find_config_file(config.agent.system_prompt_path)
+    if system_prompt_path and system_prompt_path.exists():
+        base_system_prompt = system_prompt_path.read_text(encoding="utf-8")
+        print(f"{Colors.GREEN}✅ Loaded system prompt (from: {system_prompt_path}){Colors.RESET}")
+    else:
+        base_system_prompt = "You are Mini-Agent, an intelligent assistant powered by MiniMax M2 that can help users complete various tasks."
+        print(f"{Colors.YELLOW}⚠️  System prompt not found, using default{Colors.RESET}")
+
+    # 5.5 Load TeamADAPT Rules & Protocols (with hotloading support)
+    rules_loader = RulesLoader()
+    rules = rules_loader.load_rules()
+
+    # Start with base system prompt
+    system_prompt = base_system_prompt
+
+    if rules:
+        # Append rules to system prompt
+        system_prompt = f"""{system_prompt}
+
+---
+
+{rules}
+"""
+        rules_meta = rules_loader.get_rules_metadata()
+        print(f"📋 Loaded {rules_meta.get('rules_loaded', 0)} rules/protocols sections")
+    else:
+        print(f"{Colors.YELLOW}⚠️  No TeamADAPT rules found at: {rules_loader.rules_file}{Colors.RESET}")
+
+    # 6. Inject Skills Metadata into System Prompt (Progressive Disclosure - Level 1)
+    if skill_loader:
+        skills_metadata = skill_loader.get_skills_metadata_prompt()
+        if skills_metadata:
+            # Replace placeholder with actual metadata
+            system_prompt = system_prompt.replace("{SKILLS_METADATA}", skills_metadata)
+            print(f"{Colors.GREEN}✅ Injected {len(skill_loader.loaded_skills)} skills metadata into system prompt{Colors.RESET}")
+        else:
+            # Remove placeholder if no skills
+            system_prompt = system_prompt.replace("{SKILLS_METADATA}", "")
+    else:
+        # Remove placeholder if skills not enabled
+        system_prompt = system_prompt.replace("{SKILLS_METADATA}", "")
+
+    # 7. Create Agent
+    if initial_messages:
+        # Resume from loaded session
+        agent = Agent(
+            llm_client=llm_client,
+            system_prompt=system_prompt,
+            tools=tools,
+            max_steps=config.agent.max_steps,
+            workspace_dir=str(workspace_dir),
+            messages=initial_messages,
+        )
+    else:
+        # Start fresh
+        agent = Agent(
+            llm_client=llm_client,
+            system_prompt=system_prompt,
+            tools=tools,
+            max_steps=config.agent.max_steps,
+            workspace_dir=str(workspace_dir),
+        )
+
+    # 8. Display welcome information
+    print_banner()
+    print_session_info(agent, workspace_dir, config.llm.model)
+
+    # 9. Setup prompt_toolkit session
+    # Command completer
+    command_completer = WordCompleter(
+        ["/help", "/clear", "/history", "/stats", "/save", "/load", "/sessions", "/exit", "/quit", "/q", "/pause", "/continue"],
+        ignore_case=True,
+        sentence=True,
+    )
+
+    # Custom style for prompt
+    prompt_style = Style.from_dict(
+        {
+            "prompt": "#00ff00 bold",  # Green and bold
+            "separator": "#666666",  # Gray
+        }
+    )
+
+    # Custom key bindings
+    kb = KeyBindings()
+
+    @kb.add("c-u")  # Ctrl+U: Clear current line
+    def _(event):
+        """Clear the current input line"""
+        event.current_buffer.reset()
+
+    @kb.add("c-l")  # Ctrl+L: Clear screen (optional bonus)
+    def _(event):
+        """Clear the screen"""
+        event.app.renderer.clear()
+
+    # Global pause flag
+    agent_paused = False
+
+    @kb.add("c-c")  # Ctrl+C: Pause or interject
+    def _(event):
+        """Toggle pause or handle graceful interrupt"""
+        nonlocal agent_paused
+        if agent_paused:
+            # If already paused, this means user wants to abort
+            agent_paused = False
+            event.app.exit()
+        else:
+            # Set pause flag
+            agent_paused = True
+            print(f"\n{Colors.BRIGHT_YELLOW}⚠️  Agent paused. Press Ctrl+C again to abort or type /continue to resume.{Colors.RESET}\n")
+
+    @kb.add("c-j")  # Ctrl+J (对应 Ctrl+Enter)
+    def _(event):
+        """Insert a newline"""
+        event.current_buffer.insert_text("\n")
+
+    # Create prompt session with history and auto-suggest
+    # Use FileHistory for persistent history across sessions (stored in user's home directory)
+    history_file = Path.home() / ".mini-agent" / ".history"
+    history_file.parent.mkdir(parents=True, exist_ok=True)
+    session = PromptSession(
+        history=FileHistory(str(history_file)),
+        auto_suggest=AutoSuggestFromHistory(),
+        completer=command_completer,
+        style=prompt_style,
+        key_bindings=kb,
+    )
+
+    # 10. Interactive loop
+    while True:
+        try:
+            # Get user input using prompt_toolkit
+            # Use styled list for robust coloring
+            user_input = await session.prompt_async(
+                [
+                    ("class:prompt", "You"),
+                    ("", " › "),
+                ],
+                multiline=False,
+                enable_history_search=True,
+            )
+            user_input = user_input.strip()
+
+            if not user_input:
+                continue
+
+            # Handle commands
+            if user_input.startswith("/"):
+                command = user_input.lower()
+
+                if command in ["/exit", "/quit", "/q"]:
+                    print(f"\n{Colors.BRIGHT_YELLOW}👋 Goodbye! Thanks for using Mini Agent{Colors.RESET}\n")
+                    print_stats(agent, session_start)
+                    break
+
+                elif command == "/help":
+                    print_help()
+                    continue
+
+                elif command == "/clear":
+                    # Clear message history but keep system prompt
+                    old_count = len(agent.messages)
+                    agent.messages = [agent.messages[0]]  # Keep only system message
+                    print(f"{Colors.GREEN}✅ Cleared {old_count - 1} messages, starting new session{Colors.RESET}\n")
+                    continue
+
+                elif command == "/history":
+                    print(f"\n{Colors.BRIGHT_CYAN}Current session message count: {len(agent.messages)}{Colors.RESET}\n")
+                    continue
+
+                elif command == "/stats":
+                    print_stats(agent, session_start)
+                    continue
+
+                elif command == "/pause":
+                    agent_paused = True
+                    print(f"{Colors.BRIGHT_YELLOW}⏸️  Agent execution paused. Type /continue to resume.{Colors.RESET}\n")
+                    continue
+
+                elif command == "/continue":
+                    if agent_paused:
+                        agent_paused = False
+                        print(f"{Colors.BRIGHT_GREEN}▶️  Agent execution resumed.{Colors.RESET}\n")
+                    else:
+                        print(f"{Colors.YELLOW}⚠️  Agent is not paused.{Colors.RESET}\n")
+                    continue
+
+                elif command.startswith("/save"):
+                    # Save current session
+                    session_name = user_input[5:].strip()
+                    session_id = session_manager.save_session(agent.messages, name=session_name)
+                    if session_name:
+                        print(f"{Colors.GREEN}✅ Saved session '{session_name}' as {session_id}{Colors.RESET}\n")
+                    else:
+                        print(f"{Colors.GREEN}✅ Saved session as {session_id}{Colors.RESET}\n")
+                    continue
+
+                elif command.startswith("/load"):
+                    # Load a previous session
+                    session_ref = user_input[5:].strip()
+
+                    if not session_ref:
+                        # Load last session
+                        last_session_id = session_manager.get_last_session()
+                        if last_session_id:
+                            session_ref = last_session_id
+                        else:
+                            print(f"{Colors.YELLOW}⚠️  No saved sessions found. Use /sessions to see all sessions.{Colors.RESET}\n")
+                            continue
+
+                    loaded_messages = session_manager.load_session(session_ref)
+                    if loaded_messages:
+                        agent.messages = loaded_messages
+                        print(f"{Colors.GREEN}✅ Loaded session {session_ref} with {len(loaded_messages)} messages{Colors.RESET}\n")
+                    else:
+                        print(f"{Colors.RED}❌ Session not found: {session_ref}{Colors.RESET}\n")
+                        print(f"{Colors.DIM}Use /sessions to see all available sessions{Colors.RESET}\n")
+                    continue
+
+                elif command == "/sessions":
+                    # List all sessions
+                    sessions = session_manager.list_sessions()
+
+                    if not sessions:
+                        print(f"{Colors.YELLOW}No saved sessions found.{Colors.RESET}\n")
+                        continue
+
+                    print(f"\n{Colors.BOLD}{Colors.BRIGHT_CYAN}Saved Sessions:{Colors.RESET}")
+                    print(f"{Colors.DIM}{'─' * 60}{Colors.RESET}")
+
+                    for i, session in enumerate(sessions[:10], 1):
+                        timestamp = session['timestamp'][:19].replace('T', ' ') if session.get('timestamp') else 'Unknown'
+                        print(f"  {Colors.BRIGHT_GREEN}{i}. {session['id']}{Colors.RESET}")
+                        print(f"     Messages: {session['message_count']}")
+                        print(f"     Saved: {timestamp}\n")
+
+                    if len(sessions) > 10:
+                        print(f"  {Colors.DIM}... and {len(sessions) - 10} more sessions{Colors.RESET}")
+
+                    print()
+                    continue
+
+                else:
+                    print(f"{Colors.RED}❌ Unknown command: {user_input}{Colors.RESET}")
+                    print(f"{Colors.DIM}Type /help to see available commands{Colors.RESET}\n")
+                    continue
+
+            # Normal conversation - exit check
+            if user_input.lower() in ["exit", "quit", "q"]:
+                print(f"\n{Colors.BRIGHT_YELLOW}👋 Goodbye! Thanks for using Mini Agent{Colors.RESET}\n")
+                print_stats(agent, session_start)
+                break
+
+            # Run Agent - with pause/interject support
+            print(f"\n{Colors.BRIGHT_BLUE}Agent{Colors.RESET} {Colors.DIM}›{Colors.RESET} {Colors.DIM}Thinking...{Colors.RESET}\n")
+            agent.add_user_message(user_input)
+
+            # Auto-save session after user message
+            auto_saved = session_manager.auto_save_session(agent.messages)
+            if auto_saved:
+                print(f"{Colors.DIM}💾 Auto-saved session: {auto_saved}{Colors.RESET}")
+
+            # Hotload rules if file changed (check before each agent run)
+            try:
+                if rules_loader and hasattr(rules_loader, '_should_reload') and rules_loader._should_reload():
+                    print(f"{Colors.DIM}🔄 Rules file changed, hotloading...{Colors.RESET}")
+                    new_rules = rules_loader.load_rules(force_reload=True)
+                    if new_rules:
+                        # Update agent's system prompt (reconstruct from cached base)
+                        new_prompt = base_system_prompt
+
+                        # Re-append skills if present
+                        if skill_loader and skill_loader.loaded_skills:
+                            skills_metadata = skill_loader.get_skills_metadata_prompt()
+                            if skills_metadata:
+                                new_prompt = new_prompt.replace("{SKILLS_METADATA}", skills_metadata)
+
+                        # Re-append rules
+                        new_prompt = f"""{new_prompt}
+
+---
+
+{new_rules}
+"""
+                        agent.system_prompt = new_prompt
+                        print(f"{Colors.GREEN}✅ Hotloaded rules into system prompt{Colors.RESET}")
+            except Exception as e:
+                print(f"{Colors.YELLOW}⚠️  Warning: Could not hotload rules: {e}{Colors.RESET}")
+
+            # Check for pause before running agent
+            if not agent_paused:
+                try:
+                    # Run agent execution in a task to allow interruption
+                    agent_task = asyncio.create_task(agent.run())
+
+                    # Monitor for pause flag
+                    while not agent_task.done():
+                        if agent_paused:
+                            # Cancel the agent task when paused
+                            agent_task.cancel()
+                            try:
+                                await agent_task
+                            except asyncio.CancelledError:
+                                pass
+
+                            print(f"\n{Colors.BRIGHT_YELLOW}⏸️  Agent execution paused.{Colors.RESET}")
+                            print(f"{Colors.BRIGHT_YELLOW}   Options:{Colors.RESET}")
+                            print(f"{Colors.BRIGHT_YELLOW}   - Type /continue to resume execution{Colors.RESET}")
+                            print(f"{Colors.BRIGHT_YELLOW}   - Type a new message to interject and change direction{Colors.RESET}")
+                            print(f"{Colors.BRIGHT_YELLOW}   - Press Ctrl+C again to force exit{Colors.RESET}\n")
+                            break
+
+                        # Check every 100ms
+                        await asyncio.sleep(0.1)
+
+                    # If task completed normally, get result
+                    if agent_task.done() and not agent_task.cancelled():
+                        _ = await agent_task
+
+                except Exception as e:
+                    if "CancelledError" not in str(type(e)):
+                        print(f"\n{Colors.RED}❌ Error during agent execution: {e}{Colors.RESET}")
+            else:
+                print(f"{Colors.BRIGHT_YELLOW}⏸️  Agent is paused. Type /continue to resume.{Colors.RESET}\n")
+
+            # Visual separation - keep it simple like the reference code
+            print(f"\n{Colors.DIM}{'─' * 60}{Colors.RESET}\n")
+
+        except KeyboardInterrupt:
+            print(f"\n\n{Colors.BRIGHT_YELLOW}👋 Interrupt signal detected, exiting...{Colors.RESET}\n")
+            print_stats(agent, session_start)
+            break
+
+        except Exception as e:
+            print(f"\n{Colors.RED}❌ Error: {e}{Colors.RESET}")
+            print(f"{Colors.DIM}{'─' * 60}{Colors.RESET}\n")
+
+    # 11. Cleanup MCP connections
+    try:
+        print(f"{Colors.BRIGHT_CYAN}Cleaning up MCP connections...{Colors.RESET}")
+        await cleanup_mcp_connections()
+        print(f"{Colors.GREEN}✅ Cleanup complete{Colors.RESET}\n")
+    except Exception as e:
+        print(f"{Colors.YELLOW}Error during cleanup (can be ignored): {e}{Colors.RESET}\n")
+
+
+def main():
+    """Main entry point for CLI"""
+    # Parse command line arguments
+    args = parse_args()
+
+    # Determine workspace directory
+    if args.workspace:
+        workspace_dir = Path(args.workspace).absolute()
+    else:
+        # Use current working directory
+        workspace_dir = Path.cwd()
+
+    # Ensure workspace directory exists
+    workspace_dir.mkdir(parents=True, exist_ok=True)
+
+    # Handle resume flag through sys.argv
+    if args.resume:
+        sys.argv = [sys.argv[0], "--resume"]
+    else:
+        sys.argv = [sys.argv[0]]
+
+    # Run the agent (config always loaded from package directory)
+    asyncio.run(run_agent(workspace_dir))
+
+
+if __name__ == "__main__":
+    main()

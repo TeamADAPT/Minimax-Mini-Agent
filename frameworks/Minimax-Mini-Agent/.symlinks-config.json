@@ -1,0 +1,8 @@
+{
+  "symlinks_directory": "/adapt/platform/novaops/frameworks/Minimax-Mini-Agent/.system-symlinks",
+  "secrets": {
+    "source": "/adapt/secrets/m2.env",
+    "link": "/adapt/platform/novaops/frameworks/Minimax-Mini-Agent/.system-symlinks/m2.env"
+  },
+  "created_at": "2025-12-17T00:50:04Z"
+}
