@@ -442,7 +442,17 @@ async def run_agent(workspace_dir: Path):
         tools=tools,
         max_steps=config.agent.max_steps,
         workspace_dir=str(workspace_dir),
+<<<<<<< HEAD
     )
+=======
+        token_limit=config.agent.token_limit,
+    )
+
+    # If resuming, add loaded messages to agent
+    if initial_messages:
+        # Skip the first system message since Agent already added one
+        agent.messages.extend(initial_messages[1:])
+>>>>>>> c15ae5e (Bridge Infrastructure Assessment & NovaThreads Enhancement Plan - COMPLETE)
 
     # 8. Display welcome information
     print_banner()

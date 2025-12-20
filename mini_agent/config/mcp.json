@@ -1,5 +1,45 @@
 {
   "mcpServers": {
+    "atomic_memory": {
+      "description": "Atomic Memory - 27-tier polyglot storage system with <1ms load time",
+      "type": "stdio",
+      "command": "python3",
+      "args": [
+        "-m",
+        "toolops.mcp_servers.atomic_memory_mcp.atomic_memory_mcp"
+      ],
+      "env": {
+        "SECRETS_PATH": "/adapt/secrets"
+      },
+      "disabled": false
+    },
+    "nova_comms": {
+      "description": "Nova Communications - Real-time messaging via NATS/DragonflyDB (0.59ms latency)",
+      "type": "stdio",
+      "command": "python3",
+      "args": [
+        "-m",
+        "toolops.mcp_servers.nova_comms_mcp.nova_comms_mcp"
+      ],
+      "env": {
+        "NATS_URL": "nats://nats:password@localhost:18020",
+        "DRAGONFLY_URL": "redis://:df_cluster_2024_adapt_research@localhost:18000"
+      },
+      "disabled": false
+    },
+    "a2a_bridge": {
+      "description": "A2A Protocol Bridge - Agent-to-Agent communication via NATS",
+      "type": "stdio",
+      "command": "python3",
+      "args": [
+        "-m",
+        "toolops.mcp_servers.a2a_mcp_bridge.a2a_mcp"
+      ],
+      "env": {
+        "NATS_URL": "nats://nats:password@localhost:18020"
+      },
+      "disabled": false
+    },
     "minimax_search": {
       "description": "MiniMax Search - Powerful web search and intelligent browsing ⭐",
       "type": "stdio",

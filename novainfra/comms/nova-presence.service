@@ -1,0 +1,25 @@
+[Unit]
+Description=Nova Presence Monitoring Service
+Documentation=https://github.com/adapt-nova/novaops
+After=network.target nats-server.service
+
+[Service]
+Type=simple
+User=x
+WorkingDirectory=/adapt/platform/novaops/novainfra/comms
+ExecStart=/usr/bin/python3 -m lib.nova_presence_monitor
+Restart=always
+RestartSec=10
+
+# Environment
+Environment="PYTHONPATH=/adapt/platform/novaops/novainfra/comms/lib"
+Environment="NATS_URL=nats://nats:password@localhost:18020"
+Environment="DRAGONFLY_NODE_1_URL=redis://:df_cluster_2024_adapt_research@localhost:18000"
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nova-presence
+
+[Install]
+WantedBy=multi-user.target
