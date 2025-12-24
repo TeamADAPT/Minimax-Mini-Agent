@@ -66,3 +66,8 @@ secrets/
 secrets/*
 .mcp.json
 !.mcp.json.example
+
+# Parent directory files (minimize scope to this repo only)
+../../nova_core/
+../../novamon/
+../../novas/
