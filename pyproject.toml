@@ -1,11 +1,11 @@
 [project]
-name = "mini-agent"
+name = "adapt-novaops"
 version = "0.1.0"
-description = "Minimal single agent demo with basic file tools and MCP support"
+description = "ADAPT NovaOps — autonomous agent infrastructure platform built on Nova Framework"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-    {name = "Mini Agent Team"}
+    {name = "TeamADAPT"}
 ]
 license = {text = "MIT"}
 dependencies = [

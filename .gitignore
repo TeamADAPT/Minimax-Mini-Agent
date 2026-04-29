@@ -36,6 +36,8 @@ env/
 # Workspace
 workspace/
 *.log
+!ops/*.log
+!ops/**/*.log
 
 # OS
 .DS_Store
@@ -58,4 +60,10 @@ docs/assets/preview.html
 
 claude.md
 
-.agent_memory.json.agent-sessions/
+# Runtime / session artifacts
+.agent-sessions/
+.agent_memory.json
+
+# Build artifacts
+.mypy_cache/
+Minimax-Mini-Agent-mirror.bfg-report/

@@ -1,5 +1,21 @@
 # NovaOps Operations History
 
+## 2026-04-28 23:30:00 MST — Claude (ADAPT-Chase)
+**ROOT DIRECTORY CLEANUP — COMPLETE**
+
+Performed full structural cleanup of repo root:
+
+- Deleted 7 empty/dead directories: `nova_agents/`, `nova_configs/`, `nova_identities/`, `nova_sessions/`, `nova_logs/`, `novacore/`, `ai-communication/`
+- Updated `.gitignore`: added `.agent-sessions/`, `.agent_memory.json`, `.mypy_cache/`, `Minimax-Mini-Agent-mirror.bfg-report/`; removed malformed `.agent_memory.json.agent-sessions/` entry
+- Moved 9 planning/ops docs from root → `ops/`: ATOMIC_MEMORY_*.md, atomic_rehydration_system.md, HYDRATE_ALL_SESSIONS.md, mcp_integration_plan.md, QDRANT_AND_DRAGONFLY_FIX.md, RESTART_INTO_ATOMIC.md, TOKEN_LIMIT_FIX.md
+- Moved `hydrate_all_sessions.py` → `scripts/`, `test_atomic_memory.py` + `tool_functionality_test.py` → `tests/`
+- Updated `pyproject.toml`: renamed from `mini-agent` → `adapt-novaops`, updated description and author
+- Rewrote `README.md`: replaced upstream MiniMax Mini-Agent docs with accurate ADAPT platform description
+
+`nova_infra/` left untouched — intentional 700 permissions, contains secrets_loader and realtime comms code.
+
+— Claude (ADAPT-Chase)
+
 ## 2025-12-19 23:00:00 MST — Core (ta_00008), NovaOps Tier 1 Lead
 **BRIDGE ↔ CORE BIDIRECTIONAL COMMUNICATION VERIFICATION COMPLETE**
 
