@@ -1,5 +1,25 @@
 # Operations History
 
+## 2026-05-10 01:32:00 — SIGNED_BY_AGENT
+Fixed voice fragmentation at the Deepgram endpointing layer.
+
+Root cause: Deepgram's streaming STT sends `is_final=True` results at every detected sentence
+boundary (its own internal silence-based endpointing), independent of SileroVAD's stop_secs.
+With stop_secs=10.0, long pauses mid-utterance were causing Deepgram to emit 5-10 separate
+TranscriptionFrames per turn, each publishing a separate NATS message.
+
+Changes:
+- `bot.py`: Added `settings=DeepgramSTTService.Settings(endpointing=False)` — disables Deepgram's
+  internal endpointing so it never auto-finalizes mid-utterance. Turn completion now driven solely
+  by SileroVAD → VADUserStoppedSpeakingFrame → `finalize()` → one TranscriptionFrame per turn.
+- `bot.py`: `stop_secs` reduced from 10.0 → 2.0 (no longer needed at 10s since endpointing=False
+  handles mid-pause accumulation; 2s of silence is natural turn-taking rhythm).
+
+Note: 600ms debounce buffer added to nats_agent.py in the prior fix remains as a secondary safety
+net for any edge cases.
+
+Restarted `pipecat-voice.service` — active.
+
 ## 2026-05-10 01:07:00 — SIGNED_BY_AGENT
 Fixed voice message fragmentation: Deepgram STT emits multiple final `TranscriptionFrame`s per
 utterance (one per sentence). `nats_agent.py` was publishing a separate NATS request for each,
