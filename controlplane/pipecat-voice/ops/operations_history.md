@@ -1,5 +1,18 @@
 # Operations History
 
+## 2026-05-10 01:07:00 — SIGNED_BY_AGENT
+Fixed voice message fragmentation: Deepgram STT emits multiple final `TranscriptionFrame`s per
+utterance (one per sentence). `nats_agent.py` was publishing a separate NATS request for each,
+causing Chase's messages to arrive as word/sentence fragments 300-500ms apart.
+
+Fix: Added transcript debounce buffer to `NATSAgentProcessor`.
+- `_transcript_buffer: list[str]` accumulates TranscriptionFrames.
+- Each new frame cancels the pending debounce task and starts a fresh 600ms timer.
+- On timer fire: joins buffer with spaces and publishes a single `_send_and_stream` call.
+- No change to VAD or STT config — fix is purely in the NATS bridge layer.
+
+Restarted `pipecat-voice.service` — active and confirmed.
+
 ## 2026-05-09 17:49:20 — SIGNED_BY_AGENT
 Refactored vox fallback: eliminated MCP dependency from headless CC path.
 
