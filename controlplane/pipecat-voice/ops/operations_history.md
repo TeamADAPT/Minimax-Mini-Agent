@@ -1,5 +1,21 @@
 # Operations History
 
+## 2026-05-09 17:49:20 — SIGNED_BY_AGENT
+Refactored vox fallback: eliminated MCP dependency from headless CC path.
+
+Changes:
+- `scripts/vox_turn_trigger.py`: removed ToolSearch + nats_reply MCP tool call from prompt.
+  CC now outputs plain text; daemon captures stdout and publishes directly to NATS reply_to.
+  Added `CLAUDE_CONFIG_DIR` env pointing to `/home/x/.claude-headless` (no mcpServers).
+  Timeout reduced to 60s (was 120s); actual latency now 18-19s end-to-end.
+- Created `/home/x/.claude-headless/settings.json` (minimal, no mcpServers) with
+  `.credentials.json` symlinked from `~/.claude/`. Removing MCP server init saves ~15s.
+- `/etc/systemd/system/vox-agent.service`: added `/home/x/.claude-headless` to
+  `ReadWritePaths`.
+
+Verified: `nova.vox.direct` → 4s debounce → headless CC (rc=0, 18.9s) → plain text
+captured → `{"chunk": "...", "final": true}` published to `_INBOX.*`.
+
 ## 2026-05-09 10:41:39 — SIGNED_BY_AGENT
 Completed vox-agent fallback architecture — full end-to-end verified.
 
