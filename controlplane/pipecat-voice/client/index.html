@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="nova voice" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#06080b" />
+<link rel="manifest" href="/static/manifest.json" />
+<title>pipe.adaptdev.ai &mdash; nova voice link</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="logo">●</span>
+        <div>
+          <div class="brand-name">pipe</div>
+          <div class="brand-host">adaptdev.ai</div>
+        </div>
+      </div>
+
+      <section class="stage">
+        <div class="orb" id="orb" data-state="offline" aria-live="polite">
+          <div class="orb-core"></div>
+          <div class="orb-ring r1"></div>
+          <div class="orb-ring r2"></div>
+          <div class="orb-ring r3"></div>
+        </div>
+        <p class="status-line" id="statusText">offline</p>
+        <p class="route-line"><span id="routeLabel">—</span></p>
+      </section>
+
+      <div class="controls">
+        <button id="toggle" type="button" class="primary">connect</button>
+        <button id="mute" type="button" class="ghost" disabled>mute</button>
+      </div>
+
+      <div class="cmdbar">
+        <input id="cmdInput" type="text" placeholder='ask switch — "go get echo"' autocomplete="off" />
+        <button id="cmdSend" type="button" class="ghost" disabled>send</button>
+      </div>
+
+      <footer class="legend">
+        <span><i class="dot dot-green"></i>online</span>
+        <span><i class="dot dot-red"></i>offline</span>
+        <span><i class="dot dot-cyan"></i>active</span>
+      </footer>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1>Nova Roster</h1>
+        <div class="topbar-actions">
+          <button id="newRoom" class="ghost">+ room</button>
+          <button id="addAgent" class="ghost">+ agent</button>
+        </div>
+      </header>
+
+      <section class="grid" id="agentGrid"></section>
+
+      <section class="room-panel hidden" id="roomPanel">
+        <header>
+          <h2>Active room <span class="rid" id="roomId"></span></h2>
+          <button class="ghost" id="leaveRoom">leave</button>
+        </header>
+        <div class="room-members" id="roomMembers"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="addAgentDialog">
+    <form method="dialog">
+      <h3>Add agent</h3>
+      <label>name <small>(lowercase, used in subject)</small>
+        <input id="newName" type="text" required pattern="[a-z][a-z0-9_-]{1,30}" />
+      </label>
+      <label>label
+        <input id="newLabel" type="text" />
+      </label>
+      <label>tier
+        <select id="newTier">
+          <option value="core">core</option>
+          <option value="custom" selected>custom</option>
+          <option value="router">router</option>
+        </select>
+      </label>
+      <menu>
+        <button value="cancel" class="ghost">cancel</button>
+        <button id="newSubmit" value="ok" class="primary">add</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="newRoomDialog">
+    <form method="dialog">
+      <h3>Open room</h3>
+      <p class="muted">Pick agents to invite. Switch will notify each on their direct channel.</p>
+      <div class="checklist" id="roomChecklist"></div>
+      <label>moderator
+        <select id="roomModerator"></select>
+      </label>
+      <menu>
+        <button value="cancel" class="ghost">cancel</button>
+        <button id="roomSubmit" value="ok" class="primary">open room</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
