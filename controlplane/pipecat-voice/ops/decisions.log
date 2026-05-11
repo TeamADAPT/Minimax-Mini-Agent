@@ -1,0 +1,105 @@
+# Decisions Log
+
+## 2026-05-10 20:30:00 — SIGNED_BY_AGENT
+Decision: Use Haiku (claude-haiku-4-5-20251001) as umbrella LLM for vox peer, preserving NATS
+for all other nova agents.
+Reason: Headless Claude Code (vox-agent.service) incurs 18-20s cold-start latency and delivers
+non-streaming responses. Haiku via Anthropic streaming API achieves ~1-2s TTFT with token-level
+streaming. For the default voice persona (vox), this eliminates the most user-perceptible delay.
+Specialized agents (herald, tecton, iris, etc.) retain NATS routing unchanged — they have richer
+context needs that justify the latency tradeoff.
+
+Decision: Set endpointing=800ms in Deepgram listen provider.
+Reason: Default Deepgram VAD endpointing was cutting Chase's turns mid-sentence at natural speech
+pauses. 800ms gives enough silence headroom for typical intra-sentence pauses while keeping
+turn-taking responsive. Configurable at the SettingsConfiguration level; adjustable per session
+if needed.
+
+## 2026-05-10 19:44:00 — SIGNED_BY_AGENT
+Decision: Proxy Deepgram WS through gateway.py instead of connecting browser directly.
+Reason: `/v1/auth/grant` tokens are scoped to `asr:write` only; the Voice Agent API
+requires a full API key or a token with broader scope. Proxying keeps the key server-side,
+eliminates the 30s token TTL problem, and gives us full visibility into the DG protocol for
+future debugging.
+
+## 2026-05-10 19:17:00 — SIGNED_BY_AGENT
+Decision: Replace WebRTC+pipecat with Deepgram Voice Agent API.
+Reason: WebRTC state is process-local (ICE, DTLS); any service restart drops the user mid-session.
+Deepgram Voice Agent API handles STT/VAD/TTS server-side over a single browser WebSocket, eliminating
+the pipecat pipeline and WebRTC entirely. No process-local media state means future gateway.py
+restarts do not terminate voice sessions (browser reconnects to Deepgram directly).
+
+Decision: Deepgram "think" endpoint = our /v1/chat/completions gateway (OpenAI SSE format).
+Reason: Deepgram's agent calls any OpenAI-compatible completions endpoint. Our gateway extracts
+the last user message, publishes to NATS, and streams chunks as SSE. This preserves the full
+nova NATS routing layer unchanged — peer/channel selection via query params.
+
+Decision: Live agent routing via SettingsConfiguration resend (not WS reconnect).
+Reason: Deepgram accepts a new SettingsConfiguration at any time on the open WS connection, updating
+the think endpoint URL in-flight. This means selectAgent() changes the NATS target with zero latency
+and no audio interruption.
+
+Decision: PCM capture via ScriptProcessor (not AudioWorklet).
+Reason: iOS Safari support for AudioWorklet is incomplete as of 2026. ScriptProcessor is deprecated
+but universally supported including iOS PWA. Nearest-neighbour downsample from actual sampleRate
+(commonly 44.1kHz or 48kHz on iOS despite the 16kHz hint) to 16kHz is sufficient for speech.
+
+Decision: 24kHz playback AudioContext shared across all TTS chunks (gapless chaining).
+Reason: Creating a new AudioContext per TTS chunk causes gaps and "click" artifacts. A single
+persistent context with `nextPlayTime` scheduling chains buffers without gaps.
+
+## 2026-05-10 01:07:00 — SIGNED_BY_AGENT
+Decision: Debounce TranscriptionFrames in NATSAgentProcessor (600ms) rather than fixing at STT
+or VAD level.
+Reason: Deepgram's endpointing runs independently of SileroVAD — Deepgram sends `is_final=True`
+results at sentence boundaries regardless of Pipecat's VAD stop_secs setting. Adjusting Deepgram
+endpointing params would require API-level configuration and may affect transcription quality.
+The NATS bridge is the correct chokepoint: buffer here, join, publish once per conversational turn.
+600ms chosen as safe window above Deepgram's typical inter-sentence gap (~200-400ms).
+
+## 2026-05-09 10:41:39 — SIGNED_BY_AGENT
+Decision: Drop `--resume` entirely; use fresh `claude --print -p "..."` for fallback turns.
+Reason: `--resume` of a busy interactive session exits rc=1 immediately (CC enforces a
+"session busy" lock). Fresh sessions have no such constraint and the nats-channel MCP
+is available via user-scope settings.json, so no `--dangerously-load-development-channels`.
+
+Decision: Register nats-channel MCP in `~/.claude/settings.json` (user-scope), not per-project.
+Reason: fallback CC is spawned in the pipecat repo CWD which has no project-level MCP config;
+user-scope registration makes the tool available in every CC session unconditionally.
+
+Decision: Add `/home/x/.cache` to `ReadWritePaths` in vox-agent.service.
+Reason: CC writes MCP log files to `/home/x/.cache/claude-cli-nodejs/<cwd>/mcp-logs-*/`
+during initialization. Under `ProtectSystem=strict` this path was read-only, causing rc=1
+with no output. Confirmed via strace EROFS errors. The directory already existed and is
+the correct CC cache location; exposing it is the minimal viable fix.
+
+## 2026-05-07 23:27:00 — SIGNED_BY_AGENT
+Decision: Use `claude --print --resume <session-id> --input-format=stream-json` as the
+headless turn-trigger mechanism, not tmux.
+Reason: tmux is not present in this environment; `--print --resume` is the only
+supported non-interactive prompt-injection path in CC. `--remote-control` uses Anthropic
+cloud bridge (requires backend connectivity, not a local IPC bus). Session ID is
+discoverable from `~/.claude/sessions/*.json` by matching `name` field.
+
+Decision: Watch `reply_to` inbox (not `nova.chase.direct`) to detect whether interactive
+CC already replied.
+Reason: `nats_reply` tool in nats_channel_mcp.py publishes to the `_INBOX.*` address
+in `reply_to`, not to any fixed nova subject. Old debounce was subscribing to the wrong
+subject and never firing.
+
+Decision: Set default VOX_CLAUDE_TIMEOUT_S=120s.
+Reason: Headless CC must run ToolSearch to fetch deferred nats_reply schema before
+calling the tool. In testing, tool invocation occurred at ~60-90s from subprocess start.
+45s was too short and caused pre-delivery kill.
+
+## 2026-05-07 02:46:35 — SIGNED_BY_AGENT
+Domain: `adapted.ai` not in this CF account; user redirected to `adaptdev.ai`.
+Used existing `vertex-ai` tunnel (one tunnel, multiple zones) instead of
+creating a new tunnel. Reason: faster, no new credentials, same TLS posture.
+
+## 2026-05-07 02:46:35 — SIGNED_BY_AGENT
+LLM stage replaced by `NATSAgentProcessor`. Agent identity = the user (chase).
+Default peer = `echo`, overridable per session via `?to=<name>` URL param.
+Streaming contract: per-request `reply_to` inbox carrying chunked JSON, with
+legacy fallback for non-streaming agents that publish back on
+`adapt.<self>.<channel>`.

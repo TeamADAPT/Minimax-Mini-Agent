@@ -1,5 +1,18 @@
 # Operations History
 
+## 2026-05-10 20:30:00 — SIGNED_BY_AGENT
+Added Haiku umbrella LLM fast path and increased VAD endpointing window.
+
+Changes:
+- `gateway.py`: Added `anthropic` import, `UMBRELLA_PEER`/`UMBRELLA_MODEL`/`UMBRELLA_SYSTEM`
+  constants. `POST /v1/chat/completions` now branches on peer: `peer=vox` (UMBRELLA_PEER)
+  streams via `AsyncAnthropic.messages.stream()` with `claude-haiku-4-5-20251001` (max_tokens=300),
+  yielding OpenAI SSE chunks at ~1-2s TTFT. Other peers continue through original NATS path.
+- `client/app.js`: Added `endpointing: 800` to listen provider in `buildSettings()` — 800ms
+  silence required before Deepgram finalizes a turn, reducing mid-sentence cutoffs.
+
+Service restarted — active (running).
+
 ## 2026-05-10 19:44:00 — SIGNED_BY_AGENT
 Fixed Deepgram Voice Agent WS auth: replaced browser→DG direct connection with server-side proxy.
 

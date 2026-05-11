@@ -124,7 +124,7 @@ function buildSettings(peer, channel) {
     },
     agent: {
       listen: {
-        provider: { type: "deepgram", model: "nova-3" },
+        provider: { type: "deepgram", model: "nova-3", endpointing: 800 },
       },
       think: {
         provider: { type: "open_ai", model: "gpt-4o-mini" },
