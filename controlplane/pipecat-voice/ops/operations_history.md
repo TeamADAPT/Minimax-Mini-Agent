@@ -1,5 +1,42 @@
 # Operations History
 
+## 2026-05-10 19:17:00 — SIGNED_BY_AGENT
+Migrated pipecat-voice from WebRTC+pipecat pipeline to Deepgram Voice Agent API.
+
+Architecture change:
+- Eliminated WebRTC (RTCPeerConnection), pipecat pipeline, bot.py, nats_agent.py from the hot path.
+- New entrypoint: `gateway.py` — FastAPI server with no pipecat dependency.
+- Browser now connects directly to `wss://agent.deepgram.com/v1/agent/converse` using a short-lived
+  token fetched from `GET /token` (server-side POST to Deepgram auth/grant, 30s TTL).
+- Deepgram handles STT (nova-3), VAD, and TTS (aura-asteria-en) natively. LLM "think" step
+  POSTs to our `POST /v1/chat/completions?peer=X&channel=Y` which bridges to NATS and streams
+  OpenAI-format SSE chunks back to Deepgram.
+- Live agent switching via re-sending SettingsConfiguration to DG WS — no reconnect needed.
+
+Files changed:
+- `gateway.py` — new FastAPI server (replaces bot.py). Preserves EventBus, PresenceTracker,
+  roster CRUD, /ws/status, /healthz, /api/presence, /api/roster, /api/route. Adds /token and
+  /v1/chat/completions (NATS SSE bridge). No pipecat imports.
+- `client/app.js` — complete rewrite. Deepgram Voice Agent WS client. PCM capture via
+  ScriptProcessor with iOS downsample (actual sampleRate detection). Gapless PCM playback via
+  chained AudioBufferSource scheduling. Live route switching via SettingsConfiguration resend.
+  InjectUserMessage for cmdbar text turns. AudioContext resumed in user gesture for iOS.
+  visibilitychange handler resumes suspended contexts on return-to-foreground.
+- `client/index.html` — added Apple PWA meta tags (apple-mobile-web-app-capable,
+  apple-mobile-web-app-title, apple-mobile-web-app-status-bar-style, theme-color) and
+  `<link rel="manifest">`.
+- `client/manifest.json` — new PWA manifest (display: standalone, background #06080b).
+- `/etc/systemd/system/pipecat-voice.service` — ExecStart: bot.py → gateway.py.
+
+bot.py and nats_agent.py retained on disk as fallback; not loaded by the service.
+Service restarted — active (running), NATS connected.
+
+## 2026-05-10 02:55:00 — SIGNED_BY_AGENT
+Tuned VAD silence window: stop_secs 2.0 → 3.0.
+Reason: Chase was fragmenting mid-sentence at natural speech pauses >2s. 3.0s gives enough
+headroom for longer thoughts while keeping total response latency under ~4s on the fast path.
+Service restarted — active.
+
 ## 2026-05-10 01:32:00 — SIGNED_BY_AGENT
 Fixed voice fragmentation at the Deepgram endpointing layer.
 
