@@ -36,6 +36,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import anthropic as _anthropic_lib
 import nats
 import uvicorn
 import websockets as _ws_lib
@@ -56,6 +57,27 @@ for _env in (Path("/adapt/secrets/db.env"), Path("/adapt/secrets/m2.env"), ROOT 
 SELF_AGENT = os.environ.get("SELF_AGENT", "chase")
 SUBJECT_NS = os.environ.get("SUBJECT_NS", "nova")
 NATS_REPLY_TIMEOUT = float(os.environ.get("NATS_REPLY_TIMEOUT", "30"))
+UMBRELLA_PEER = os.environ.get("UMBRELLA_PEER", "vox")
+UMBRELLA_MODEL = os.environ.get("UMBRELLA_MODEL", "claude-haiku-4-5-20251001")
+UMBRELLA_SYSTEM = (
+    "You are Vox, the voice interface for Chase in the nova collective. "
+    "Respond in one to three sentences. Spoken language only — no markdown, "
+    "no bullet points, no code formatting, no symbols. Direct and concise."
+)
+
+# ------------------------------------------------------------------ Anthropic client
+
+_ac: _anthropic_lib.AsyncAnthropic | None = None
+
+
+def _get_anthropic() -> _anthropic_lib.AsyncAnthropic:
+    global _ac
+    if _ac is None:
+        key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not key:
+            raise RuntimeError("ANTHROPIC_API_KEY not set")
+        _ac = _anthropic_lib.AsyncAnthropic(api_key=key)
+    return _ac
 
 # ------------------------------------------------------------------ NATS client
 
@@ -325,36 +347,78 @@ async def get_token() -> dict:
 @app.post("/v1/chat/completions")
 async def chat_completions(
     request: Request,
-    peer: str = "switch",
+    peer: str = "vox",
     channel: str = "direct",
 ) -> StreamingResponse:
     """OpenAI-compatible SSE endpoint called by Deepgram's think step.
 
-    Extracts the last user message from the messages[] array, publishes it
-    to the NATS nova collective, and streams the reply as chat completion chunks.
-    The model/provider fields in the request body are ignored — routing is
-    determined by the ``peer`` and ``channel`` query parameters.
+    peer == UMBRELLA_PEER (default "vox"): streams directly from Haiku for low latency.
+    Any other peer: publishes to NATS and streams the nova agent's reply.
     """
     body = await request.json()
-    messages: list[dict] = body.get("messages", [])
+    raw_messages: list[dict] = body.get("messages", [])
 
-    text = ""
-    for msg in reversed(messages):
-        if msg.get("role") == "user":
-            content = msg.get("content", "")
-            text = (
-                content
-                if isinstance(content, str)
-                else " ".join(
-                    p.get("text", "") for p in content if isinstance(p, dict)
-                )
-            )
-            break
+    # Normalise content to strings; drop system/tool roles Anthropic doesn't accept here
+    anth_messages: list[dict] = []
+    for m in raw_messages:
+        role = m.get("role", "")
+        if role not in ("user", "assistant"):
+            continue
+        content = m.get("content", "")
+        if isinstance(content, list):
+            content = " ".join(p.get("text", "") for p in content if isinstance(p, dict))
+        if content:
+            anth_messages.append({"role": role, "content": content})
 
+    if not anth_messages:
+        raise HTTPException(400, "no usable messages in request body")
+
+    # Last user text (for NATS path)
+    text = next(
+        (m["content"] for m in reversed(anth_messages) if m["role"] == "user"), ""
+    )
+
+    cid = f"chatcmpl-{uuid.uuid4().hex[:8]}"
+
+    def _sse(chunk_text: str) -> str:
+        data = {
+            "id": cid,
+            "object": "chat.completion.chunk",
+            "choices": [{"index": 0, "delta": {"content": chunk_text}, "finish_reason": None}],
+        }
+        return f"data: {json.dumps(data)}\n\n"
+
+    # ---- fast path: umbrella LLM (Haiku) -----------------------------------
+    if peer == UMBRELLA_PEER:
+        async def _stream_haiku():
+            logger.info(f"Haiku stream | {text[:80]!r}")
+            try:
+                ac = _get_anthropic()
+                async with ac.messages.stream(
+                    model=UMBRELLA_MODEL,
+                    max_tokens=300,
+                    system=UMBRELLA_SYSTEM,
+                    messages=anth_messages,
+                ) as stream:
+                    async for chunk_text in stream.text_stream:
+                        yield _sse(chunk_text)
+            except Exception as exc:
+                logger.error(f"Haiku stream error: {exc}")
+                yield _sse("Sorry, I ran into an error.")
+            finally:
+                yield "data: [DONE]\n\n"
+
+        return StreamingResponse(
+            _stream_haiku(),
+            media_type="text/event-stream",
+            headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"},
+        )
+
+    # ---- slow path: NATS nova agent ----------------------------------------
     if not text.strip():
         raise HTTPException(400, "no user message in request body")
 
-    async def _stream():
+    async def _stream_nats():
         try:
             nc = await _get_nats()
         except Exception as exc:
@@ -392,7 +456,6 @@ async def chat_completions(
         await nc.publish(subject, json.dumps(envelope).encode())
         await nc.flush()
 
-        cid = f"chatcmpl-{uuid.uuid4().hex[:8]}"
         try:
             while True:
                 try:
@@ -402,14 +465,7 @@ async def chat_completions(
                     break
                 if chunk is None:
                     break
-                data = {
-                    "id": cid,
-                    "object": "chat.completion.chunk",
-                    "choices": [
-                        {"index": 0, "delta": {"content": chunk}, "finish_reason": None}
-                    ],
-                }
-                yield f"data: {json.dumps(data)}\n\n"
+                yield _sse(chunk)
         finally:
             try:
                 await sub.unsubscribe()
@@ -418,7 +474,7 @@ async def chat_completions(
             yield "data: [DONE]\n\n"
 
     return StreamingResponse(
-        _stream(),
+        _stream_nats(),
         media_type="text/event-stream",
         headers={"X-Accel-Buffering": "no", "Cache-Control": "no-cache"},
     )
