@@ -38,6 +38,7 @@ from typing import Any
 
 import nats
 import uvicorn
+import websockets as _ws_lib
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
@@ -312,7 +313,7 @@ async def get_token() -> dict:
         logger.error(f"Deepgram token grant failed: {exc}")
         raise HTTPException(502, "failed to obtain Deepgram token")
 
-    token = result.get("key") or result.get("token") or ""
+    token = result.get("key") or result.get("token") or result.get("access_token") or ""
     if not token:
         raise HTTPException(502, f"unexpected Deepgram auth response: {result}")
     return {"token": token}
@@ -478,6 +479,80 @@ async def set_route(body: dict) -> dict:
         raise HTTPException(400, "invalid peer name")
     await bus.publish({"type": "route", "peer": peer, "channel": channel, "room": None})
     return {"peer": peer, "channel": channel}
+
+
+# --------------------------------------------------------------- Deepgram WS proxy
+
+
+@app.websocket("/ws/voice")
+async def ws_voice_proxy(browser: WebSocket) -> None:
+    """Transparent proxy to wss://agent.deepgram.com/v1/agent/converse.
+
+    Keeps the DG API key server-side and avoids short-lived token scope issues.
+    Relays binary PCM (browser→DG) and binary TTS + JSON events (DG→browser).
+    """
+    await browser.accept()
+    dg_key = os.environ.get("DEEPGRAM_API_KEY", "")
+    if not dg_key:
+        await browser.close(code=1011, reason="DEEPGRAM_API_KEY not configured")
+        return
+
+    logger.info("DG proxy: browser connected, opening upstream WS")
+    try:
+        async with _ws_lib.connect(
+            "wss://agent.deepgram.com/v1/agent/converse",
+            additional_headers={"Authorization": f"Token {dg_key}"},
+            ping_interval=None,
+            compression=None,
+        ) as dg:
+            logger.info("DG proxy: upstream connected")
+
+            async def browser_to_dg() -> None:
+                try:
+                    while True:
+                        frame = await browser.receive()
+                        if frame["type"] == "websocket.disconnect":
+                            break
+                        if frame.get("bytes") is not None:
+                            await dg.send(frame["bytes"])
+                        elif frame.get("text") is not None:
+                            await dg.send(frame["text"])
+                except Exception as exc:
+                    logger.debug(f"DG proxy browser→dg: {exc}")
+                finally:
+                    await dg.close()
+
+            async def dg_to_browser() -> None:
+                try:
+                    async for msg in dg:
+                        if isinstance(msg, bytes):
+                            await browser.send_bytes(msg)
+                        else:
+                            await browser.send_text(msg)
+                except Exception as exc:
+                    logger.debug(f"DG proxy dg→browser: {exc}")
+
+            tasks = [
+                asyncio.create_task(browser_to_dg()),
+                asyncio.create_task(dg_to_browser()),
+            ]
+            _, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            for t in pending:
+                t.cancel()
+                try:
+                    await t
+                except (asyncio.CancelledError, Exception):
+                    pass
+
+    except WebSocketDisconnect:
+        pass
+    except Exception as exc:
+        logger.error(f"DG proxy error: {exc}")
+        try:
+            await browser.close(code=1011)
+        except Exception:
+            pass
+    logger.info("DG proxy: session ended")
 
 
 # --------------------------------------------------------------- status WebSocket

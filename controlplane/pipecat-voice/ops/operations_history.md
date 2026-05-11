@@ -1,5 +1,21 @@
 # Operations History
 
+## 2026-05-10 19:44:00 — SIGNED_BY_AGENT
+Fixed Deepgram Voice Agent WS auth: replaced browser→DG direct connection with server-side proxy.
+
+Root cause: `/v1/auth/grant` issues tokens scoped `asr:write` only; Voice Agent API requires
+broader scope (agent:write). Browser-held tokens can't be promoted.
+
+Fix:
+- `gateway.py`: Added `GET /ws/voice` WebSocket proxy endpoint. Opens
+  `wss://agent.deepgram.com/v1/agent/converse` server-side with full `DEEPGRAM_API_KEY`
+  (`Authorization: Token <key>` header, `ping_interval=None`, `compression=None`).
+  Relays binary frames and JSON messages bidirectionally in two async tasks.
+- `client/app.js`: Removed token fetch. `connect()` now opens `ws[s]://<host>/ws/voice`
+  instead of `wss://agent.deepgram.com/...`. No subprotocol needed.
+
+Service restarted — active (running).
+
 ## 2026-05-10 19:17:00 — SIGNED_BY_AGENT
 Migrated pipecat-voice from WebRTC+pipecat pipeline to Deepgram Voice Agent API.
 

@@ -117,7 +117,7 @@ async function removeAgent(name) {
 function buildSettings(peer, channel) {
   const endpointUrl = `${location.origin}/v1/chat/completions?peer=${encodeURIComponent(peer)}&channel=${encodeURIComponent(channel)}`;
   return {
-    type: "SettingsConfiguration",
+    type: "Settings",
     audio: {
       input:  { encoding: "linear16", sample_rate: 16000 },
       output: { encoding: "linear16", sample_rate: 24000, container: "none" },
@@ -126,14 +126,14 @@ function buildSettings(peer, channel) {
       listen: {
         provider: { type: "deepgram", model: "nova-3" },
       },
-      think: [{
+      think: {
         provider: { type: "open_ai", model: "gpt-4o-mini" },
         endpoint: { url: endpointUrl, headers: {} },
         prompt: "You are Vox, a concise voice assistant routing to the nova agent collective. Keep responses brief and spoken-word natural — no markdown, no bullet points.",
-      }],
-      speak: [{
-        provider: { type: "deepgram", model: "aura-asteria-en" },
-      }],
+      },
+      speak: {
+        provider: { type: "deepgram", model: "aura-2-thalia-en" },
+      },
     },
   };
 }
@@ -153,22 +153,12 @@ async function connect() {
     return;
   }
 
-  let token;
-  try {
-    const resp = await apiGet("/token");
-    token = resp.token;
-  } catch (e) {
-    console.error("token fetch failed:", e);
-    setOrb("error", "token error");
-    toggleBtn.disabled = false;
-    return;
-  }
-
-  const peer = state.route.peer || state.roster.default_peer || "switch";
+  const peer = state.route.peer || state.roster.default_peer || "vox";
   const channel = state.route.channel || "direct";
 
   try {
-    state.dgWs = new WebSocket("wss://agent.deepgram.com/v1/agent/converse", ["token", token]);
+    const wsProto = location.protocol === "https:" ? "wss:" : "ws:";
+    state.dgWs = new WebSocket(`${wsProto}//${location.host}/ws/voice`);
     state.dgWs.binaryType = "arraybuffer";
   } catch (e) {
     console.error("DG WS open failed:", e);
@@ -211,32 +201,31 @@ async function connect() {
   };
 
   state.dgWs.onclose = () => {
-    if (state.connected) {
-      setOrb("offline", "offline");
-      teardown();
-    }
+    setOrb("offline", "offline");
+    teardown();
   };
 }
 
 function handleDgEvent(msg) {
   const t = msg.type;
-  if (t === "UserStartedSpeaking") {
+  if (t === "AgentV1UserStartedSpeaking" || t === "UserStartedSpeaking") {
     setOrb("listening", "listening");
-    // Stop any in-progress TTS to avoid talking over the user
     state.nextPlayTime = 0;
-  } else if (t === "UserStoppedSpeaking") {
+  } else if (t === "AgentV1UserStoppedSpeaking" || t === "UserStoppedSpeaking") {
     setOrb("sending", "thinking...");
-  } else if (t === "AgentThinking") {
+  } else if (t === "AgentV1AgentThinking" || t === "AgentThinking") {
     setOrb("receiving", "thinking...");
-  } else if (t === "AgentStartedSpeaking") {
+  } else if (t === "AgentV1AgentStartedSpeaking" || t === "AgentStartedSpeaking") {
     setOrb("speaking", "speaking");
-  } else if (t === "AgentAudioDone") {
+  } else if (t === "AgentV1AgentAudioDone" || t === "AgentAudioDone") {
     setOrb("ready", "connected");
-  } else if (t === "ConversationText") {
-    // Could log to a transcript pane in the future
-  } else if (t === "Error") {
+  } else if (t === "AgentV1SettingsApplied" || t === "SettingsApplied") {
+    console.log("DG settings applied");
+  } else if (t === "AgentV1Welcome" || t === "Welcome") {
+    console.log("DG welcome:", msg);
+  } else if (t === "AgentV1Error" || t === "Error") {
     console.error("DG agent error:", msg);
-    setOrb("error", msg.description || "agent error");
+    setOrb("error", msg.description || msg.message || "agent error");
   }
 }
 
@@ -324,10 +313,13 @@ function stopMic() {
 }
 
 function teardown() {
+  if (state._tearingDown) return;
+  state._tearingDown = true;
   state.connected = false;
   stopMic();
   if (state.dgWs) {
     state.dgWs.onclose = null;
+    state.dgWs.onerror = null;
     try { state.dgWs.close(); } catch {}
     state.dgWs = null;
   }
@@ -343,6 +335,7 @@ function teardown() {
   muteBtn.disabled = true;
   muteBtn.textContent = "mute";
   cmdSend.disabled = true;
+  state._tearingDown = false;
 }
 
 // ---------- route switching (live, no reconnect)
@@ -380,7 +373,7 @@ async function sendCommand() {
   }
 
   // Inject text directly into DG agent turn (bypasses mic VAD)
-  state.dgWs.send(JSON.stringify({ type: "InjectUserMessage", message: txt }));
+  state.dgWs.send(JSON.stringify({ type: "AgentV1InjectUserMessage", payload: { message: txt } }));
   setOrb("sending", "thinking...");
 }
 
