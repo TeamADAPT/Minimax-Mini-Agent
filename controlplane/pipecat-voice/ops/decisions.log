@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:28:22 — SIGNED_BY_AGENT
+Decision: Verify the phone route against the serialized/reply-capturing Echo visible bridge before changing gateway code.
+Reason: Echo NATS now returns real answer text, so the phone path may already satisfy the truthful-response requirement if it forwards `reply_to` output correctly.
+
 ## 2026-05-18 15:27:05 — SIGNED_BY_AGENT
 Decision: Defer Skipper NATS enablement instead of adding Skipper to the live bridge roster during validation.
 Reason: Skipper has profile/config/active-directory state but no current subject owner; enabling it changes project routing semantics and should be an explicit delegation decision, not a hidden validation side effect.

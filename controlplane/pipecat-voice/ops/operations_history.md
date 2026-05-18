@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:28:22 — SIGNED_BY_AGENT
+Started `06-phone-voice-path-integration` by moving it from `ops/to_do/` to `ops/in_progress/` before tracing the phone/CX pipe route to Echo.
+
 ## 2026-05-18 15:27:05 — SIGNED_BY_AGENT
 Completed `05-fleet-subject-sync-and-validation`: created `ops/fleet_subject_matrix.md`, stopped and disabled duplicate fallback `pipecat-roster-agents.service`, confirmed `roster_agents.py` exited, and revalidated NATS pings for Echo, core profile-backed novas, Switch, and Skipper.
 

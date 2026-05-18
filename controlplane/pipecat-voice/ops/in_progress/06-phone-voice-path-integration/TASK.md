@@ -2,7 +2,7 @@
 
 ## Status
 
-to_do
+in_progress
 
 ## Objective
 
@@ -35,4 +35,3 @@ Make the phone app path to Echo deterministic and non-interrupting.
 - Phone app to Echo does not interrupt active Echo model calls.
 - Phone app receives truthful status or actual answer.
 - The visible Echo CLI proof aligns with NATS logs.
-
