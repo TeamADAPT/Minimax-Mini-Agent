@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:38:14 — SIGNED_BY_AGENT
+Started `10-ops-ui-chat-session-console` by moving it from `ops/to_do/` to `ops/in_progress/` before writing the adapted chat/session console implementation spec.
+
 ## 2026-05-18 15:37:27 — SIGNED_BY_AGENT
 Completed `08-hermes-ui-design-extraction`: wrote `ops/hermes_ui_design_patterns.md`, created three implementation-spec task folders from the extracted Hermes UI/design-collaboration patterns, and recorded the no-straight-copy boundary.
 

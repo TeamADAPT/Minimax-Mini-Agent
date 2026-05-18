@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:38:14 — SIGNED_BY_AGENT
+Decision: Specify the chat/session console before implementation.
+Reason: the UI needs stable data contracts for NATS delivery, reply capture, and visible CLI handoff before code work begins.
+
 ## 2026-05-18 15:37:27 — SIGNED_BY_AGENT
 Decision: Base the first NovaOps UI specs on a calm three-panel console plus fleet-specific NATS/service state.
 Reason: this preserves the strongest user-facing idea from the Hermes UI candidates while grounding the platform in the actual Echo/NATS/systemd runtime.
