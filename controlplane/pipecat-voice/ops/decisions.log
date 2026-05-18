@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:31:27 — SIGNED_BY_AGENT
+Decision: Paperclip receives a documentation adapter package for the Nova fleet before any direct runtime integration.
+Reason: stable docs/config inventory gives Skipper and future Paperclip agents a safe operating map without granting runtime mutation authority or exposing secrets.
+
 ## 2026-05-18 15:30:46 — SIGNED_BY_AGENT
 Decision: Sync Paperclip with redacted operational inventory instead of copying raw profile config/auth files.
 Reason: Paperclip needs usable fleet context, but profile configs and auth stores may contain live tokens or provider credentials.
