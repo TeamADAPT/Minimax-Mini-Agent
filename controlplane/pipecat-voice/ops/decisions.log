@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:09:35 — SIGNED_BY_AGENT
+Decision: Use an internal bounded FIFO worker for Echo visible NATS delivery instead of relying on the NATS callback body as the serialization boundary.
+Reason: callback-level blocking can hide queued messages and makes queue telemetry ambiguous; a dedicated worker separates NATS receive, queue accounting, visible typing, and completion/timeout reporting.
+
 ## 2026-05-18 15:03:58 — SIGNED_BY_AGENT
 Decision: Serialize Echo visible bridge delivery before adding answer extraction.
 Reason: reply capture is not reliable until rapid inbound NATS messages cannot interrupt the active visible model turn.
