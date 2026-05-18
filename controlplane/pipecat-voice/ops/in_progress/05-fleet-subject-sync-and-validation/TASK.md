@@ -2,7 +2,7 @@
 
 ## Status
 
-to_do
+in_progress
 
 ## Objective
 
@@ -38,4 +38,3 @@ Synchronize the Nova fleet's NATS subjects, active profile directories, and brid
 - Fleet matrix exists.
 - Every active NATS subject has one owner.
 - Any dangerous fix is decomposed into its own task folder.
-

@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:24:58 — SIGNED_BY_AGENT
+Started `05-fleet-subject-sync-and-validation` by moving it from `ops/to_do/` to `ops/in_progress/` before inventorying fleet profiles, active directories, NATS ping ownership, and runtime paths.
+
 ## 2026-05-18 15:23:53 — SIGNED_BY_AGENT
 Completed `04-native-hermes-nats-adapter-spike`: finalized the Hermes NATS platform plugin on local Hermes branch `feat/nats-platform-adapter` commit `b256666f5`, proved Echo gateway could own `nova.echo.direct` without X11 input, captured native `nova.logs.echo` events, restored `echo-tui-nats-bridge.service`, and documented the upstream Hermes push blocker.
 
