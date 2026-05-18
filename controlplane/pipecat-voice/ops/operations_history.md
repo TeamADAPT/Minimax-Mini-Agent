@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-18 15:27:05 — SIGNED_BY_AGENT
+Completed `05-fleet-subject-sync-and-validation`: created `ops/fleet_subject_matrix.md`, stopped and disabled duplicate fallback `pipecat-roster-agents.service`, confirmed `roster_agents.py` exited, and revalidated NATS pings for Echo, core profile-backed novas, Switch, and Skipper.
+
+## 2026-05-18 15:26:19 — SIGNED_BY_AGENT
+Stopped and disabled `pipecat-roster-agents.service` after confirming it was the superseded fallback bridge subscribing to subjects now owned by `pipecat-hermes-agents.service`, `echo-tui-nats-bridge.service`, and `switch_agent.py`.
+
 ## 2026-05-18 15:24:58 — SIGNED_BY_AGENT
 Started `05-fleet-subject-sync-and-validation` by moving it from `ops/to_do/` to `ops/in_progress/` before inventorying fleet profiles, active directories, NATS ping ownership, and runtime paths.
 

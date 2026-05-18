@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-18 15:27:05 — SIGNED_BY_AGENT
+Decision: Defer Skipper NATS enablement instead of adding Skipper to the live bridge roster during validation.
+Reason: Skipper has profile/config/active-directory state but no current subject owner; enabling it changes project routing semantics and should be an explicit delegation decision, not a hidden validation side effect.
+
+## 2026-05-18 15:26:19 — SIGNED_BY_AGENT
+Decision: Disable `pipecat-roster-agents.service` as a low-risk duplicate-owner fix.
+Reason: the fallback roster bridge overlaps with the profile-backed Hermes bridge and Echo visible bridge; keeping it active violates the one-owner subject rule and can produce stale or duplicate answers.
+
 ## 2026-05-18 15:24:58 — SIGNED_BY_AGENT
 Decision: Build a read-only fleet matrix first and defer dangerous service ownership changes into new task folders.
 Reason: multiple Hermes gateways are already running under systemd, and the acceptance criteria require one clear owner per subject without disrupting unrelated profiles.
