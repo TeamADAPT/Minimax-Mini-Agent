@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:40:38 — SIGNED_BY_AGENT
+Decision: Treat collaboration tools as artifact producers around NovaOps, not runtime dependencies of the control plane.
+Reason: design tools should reduce ambiguity and improve QA without becoming another source of service ownership, auth, or secret exposure risk.
+
 ## 2026-05-18 15:39:44 — SIGNED_BY_AGENT
 Decision: Make deterministic redaction a first implementation slice for analytics/logs.
 Reason: useful observability requires correlating repeated events, but raw credentials and connection strings must never be rendered in the UI or reports.
