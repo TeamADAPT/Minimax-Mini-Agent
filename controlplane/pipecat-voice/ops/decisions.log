@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-18 15:37:27 — SIGNED_BY_AGENT
+Decision: Base the first NovaOps UI specs on a calm three-panel console plus fleet-specific NATS/service state.
+Reason: this preserves the strongest user-facing idea from the Hermes UI candidates while grounding the platform in the actual Echo/NATS/systemd runtime.
+
+## 2026-05-18 15:36:11 — SIGNED_BY_AGENT
+Decision: Convert UI extraction into three implementation-spec tasks rather than immediate frontend code.
+Reason: the current goal is to make the borrowed ideas actionable and safe for later implementation while preserving Chase's no-straight-pull boundary.
+
 ## 2026-05-18 15:32:59 — SIGNED_BY_AGENT
 Decision: Extract UI patterns and implementation tasks, not code, from Hermes Web UI candidates.
 Reason: Chase explicitly asked to rebuild/adapt ideas rather than straight-pull another project's implementation.

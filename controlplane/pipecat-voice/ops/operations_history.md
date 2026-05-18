@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-18 15:37:27 — SIGNED_BY_AGENT
+Completed `08-hermes-ui-design-extraction`: wrote `ops/hermes_ui_design_patterns.md`, created three implementation-spec task folders from the extracted Hermes UI/design-collaboration patterns, and recorded the no-straight-copy boundary.
+
+## 2026-05-18 15:36:11 — SIGNED_BY_AGENT
+Created `ops/hermes_ui_design_patterns.md` and decomposed the extracted Hermes UI/product ideas into implementation-spec task folders `10-ops-ui-chat-session-console`, `11-ops-ui-analytics-logs`, and `12-design-collaboration-workbench`.
+
 ## 2026-05-18 15:32:59 — SIGNED_BY_AGENT
 Started `08-hermes-ui-design-extraction` by moving it from `ops/to_do/` to `ops/in_progress/` before inventorying Hermes UI candidates and installed design-collaboration tools.
 
