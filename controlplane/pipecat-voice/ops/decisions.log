@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 13:58:43 — SIGNED_BY_AGENT
+Decision: Store the new Hermes/NATS operating procedures as skills in `skills_master` instead of only adding another plan note.
+Reason: Chase needs the next session to recover operational muscle memory quickly after sleep; skills are the reusable surface for opening/commanding agents and using NATS without re-deriving the exact commands.
+
 ## 2026-05-18 13:54:08 — SIGNED_BY_AGENT
 Decision: Put Echo's fresh OpenAI/Codex access token in `model.api_key` and also update Echo's `auth.json` provider/pool state.
 Reason: Hermes' `openai-codex` provider normally resolves OAuth from Echo's profile auth store, but the operator explicitly required the key to be in Echo's config; setting `model.api_key` makes the runtime use the fresh token directly, while synchronizing `auth.json` prevents the stale revoked pool entry from being selected on paths that still consult the auth store.

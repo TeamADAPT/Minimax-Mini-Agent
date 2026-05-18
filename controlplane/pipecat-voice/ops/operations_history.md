@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 13:58:43 — SIGNED_BY_AGENT
+Created two operational skills in `/adapt/novas/active/skills_master`: `autonomous-ai-agents/hermes-agent-ops/SKILL.md` for opening, relaunching, configuring, and commanding Hermes nova agents, and `devops/nova-nats-ops/SKILL.md` for structured NATS envelopes, subjects, pings, service checks, and visible CLI bridge verification.
+
 ## 2026-05-18 13:54:08 — SIGNED_BY_AGENT
 Installed the fresh Codex CLI token into Echo's Hermes profile configuration by setting `model.api_key` in `/home/x/.hermes/profiles/echo/config.yaml`, synchronized Echo's `openai-codex` provider and credential-pool state in `/home/x/.hermes/profiles/echo/auth.json`, set both files to mode `600`, relaunched Echo's visible CLI from `/adapt/novas/active/echo`, and verified a `nova.echo.direct` proof completed visibly on `gpt-5.4-mini` without the prior `HTTP 401 token_revoked` fallback.
 
