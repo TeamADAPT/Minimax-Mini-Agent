@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:13:33 — SIGNED_BY_AGENT
+Completed `03-echo-reply-capture-session-watcher`: added Echo session DB reply extraction, flattened visible prompts to prevent multiline TUI splitting, added `scripts/smoke_echo_tui_reply_capture.py`, restarted `echo-tui-nats-bridge.service`, and verified short plus long NATS proofs returned Echo's actual assistant text.
+
 ## 2026-05-18 15:10:25 — SIGNED_BY_AGENT
 Started `03-echo-reply-capture-session-watcher` by moving it from `ops/to_do/` to `ops/in_progress/` before modifying Echo reply extraction.
 

@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:13:33 — SIGNED_BY_AGENT
+Decision: Flatten Echo visible bridge prompts before typing and capture replies from the Hermes SQLite message table.
+Reason: multiline desktop typing can split the envelope into multiple TUI user rows; a compact single-line envelope preserves the event id and message in one stored prompt, making assistant-row extraction deterministic.
+
 ## 2026-05-18 15:10:25 — SIGNED_BY_AGENT
 Decision: Implement reply capture after serialization using Echo's local Hermes CLI session database.
 Reason: the visible TUI bridge already proves delivery and session advancement; the missing contract is returning the assistant row that Echo actually wrote for the NATS-triggered turn.

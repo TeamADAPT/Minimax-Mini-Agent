@@ -31,6 +31,7 @@ WINDOW_NAME = os.environ.get("ECHO_TUI_WINDOW_NAME", "Echo CLI")
 DELIVERY_TIMEOUT = float(os.environ.get("ECHO_TUI_DELIVERY_TIMEOUT", "300"))
 IDLE_POLL_SECONDS = float(os.environ.get("ECHO_TUI_IDLE_POLL_SECONDS", "1.5"))
 MAX_QUEUE_DEPTH = int(os.environ.get("ECHO_TUI_MAX_QUEUE_DEPTH", "8"))
+REPLY_CAPTURE_TIMEOUT = float(os.environ.get("ECHO_TUI_REPLY_CAPTURE_TIMEOUT", "30"))
 PROFILE_ROOT = Path(os.environ.get("ECHO_PROFILE_ROOT", "/home/x/.hermes/profiles/echo"))
 
 _delivery_lock = asyncio.Lock()
@@ -113,6 +114,7 @@ def _clear_input() -> None:
 
 
 def _type_prompt(prompt: str) -> None:
+    prompt = re.sub(r"\s+", " ", prompt).strip()
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as handle:
         handle.write(prompt)
         path = handle.name
@@ -127,18 +129,19 @@ def _type_prompt(prompt: str) -> None:
 
 
 def _format_prompt(sender: str, channel: str, message: str, event_id: str) -> str:
+    compact_message = re.sub(r"\s+", " ", message).strip()
     return (
-        f"NATS delivery into visible Echo CLI.\n"
-        f"Subject: {NS}.{AGENT}.{channel}\n"
-        f"Sender: {sender}\n"
-        f"Event ID: {event_id}\n\n"
-        f"Message:\n{message}\n\n"
+        f"NATS delivery into visible Echo CLI. "
+        f"Subject: {NS}.{AGENT}.{channel}. "
+        f"Sender: {sender}. "
+        f"Event ID: {event_id}. "
+        f"Message: {compact_message}. "
         "Answer in this visible CLI session. Give a substantial answer when the "
         "message asks for depth. Mention that this came through NATS."
     )
 
 
-def _active_cli_session_count() -> tuple[str, int]:
+def _active_cli_session_state() -> tuple[str, int, int]:
     db_path = PROFILE_ROOT / "state.db"
     with sqlite3.connect(str(db_path), timeout=10) as conn:
         row = conn.execute(
@@ -150,9 +153,52 @@ def _active_cli_session_count() -> tuple[str, int]:
             LIMIT 1
             """
         ).fetchone()
+        if not row:
+            return "", 0, 0
+        message_id = conn.execute(
+            "SELECT COALESCE(MAX(id), 0) FROM messages WHERE session_id = ?",
+            (str(row[0]),),
+        ).fetchone()[0]
+    return str(row[0]), int(row[1] or 0), int(message_id or 0)
+
+
+def _active_cli_session_count() -> tuple[str, int]:
+    session_id, count, _message_id = _active_cli_session_state()
+    return session_id, count
+
+
+def _assistant_reply_after(session_id: str, after_message_id: int) -> tuple[int, str]:
+    db_path = PROFILE_ROOT / "state.db"
+    with sqlite3.connect(str(db_path), timeout=10) as conn:
+        row = conn.execute(
+            """
+            SELECT id, content
+            FROM messages
+            WHERE session_id = ?
+              AND id > ?
+              AND role = 'assistant'
+              AND COALESCE(content, '') != ''
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (session_id, after_message_id),
+        ).fetchone()
     if not row:
-        return "", 0
-    return str(row[0]), int(row[1] or 0)
+        return 0, ""
+    return int(row[0]), str(row[1] or "")
+
+
+async def _wait_for_assistant_reply_after(
+    session_id: str,
+    after_message_id: int,
+) -> tuple[int, str]:
+    deadline = asyncio.get_running_loop().time() + REPLY_CAPTURE_TIMEOUT
+    while asyncio.get_running_loop().time() < deadline:
+        assistant_message_id, assistant_text = _assistant_reply_after(session_id, after_message_id)
+        if assistant_text:
+            return assistant_message_id, assistant_text
+        await asyncio.sleep(IDLE_POLL_SECONDS)
+    return 0, ""
 
 
 async def _wait_for_cli_turn(before_session: str, before_count: int) -> tuple[str, int]:
@@ -301,10 +347,31 @@ async def _process_work(nc, work: BridgeWork) -> None:
         prompt = _format_prompt(work.sender, work.channel, work.message, work.event_id)
         logger.info(f"typing NATS message into Echo TUI from={work.sender} channel={work.channel}")
         await _wait_for_idle_window()
-        before_session, before_count = _active_cli_session_count()
+        before_session, before_count, before_message_id = _active_cli_session_state()
         _clear_input()
         _type_prompt(prompt)
         after_session, after_count = await _wait_for_cli_turn(before_session, before_count)
+        assistant_after_id = before_message_id if after_session == before_session else 0
+        assistant_message_id, assistant_text = await _wait_for_assistant_reply_after(
+            after_session,
+            assistant_after_id,
+        )
+        if not assistant_text:
+            raise RuntimeError(
+                "Echo CLI completed the visible turn but no assistant reply was found "
+                f"after message id {assistant_after_id}"
+            )
+        await _publish_trace(
+            nc,
+            "reply_captured",
+            channel=work.subject,
+            sender=work.sender,
+            reply_to=bool(work.reply_to),
+            id=work.event_id,
+            session_id=after_session,
+            assistant_message_id=assistant_message_id,
+            response_chars=len(assistant_text),
+        )
         await _publish_trace(
             nc,
             "completed",
@@ -315,11 +382,15 @@ async def _process_work(nc, work: BridgeWork) -> None:
             id=work.event_id,
             session_id=after_session,
             message_count=after_count,
+            assistant_message_id=assistant_message_id,
+            response_chars=len(assistant_text),
             elapsed_seconds=round(time.monotonic() - started, 3),
         )
         await _reply(nc, work.reply_to, {
-            "chunk": "Delivered to Echo CLI and Echo completed the visible turn.",
+            "chunk": assistant_text,
             "final": False,
+            "session_id": after_session,
+            "assistant_message_id": assistant_message_id,
         })
         await _reply_final(nc, work.reply_to)
     except Exception as exc:
