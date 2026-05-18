@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:10:25 — SIGNED_BY_AGENT
+Started `03-echo-reply-capture-session-watcher` by moving it from `ops/to_do/` to `ops/in_progress/` before modifying Echo reply extraction.
+
 ## 2026-05-18 15:09:35 — SIGNED_BY_AGENT
 Completed `02-echo-visible-bridge-serialization`: replaced inline visible delivery with a bounded FIFO worker in `scripts/echo_tui_nats_bridge.py`, added `scripts/smoke_echo_tui_serialization.py`, restarted `echo-tui-nats-bridge.service`, verified two immediate `nova.echo.direct` messages serialized without interruption, and captured `/tmp/echo-serialization-20260518-1510.png`.
 

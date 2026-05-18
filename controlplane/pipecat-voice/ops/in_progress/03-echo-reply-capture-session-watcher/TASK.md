@@ -2,7 +2,7 @@
 
 ## Status
 
-to_do
+in_progress
 
 ## Objective
 
@@ -41,4 +41,3 @@ Make NATS callers receive Echo's actual answer text instead of only a delivery/c
 ## Revert
 
 Disable reply extraction and fall back to delivery/completion ack. Keep visible delivery working.
-

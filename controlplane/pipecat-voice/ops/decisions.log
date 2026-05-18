@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:10:25 — SIGNED_BY_AGENT
+Decision: Implement reply capture after serialization using Echo's local Hermes CLI session database.
+Reason: the visible TUI bridge already proves delivery and session advancement; the missing contract is returning the assistant row that Echo actually wrote for the NATS-triggered turn.
+
 ## 2026-05-18 15:09:35 — SIGNED_BY_AGENT
 Decision: Use an internal bounded FIFO worker for Echo visible NATS delivery instead of relying on the NATS callback body as the serialization boundary.
 Reason: callback-level blocking can hide queued messages and makes queue telemetry ambiguous; a dedicated worker separates NATS receive, queue accounting, visible typing, and completion/timeout reporting.
