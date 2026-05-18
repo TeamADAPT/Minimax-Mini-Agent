@@ -2,7 +2,7 @@
 
 ## Status
 
-to_do
+in_progress
 
 ## Objective
 
@@ -45,4 +45,3 @@ Restore the previous bridge file from git or from a timestamped backup, then:
 python3 -m py_compile scripts/echo_tui_nats_bridge.py
 systemctl --user restart echo-tui-nats-bridge.service
 ```
-
