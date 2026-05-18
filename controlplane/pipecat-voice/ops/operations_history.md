@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:39:44 — SIGNED_BY_AGENT
+Completed `11-ops-ui-analytics-logs`: wrote `ops/ui_analytics_logs_spec.md` with fleet health, NATS trace timeline, journal/log filters, provider response metrics, redaction contracts, and QA requirements.
+
 ## 2026-05-18 15:39:24 — SIGNED_BY_AGENT
 Started `11-ops-ui-analytics-logs` by moving it from `ops/to_do/` to `ops/in_progress/` before writing the analytics/logs implementation spec.
 

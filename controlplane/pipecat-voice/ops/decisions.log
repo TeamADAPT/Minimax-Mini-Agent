@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:39:44 — SIGNED_BY_AGENT
+Decision: Make deterministic redaction a first implementation slice for analytics/logs.
+Reason: useful observability requires correlating repeated events, but raw credentials and connection strings must never be rendered in the UI or reports.
+
 ## 2026-05-18 15:39:24 — SIGNED_BY_AGENT
 Decision: Build analytics/logs around live NATS and systemd sources instead of cloned dashboard metrics.
 Reason: the platform's truth comes from bus traces, journal units, service ownership, and bridge reply capture rather than a separate web UI session database.
