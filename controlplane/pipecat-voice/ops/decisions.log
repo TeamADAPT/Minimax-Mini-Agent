@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:14:17 — SIGNED_BY_AGENT
+Decision: Treat the native Hermes NATS adapter as a spike with the temporary visible bridge kept as rollback.
+Reason: the visible bridge is now serialized and returns real answer text, so native adapter work can proceed without risking the current operator-visible path.
+
 ## 2026-05-18 15:13:33 — SIGNED_BY_AGENT
 Decision: Flatten Echo visible bridge prompts before typing and capture replies from the Hermes SQLite message table.
 Reason: multiline desktop typing can split the envelope into multiple TUI user rows; a compact single-line envelope preserves the event id and message in one stored prompt, making assistant-row extraction deterministic.

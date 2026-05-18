@@ -2,7 +2,7 @@
 
 ## Status
 
-to_do
+in_progress
 
 ## Objective
 
@@ -42,4 +42,3 @@ Replace the temporary X11 visible bridge with a native Hermes gateway platform a
 ## Revert
 
 Disable `platforms.nats` in Echo config, stop/restart Echo gateway, and restore `echo-tui-nats-bridge.service` as subject owner.
-
