@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:44:47 — SIGNED_BY_AGENT
+Decision: Complete the Echo/NATS master task with the visible Echo bridge as active owner and native adapter documented as a spike.
+Reason: live NATS reply proof passes through the visible bridge, while the native path still carries provider-auth risk before fallback and should not replace the stable owner without a separate promotion task.
+
 ## 2026-05-18 15:43:40 — SIGNED_BY_AGENT
 Decision: Close the master task only after checking all child completion reports and live service/route state.
 Reason: the master task is an acceptance gate, not another planning document.
