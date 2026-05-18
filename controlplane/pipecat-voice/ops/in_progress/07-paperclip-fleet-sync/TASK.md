@@ -2,7 +2,7 @@
 
 ## Status
 
-to_do
+in_progress
 
 ## Suggested Owner
 
@@ -51,4 +51,3 @@ Skipper: build a Paperclip-facing fleet sync package. Do not copy secrets. Redac
 ## Revert
 
 Remove only the new Paperclip sync docs/package and restore previous Paperclip state from git.
-

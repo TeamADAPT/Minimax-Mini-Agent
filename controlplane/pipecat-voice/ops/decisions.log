@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:30:46 — SIGNED_BY_AGENT
+Decision: Sync Paperclip with redacted operational inventory instead of copying raw profile config/auth files.
+Reason: Paperclip needs usable fleet context, but profile configs and auth stores may contain live tokens or provider credentials.
+
 ## 2026-05-18 15:30:03 — SIGNED_BY_AGENT
 Decision: Leave `gateway.py` unchanged for the direct Echo phone path.
 Reason: the gateway already forwards the NATS `reply_to` stream to SSE, and the corrected Echo bridge now supplies actual assistant text instead of a delivery acknowledgement.
