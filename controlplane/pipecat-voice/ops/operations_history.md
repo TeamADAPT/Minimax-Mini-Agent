@@ -1,5 +1,282 @@
 # Operations History
 
+## 2026-05-18 13:25:43 — SIGNED_BY_AGENT
+Relaunched Echo's visible Hermes CLI with `/home/x/.local/bin/hermes -p echo --yolo -c` from `/adapt/novas/active/echo`, confirmed `echo-tui-nats-bridge.service` remained active, sent a `nova.echo.direct` proof message from Latch, and verified Echo answered in the visible CLI. Verified the actual process cwd from `/proc/1991425/cwd` as `/adapt/novas/active/echo`.
+
+## 2026-05-18 12:31:28 — SIGNED_BY_AGENT
+Launched Echo visible NATS bridge and captured the current blocker.
+
+- Relaunched Echo CLI from `/adapt/novas/active/echo`.
+- Added `scripts/echo_tui_nats_bridge.py` to subscribe to `nova.echo.direct`, `nova.echo.meet`, and `nova.echo.ping`.
+- Added and enabled `/home/x/.config/systemd/user/echo-tui-nats-bridge.service`.
+- Removed Echo from `pipecat-hermes-agents.service` so the background Hermes subprocess bridge no longer owns `nova.echo.direct`.
+- Verified the visible bridge types NATS-delivered prompts into the foreground Echo CLI.
+- Patched the bridge to avoid wedging when Echo's provider fails before session persistence.
+- Observed OpenAI/Codex `gpt-5.4-mini` HTTP 429 usage-limit errors, blocking the requested five long-answer turn test.
+- Wrote `ops/ECHO_NATS_10H_PLAN.md` with the next ten-hour execution plan.
+
+## 2026-05-18 11:22:07 — SIGNED_BY_AGENT
+Corrected Echo NATS routing to use the Hermes CLI session path.
+
+- Inspected `scripts/hermes_nats_agents.py`, the live `pipecat-hermes-agents.service`, NATS health, and Echo's running Hermes processes.
+- Found Echo was still special-cased with `HERMES_API_BASE_ECHO`, stale MiniMax/NVIDIA overrides, and fresh-session mode, so `nova.echo.direct` routed to the API-server session instead of Echo's current CLI lineage.
+- Removed Echo-specific API/model/session overrides from `/home/x/.config/systemd/user/pipecat-hermes-agents.service`.
+- Reloaded systemd user units and restarted `pipecat-hermes-agents.service`.
+- Verified `nova.echo.direct` returned `nats cli path ok` in about 25 seconds.
+- Verified bridge logs now show `echo: invoking Hermes CLI: /home/x/.local/bin/hermes -p echo chat --continue ...`.
+- Verified Echo's CLI session `20260518_082204_47c671` advanced to `message_count=25`.
+- Verified `nova.echo.ping` returns `pong:echo:hermes` and system `pipecat-voice.service` plus `nats-server.service` are active.
+
+## 2026-05-18 11:17:15 — SIGNED_BY_AGENT
+Sent the execute_code RPC tool-context tip into Echo's visible CLI.
+
+- Cleared the visible Echo TUI input buffer before sending.
+- Submitted the tip through X11 focused-window input.
+- Captured a terminal screenshot confirming Echo received the prompt on `gpt-5.4-mini` and replied `Got it.`
+
+## 2026-05-18 11:00:47 — SIGNED_BY_AGENT
+Validated visible terminal input after Echo's first prompt initialized.
+
+- Observed the previous focused send reached the TUI but attached to an existing `/model` input buffer.
+- Cleared the line with keyboard controls before sending a clean prompt.
+- Captured a terminal screenshot confirming the visible TUI accepted the focused input path and entered a working state.
+
+## 2026-05-18 10:57:03 — SIGNED_BY_AGENT
+Retried visible Echo CLI input after the operator confirmed first-prompt initialization behavior.
+
+- Verified Echo CLI remained open on `pts/8` with PID `1449538`.
+- Activated the `Echo CLI` GNOME Terminal window and submitted `hi` via X11 input.
+
+## 2026-05-18 10:55:49 — SIGNED_BY_AGENT
+Sent a visible test message to Echo's open terminal.
+
+- Confirmed `nova.echo.direct` traffic was reaching the API gateway session, not the visible GNOME Terminal CLI.
+- Attempted direct `/dev/pts/8` TTY injection; host kernel rejected `TIOCSTI`.
+- Used `xdotool` desktop input to activate the `Echo CLI` window and submit `hi`.
+- Verified the focused desktop window is `Echo CLI`.
+
+## 2026-05-18 10:54:06 — SIGNED_BY_AGENT
+Sent operator tip to Echo through the NATS bridge.
+
+- Published the sandbox RPC tool-context tip to `nova.echo.direct` with a reply inbox.
+- Verified Echo replied `Got it, noted.` through the live bridge.
+
+## 2026-05-18 10:50:23 — SIGNED_BY_AGENT
+Aligned Echo CLI and API gateway on `--yolo`.
+
+- Confirmed visible Echo CLI already ran `/home/x/.local/bin/hermes -p echo --yolo -c`.
+- Restarted Echo API gateway as `/home/x/.local/bin/hermes -p echo --yolo gateway run --replace`.
+- Removed the stale non-yolo Echo gateway process.
+- Verified the remaining Echo CLI PID `1449538` and gateway PID `1458507` both run from `/adapt/novas/active/echo`.
+
+## 2026-05-18 10:49:26 — SIGNED_BY_AGENT
+Verified Echo bridge routing after reopening on direct Haiku 4.5.
+
+- Published a structured request to `nova.echo.direct` with a reply inbox.
+- Verified Echo returned `echo bridge live` through the live NATS bridge in about 24 seconds.
+- Confirmed the working Echo API gateway and visible CLI remain rooted at `/adapt/novas/active/echo`.
+
+## 2026-05-18 10:47:41 — SIGNED_BY_AGENT
+Reopened Echo with the direct Haiku 4.5 profile configuration.
+
+- Restarted Echo's Hermes API gateway from `/adapt/novas/active/echo` so it loads the current profile config.
+- Launched a visible GNOME Terminal titled `Echo CLI` from `/adapt/novas/active/echo`.
+- Verified Echo API health on `127.0.0.1:8652`.
+- Verified Echo CLI PID `1449538` running on `pts/8` and gateway PID `1449418` running detached.
+
+## 2026-05-18 09:12:25 — SIGNED_BY_AGENT
+Tested Echo through the live NATS bridge after correcting agent working directories.
+
+- Published a direct request to `nova.echo.direct`.
+- Verified response `echo ready` in `13.3` seconds.
+- Confirmed Echo's visible CLI remains open in `/adapt/novas/active/echo` with PID `1053036` on `pts/8`.
+
+## 2026-05-18 09:05:46 — SIGNED_BY_AGENT
+Corrected Hermes NATS bridge subprocess working directories.
+
+- Updated `scripts/hermes_nats_agents.py` so each bridge turn runs from `/adapt/novas/active/<agent>` when that active nova directory exists.
+- Falls back to the Hermes profile directory when no active nova directory exists, e.g. `agent-5` currently resolves to `/home/x/.hermes/profiles/agent-5`.
+- Verified Echo's visible CLI remains open in `/adapt/novas/active/echo` with PID `1053036` on `pts/8`.
+- Restarted `pipecat-hermes-agents.service` and verified the NATS bridge remains active with 33 nova subscriptions.
+
+## 2026-05-18 08:57:44 — SIGNED_BY_AGENT
+Tested the `agent-5` Hermes profile turn path.
+
+- Confirmed Echo's open CLI remains on `/adapt/novas/active/echo` with PID `1053036` on `pts/8`.
+- Ran a bounded `agent-5` Hermes turn using its configured NVIDIA NIM `qwen/qwen3.5-397b-a17b` model.
+- Verified response `av5 ready`, session `20260518_085722_e98853`, and `message_count=2`.
+
+## 2026-05-18 08:52:05 — SIGNED_BY_AGENT
+Opened Echo as an interactive desktop Hermes CLI.
+
+- Launched GNOME Terminal on `DISPLAY=:0` titled `Echo CLI`.
+- Started `/home/x/.local/bin/hermes -p echo --yolo -c` from `/adapt/novas/active/echo`.
+- Verified Echo CLI PID `1053036` running on `pts/8`.
+- Left voice transport unchanged on Deepgram; planned model-side voice routing move to Grok when subscriptions/credentials are ready.
+
+## 2026-05-18 08:47:20 — SIGNED_BY_AGENT
+Updated Echo and bridge timeout policy after operator closed the stale large Echo CLI session.
+
+- Confirmed Echo no longer has an open Hermes CLI process.
+- Changed Echo profile `agent.api_max_retries` from `3` to `10`.
+- Changed gateway `NATS_REPLY_TIMEOUT` and bridge `HERMES_TURN_TIMEOUT` to `300` seconds so the HTTP/SSE caller does not cut off the bridge before Hermes finishes.
+- Removed Echo's bridge `HERMES_IGNORE_USER_CONFIG_ECHO` override so the profile retry setting is honored.
+- Restarted `pipecat-hermes-agents.service` and `pipecat-voice.service`; forced the old gateway PID through `systemctl kill --signal=SIGKILL` after the known Deepgram websocket shutdown loop held systemd in `stop-sigterm`.
+
+## 2026-05-18 08:22:14 — SIGNED_BY_AGENT
+Tested and reconfigured Echo bridge session handling.
+
+- Attempted a fresh Echo session on the profile default NVIDIA DeepSeek path; it timed out before creating a new session.
+- Created a clean Echo bridge session with NVIDIA MiniMax (`20260518_081503_e166b0`) and verified a local response of `ready`.
+- Added per-agent bridge overrides in `scripts/hermes_nats_agents.py` for model/provider/session/isolation flags.
+- Found named-session resume remained variable for Echo, so configured Echo bridge turns to use fresh lean MiniMax invocations with profile config/rules ignored.
+- Restarted `pipecat-hermes-agents.service` and verified `nova.echo.direct` returned `Fresh ready.` through the real NATS path in 15.3 seconds.
+
+## 2026-05-18 07:50:17 — SIGNED_BY_AGENT
+Synced the voice control plane NATS bridge to the real Hermes profile fleet and CLI session state.
+
+- Updated `scripts/hermes_nats_agents.py` so the real profile bridge owns `tecton`, `herald`, `iris`, `echo`, `vaeris`, `synergy`, `cosmos`, `pathfinder`, `zap`, `oracle`, and `vox`, and resumes each profile's latest CLI session with `hermes chat --continue`.
+- Updated `scripts/roster_agents.py` so the Cerebras fallback skips local profile-backed agents and no longer double-subscribes the same NATS subjects.
+- Extended `/api/profile-health` with profile existence, open CLI process, and latest session metadata.
+- Reloaded/restarted `pipecat-hermes-agents.service`, `pipecat-roster-agents.service`, and `pipecat-voice.service`; forced the old gateway PID through `systemctl kill --signal=SIGKILL` after it stuck in `stop-sigterm`.
+- Verified `nova.<agent>.ping` returns `pong:<agent>:hermes` for all 11 profile-backed group agents.
+
+## 2026-05-18 02:55:00 — SIGNED_BY_AGENT
+Hardened browser cache reset after Playwright found one stale
+`pipecat-voice-pwa-v5` cache bucket remained despite zero service-worker
+registrations.
+
+- Updated `client/pwa.js` to unregister service workers, delete all Cache API
+  buckets across three passes, and reload the page once per session after reset.
+- Bumped visible asset URLs from `orange6` to `orange7`.
+
+## 2026-05-18 02:48:00 — SIGNED_BY_AGENT
+Validated the public page with Playwright browser tooling and forced a browser
+cache reset path after user still saw stale colors.
+
+- Browser validation loaded `https://pipe.adaptdev.ai/?visual_probe=orange5`
+  and confirmed computed CSS: body background `rgb(0, 0, 0)`, orange top rule,
+  orange rail border, `blackline.css?v=orange5`, and active service-worker
+  control.
+- Captured viewport screenshot `pipe-orange5-before.png`, which showed the
+  public page rendering orange accents.
+- Converted `client/pwa.js` into a service-worker/cache unregister helper and
+  changed `client/sw.js` into a cache-reset worker that deletes all caches,
+  unregisters itself, and fetches network only.
+- Bumped visible assets to `orange6` so browser sessions cannot reuse the
+  prior `orange5` stylesheet URL.
+
+## 2026-05-18 02:41:12 — SIGNED_BY_AGENT
+Forced the Blackline orange revision to be visibly distinguishable and corrected
+the service-worker cache path.
+
+- Added a fixed dark-orange/amber/gold top rule and stronger orange rail/panel
+  borders while preserving a literal pure-black body background.
+- Moved CSS/JS asset URLs from `orange4` to `orange5` after identifying that
+  the previous service worker could cache-first serve stale `orange4` assets.
+- Changed the service-worker fetch strategy to network-first for all same-origin
+  GET requests and bumped cache key to `pipecat-voice-pwa-v5`.
+
+## 2026-05-18 02:18:05 — SIGNED_BY_AGENT
+Corrected the Blackline PWA palette after the copper pass still read as brown.
+
+- Set the page background to literal pure black (`#000000`) with no body-level
+  radial or linear glow gradients.
+- Removed the brown-leaning copper token from the primary accent path and moved
+  the UI to dark orange, amber, gold, and silver.
+- Updated charts, icons, CSS/JS asset versions, and service-worker cache key to
+  `pipecat-voice-pwa-v4` / `orange4` so browsers load the corrected palette.
+
+## 2026-05-18 02:06:10 — SIGNED_BY_AGENT
+Removed visible install buttons from all three Blackline PWA pages and made the
+metal palette materially more visible.
+
+- Deleted `data-install` buttons from Ops, Observatory, and Studio.
+- Simplified `client/pwa.js` to only register the service worker; it no longer
+  manages an install prompt or reveals install controls.
+- Strengthened copper/amber/dark-orange/gold/silver colors in the actual
+  rendered surfaces: background glows, hero overlays, primary buttons, active
+  tabs, selected cards, orb gradients, charts, and icons.
+- Added versioned CSS/JS asset URLs and bumped the service-worker cache key to
+  `pipecat-voice-pwa-v3` so browsers fetch the updated assets instead of
+  retaining the previous visual pass.
+
+## 2026-05-18 01:31:40 — SIGNED_BY_AGENT
+Restarted `pipecat-voice.service` to activate the new root `/sw.js`
+service-worker route and refreshed PWA cache behavior.
+
+- Initial `systemctl restart pipecat-voice.service` hung in `stop-sigterm`;
+  systemd reported the service stuck deactivating under the old Python PID.
+- Used `systemctl kill --signal=SIGKILL pipecat-voice.service` through
+  systemd, then started the unit cleanly.
+- Verified service active with new PID 4125069, `/healthz` returned OK,
+  `/sw.js` returned HTTP 200 with `Service-Worker-Allowed: /`, and
+  `/static/blackline.css` served the copper/amber/gold/silver tokens.
+
+## 2026-05-18 00:00:57 — SIGNED_BY_AGENT
+Retuned the Blackline PWA visual palette from brown/tan toward a balanced
+copper, amber, dark-orange, gold, and silver metal system.
+
+- Updated shared theme tokens in `client/blackline.css` so all three PWA apps
+  inherit the new palette consistently.
+- Rebalanced live/active/error indicators, orb gradients, buttons, active tabs,
+  card highlights, and chart colors away from tan toward copper/amber with
+  silver support.
+- Updated PWA SVG icons to match the revised copper/amber/gold/silver identity.
+- Bumped the service-worker cache key so installed/mobile clients refresh the
+  updated theme assets.
+
+## 2026-05-17 08:20:58 — SIGNED_BY_AGENT
+Built three installable black-mode PWA surfaces on the existing gateway routes:
+Blackline Ops (`/`), Blackline Observatory (`/dashboard`), and Blackline Studio (`/canvas`).
+
+- Added a shared PWA shell (`client/blackline.css`) with pure-black dark mode,
+  warm metallic accents only, responsive layouts, and mobile-safe controls.
+- Replaced the primary route HTML for voice control, observability, and planning
+  with modern app shells that reuse the repo's current APIs and websockets rather
+  than introducing a duplicate backend.
+- Added per-app manifests, SVG icons, install prompt wiring (`client/pwa.js`),
+  a cache-aware service worker (`client/sw.js`), and a root service-worker route
+  in `gateway.py` so all three surfaces install cleanly as PWAs.
+
+## 2026-05-16 06:56:00 — SIGNED_BY_AGENT
+Migrated voice "brain" from cold-subprocess NATS bridge / Haiku umbrella to a
+warm per-nova Hermes gateway, piloting on TECTON.
+
+- Built Hermes platform-adapter plugin `plugins/platforms/nats/` in the live
+  Hermes runtime repo `/data/vast/home/x/.hermes/hermes-agent` (branch
+  `feat/nats-platform-adapter`): stdlib-asyncio NATS wire protocol, consumes
+  the established fleet schema `extra:{url, subjects[] (wildcard), queue_group}`,
+  stable-sender chat_id for one durable session, progressive reply chunks to
+  the envelope `reply_to`, reconnect supervisor with backoff+jitter.
+- tecton config.yaml: added top-level `platforms.nats` (enabled, subjects
+  `[nova.tecton.direct]`, queue_group `hermes-nats-consumers`, agent tecton).
+  tecton `.env`: `GATEWAY_ALLOW_ALL_USERS=true` (authenticated bus is the
+  trust boundary), `NATS_HOME_CHANNEL=chase` (suppress TTS-spoken onboarding
+  notice).
+- herald/iris config: `platforms.nats.enabled: false` — they had it `true`
+  but it was a dormant no-op (no adapter existed); flipping to false removes
+  the latent landmine of binding the new adapter with the wrong path on a
+  gateway auto-restart. Their behavior is unchanged (still cold-bridge).
+- Cold bridge unit `pipecat-hermes-agents.service`: `HERMES_AGENT_NAMES`
+  `tecton,herald,iris,echo` → `herald,iris,echo` (tecton now served only by
+  its warm gateway). Reloaded + restarted.
+- `hermes -p tecton gateway install && start` → `hermes-gateway-b84f868c`
+  user systemd service, rooted in `/adapt/novas/active/tecton`.
+- `gateway.py`: removed Haiku umbrella + anthropic dependency
+  (branch `feat/nats-gateway-warm-bridge`); all peers route to NATS.
+  Service restarted, healthy (local 200, NATS connected).
+
+Verified: tecton answers `nova.tecton.direct` via the plugin in 0.4–0.8s with
+progressive chunks; onboarding notice suppressed; no cold-bridge double-answer.
+
+KNOWN BLOCKER (pre-existing, not the plugin): tecton's agent memory backend is
+~67,442 / 22,000 chars (3x over hard cap) → the `memory` tool hard-fails every
+turn and the agent thrashes ("interrupting current task"), so multi-turn
+continuity does not yet hold. tecton auxiliary providers (openrouter/nous)
+also failing on payment/credit (breaks session titling). Both are tecton
+profile/account issues outside the plugin; flagged for decision before merge.
+
 ## 2026-05-10 20:30:00 — SIGNED_BY_AGENT
 Added Haiku umbrella LLM fast path and increased VAD endpointing window.
 

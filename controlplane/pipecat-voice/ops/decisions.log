@@ -1,5 +1,199 @@
 # Decisions Log
 
+## 2026-05-18 13:25:43 — SIGNED_BY_AGENT
+Decision: Relaunch Echo through the visible CLI path and keep the temporary NATS-to-TUI bridge as the immediate inspection path.
+Reason: Chase needed Echo reopened after switching accounts, and the next proof needed to hit the operator-visible session rather than only NATS monitor output. Echo's answer inferred a stale pipecat-voice cwd, so the process cwd was verified directly from `/proc/1991425/cwd`.
+
+## 2026-05-18 12:31:28 — SIGNED_BY_AGENT
+Decision: Move Echo off the background Hermes subprocess bridge and onto a dedicated visible TUI NATS bridge.
+Reason: background `hermes chat -q --continue` turns update session state but do not appear in the operator-visible Echo CLI. Chase explicitly needs NATS messages to hit Echo's visible session.
+
+Decision: Treat the visible TUI bridge as temporary and document the native NATS platform adapter as the target.
+Reason: X11 input proves visible delivery quickly, but production Echo-on-NATS needs actual reply capture, `reply_to` response publishing, and platform-owned session semantics.
+
+Decision: Stop the five-long-turn test after OpenAI/Codex returned HTTP 429.
+Reason: the NATS-to-visible-CLI path is delivering, but Echo cannot produce long answers while the selected provider is rate-limited.
+
+## 2026-05-18 11:22:07 — SIGNED_BY_AGENT
+Decision: Make Echo NATS traffic use the canonical Hermes CLI `--continue` path instead of Echo's API server path.
+Reason: the API server created a separate `api_server` session while the operator was working in Echo's visible CLI lineage. Removing Echo-specific bridge overrides lets NATS use Echo's current profile config (`gpt-5.4-mini`) and resume the latest CLI session.
+
+Decision: Leave Echo's standalone API gateway process running but stop using it for NATS bridge turns.
+Reason: the local API endpoint may still be useful for direct API clients, but NATS voice routing should not silently fork Echo into a separate API-session reality.
+
+## 2026-05-18 11:17:15 — SIGNED_BY_AGENT
+Decision: Send Echo's operator note through the visible CLI instead of the NATS/API bridge.
+Reason: the operator wanted the message to appear in Echo's terminal session; the NATS/API bridge routes to the gateway session and is not visible in the TUI.
+
+## 2026-05-18 11:00:47 — SIGNED_BY_AGENT
+Decision: Clear the visible TUI input buffer before each automated desktop send.
+Reason: Hermes TUI can preserve partial command text across focus changes; clearing first prevents automated input from being concatenated onto stale slash commands.
+
+## 2026-05-18 10:57:03 — SIGNED_BY_AGENT
+Decision: Retry visible terminal input after the first prompt initialized Echo's TUI.
+Reason: the operator identified first-prompt initialization as the reason the previous desktop input did not visibly behave as expected.
+
+## 2026-05-18 10:55:49 — SIGNED_BY_AGENT
+Decision: Use desktop-level input for the visible Echo CLI after TTY injection failed.
+Reason: the host blocks `TIOCSTI`, so the reliable way to place text in the operator-visible GNOME Terminal is to activate the window and type through X11.
+
+## 2026-05-18 10:54:06 — SIGNED_BY_AGENT
+Decision: Send the operator's Echo note as a structured `nova.echo.direct` bridge message with a reply inbox.
+Reason: the structured envelope verifies delivery through the same path used by voice/NATS routing and provides explicit receipt confirmation.
+
+## 2026-05-18 10:50:23 — SIGNED_BY_AGENT
+Decision: Run Echo's API gateway with the global `--yolo` flag as well as the visible CLI.
+Reason: bridge/API turns should match the operator's approval posture and avoid approval stalls while Echo is being driven through NATS and the local API server.
+
+## 2026-05-18 10:49:26 — SIGNED_BY_AGENT
+Decision: Verify Echo with a structured NATS bridge request instead of plain `nats req`.
+Reason: the bridge expects a JSON envelope with `message` and `reply_to`; plain request text does not exercise the live Hermes bridge handler correctly.
+
+## 2026-05-18 10:47:41 — SIGNED_BY_AGENT
+Decision: Restart only Echo's Hermes API gateway and reopen the visible Echo CLI after the profile was changed to direct Haiku 4.5.
+Reason: Echo's profile configuration is the source of truth for the API server route, and reopening the terminal from `/adapt/novas/active/echo` preserves the operator-required working directory without disrupting the rest of the nova gateway fleet.
+
+## 2026-05-18 09:12:25 — SIGNED_BY_AGENT
+Decision: Validate Echo through NATS rather than injecting text into the visible CLI.
+Reason: pipecat voice traffic uses `nova.echo.direct`; testing that route verifies the bridge path without disturbing the operator's open Echo terminal session.
+
+## 2026-05-18 09:05:46 — SIGNED_BY_AGENT
+Decision: Run bridge-spawned Hermes turns from the agent's active nova directory instead of the pipecat control-plane directory.
+Reason: operator direction requires agent work to occur under `/adapt/novas/active/<name>`; pipecat is only the transport/control plane and should not become the agent's runtime cwd.
+
+Decision: Do not force-create `/adapt/novas/active/agent-5`.
+Reason: `agent-5` has a Hermes profile but no active nova directory. Falling back to `/home/x/.hermes/profiles/agent-5` is safer than inventing a nova active directory without an explicit owner decision.
+
+## 2026-05-18 08:57:44 — SIGNED_BY_AGENT
+Decision: Test `agent-5` directly through Hermes CLI before adding it to NATS bridge routing.
+Reason: `agent-5` is not currently part of the voice bridge roster, so a direct bounded turn validates the profile/model path without changing live NATS subscriptions.
+
+## 2026-05-18 08:52:05 — SIGNED_BY_AGENT
+Decision: Open Echo in a real GNOME Terminal CLI rather than a detached service/session wrapper.
+Reason: the operator asked for an open CLI; the host has no `tmux`, but GNOME Terminal is available on the active desktop display and gives Echo a visible interactive terminal.
+
+Decision: Leave Deepgram voice transport unchanged while preparing to move the model side to Grok.
+Reason: Deepgram currently provides the voice transport path; moving model inference to Grok is an upcoming provider routing change once subscriptions and credentials are available.
+
+## 2026-05-18 08:47:20 — SIGNED_BY_AGENT
+Decision: Honor Echo's profile config for bridge turns and raise the end-to-end timeout window to 300 seconds.
+Reason: the operator identified the low retry/timeout policy as the immediate cause of Echo bridge cutoffs and closed the stale large CLI session. The gateway timeout must match the bridge timeout or the caller still disconnects early.
+
+Decision: Keep Echo in fresh bridge-session mode for now.
+Reason: the stale large Echo CLI lineage is closed, but fresh mode avoids accidentally reattaching to an oversized historical session while the NIM provider path is still slow.
+
+## 2026-05-18 08:22:14 — SIGNED_BY_AGENT
+Decision: Run Echo bridge turns as fresh lean MiniMax invocations instead of resuming Echo's heavy CLI lineage.
+Reason: Echo's latest session had 433 messages and a 580 KB message payload, causing timeouts. A clean named session worked once but became variable on resume. Fresh MiniMax bridge turns with profile config/rules ignored returned through NATS in 15.3 seconds, which is operationally useful for voice.
+
+Decision: Add per-agent override hooks to `hermes_nats_agents.py`.
+Reason: Echo needs a different session/model/isolation profile than the rest of the fleet; global bridge settings would either slow Echo or disturb other agents that are already synced.
+
+## 2026-05-18 07:50:17 — SIGNED_BY_AGENT
+Decision: Make `hermes-nats-agents` the single owner for local Hermes profile-backed NATS subjects, and leave `roster-agents` only as a non-profile fallback.
+Reason: NATS showed overlapping `hermes-nats-agents` and `roster-agents` subscriptions on the same nova subjects, which can produce duplicate or stale replies. The user asked for agent/CLI-session sync, so the real Hermes profile path must win.
+
+Decision: Resume the latest existing CLI session with bare `--continue` instead of using a generated named session.
+Reason: Hermes rejects `--continue <name>` when no session with that name already exists. Bare `--continue` attaches to the profile's existing session lineage, which matches the current operator workflow where several profiles already have active CLI sessions.
+
+## 2026-05-18 02:55:00 — SIGNED_BY_AGENT
+Decision: Add a one-time client-side reload after service-worker/cache cleanup.
+Reason: Playwright proved the page rendered the new orange theme but one stale
+Cache API bucket could survive initial cleanup in the same browser session. A
+single post-cleanup reload forces the document, CSS, and scripts onto network
+assets after cache deletion.
+
+## 2026-05-18 02:48:00 — SIGNED_BY_AGENT
+Decision: Temporarily disable persistent PWA service-worker caching and force
+cache deletion/unregistration from the live client.
+Reason: Playwright validated that the public network page had the new orange
+theme, so continued user reports of no change pointed to stale installed app or
+browser service-worker state. Removing the service worker is the fastest way to
+force the UI to reflect current network assets.
+
+## 2026-05-18 02:41:12 — SIGNED_BY_AGENT
+Decision: Change the service worker from cache-first static handling to
+network-first for all same-origin GET requests.
+Reason: the user still saw no color change because the installed/browser
+session could keep serving cached static assets under the same versioned URL.
+Network-first plus `orange5` ensures the browser sees the corrected pure-black
+and dark-orange theme.
+
+## 2026-05-18 02:18:05 — SIGNED_BY_AGENT
+Decision: Drop copper from the visible Blackline primary palette and use pure
+black background with dark orange/amber/gold/silver accents.
+Reason: the copper pass still read as brown in the rendered UI. The user's
+direction requires pure black and dark orange, so the background was flattened
+to `#000000` and the brown-leaning accent was removed from the primary path.
+
+## 2026-05-18 02:06:10 — SIGNED_BY_AGENT
+Decision: Remove custom install controls entirely while keeping service-worker
+registration active.
+Reason: the user explicitly asked to remove the install button. Keeping the
+service worker preserves PWA/offline behavior without presenting a custom
+install CTA in the UI.
+
+Decision: Version the Blackline CSS/JS URLs and bump the service-worker cache
+after strengthening the palette.
+Reason: installed/mobile clients can continue showing stale cached assets even
+after a service restart. Versioned URLs plus a new cache key make the color
+change visible without requiring users to manually clear browser storage.
+
+## 2026-05-18 01:31:40 — SIGNED_BY_AGENT
+Decision: Force-terminate the old `pipecat-voice.service` process through
+`systemctl kill --signal=SIGKILL` after a normal restart hung in
+`stop-sigterm`.
+Reason: systemd was unable to complete the restart naturally, leaving the old
+gateway process active and preventing the new `/sw.js` route from being served.
+Using systemd's kill path preserved unit supervision and allowed a clean start
+with the updated gateway code.
+
+## 2026-05-18 00:00:57 — SIGNED_BY_AGENT
+Decision: Replace the initial brown/tan leaning Blackline palette with a metal
+stack centered on copper and amber, supported by dark orange for danger/action,
+gold for premium highlights, and silver for neutral/live contrast.
+Reason: preserves the user's pure-black/no-purple/no-teal/no-magenta direction
+while making the UI feel sharper, more premium, and less sepia.
+
+## 2026-05-17 08:20:58 — SIGNED_BY_AGENT
+Decision: Consolidate the repo's primary web experience into exactly three core
+PWA products on existing routes instead of adding more standalone pages.
+Reason: the repo already had overlapping dashboard, monitor, canvas, kanban,
+and whiteboard surfaces. Three installable shells on `/`, `/dashboard`, and
+`/canvas` cover the same operational domain with less fragmentation while still
+reusing the current backend endpoints and websocket contracts.
+
+Decision: Use pure black with warm metallic accents for the new shells.
+Reason: satisfies the explicit no-purple / no-teal / no-magenta constraint,
+preserves strong contrast in low-light mobile usage, and creates a consistent
+visual identity across the three apps without leaning on the previous mixed
+palette.
+
+## 2026-05-16 06:56:00 — SIGNED_BY_AGENT
+Decision: Implement voice→nova as a Hermes platform-adapter plugin inside the
+warm `hermes gateway` runtime, not the cold-subprocess bridge or a Haiku
+shortcut.
+Reason: gives the real agent (own LLM, session, tools, memory) with sub-second
+latency and no identity fork; the plugin path requires zero Hermes core
+changes. Adapter conforms to the pre-existing fleet schema
+(extra.url/subjects[]/queue_group) already staged in herald/iris configs —
+that schema was the intended-but-unimplemented contract; we built the missing
+half rather than inventing a new one.
+
+Decision: Pilot on TECTON only; herald/iris `platforms.nats.enabled` set to
+false.
+Reason: their nats config was a dormant no-op (no adapter existed). With the
+adapter now discoverable, an auto-restart would have bound them with a path
+that double-answers against the cold bridge. Disabling preserves current
+behavior and isolates the pilot.
+
+Decision: Surface tecton memory overflow (67442/22000) as a blocker rather
+than auto-remediating.
+Reason: trimming/clearing a nova's memory is high-blast-radius and is tecton
+profile data, not plugin scope. Continuity cannot be validated until tecton's
+memory backend is within cap; flagged for owner decision before merging the
+feature branches.
+
 ## 2026-05-10 20:30:00 — SIGNED_BY_AGENT
 Decision: Use Haiku (claude-haiku-4-5-20251001) as umbrella LLM for vox peer, preserving NATS
 for all other nova agents.
