@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:38:34 — SIGNED_BY_AGENT
+Decision: Treat `reply_captured` as the authoritative UI boundary for assistant content.
+Reason: earlier Echo work proved delivery can succeed before actual assistant-row extraction, so the console must distinguish transport progress from captured answer text.
+
 ## 2026-05-18 15:38:14 — SIGNED_BY_AGENT
 Decision: Specify the chat/session console before implementation.
 Reason: the UI needs stable data contracts for NATS delivery, reply capture, and visible CLI handoff before code work begins.

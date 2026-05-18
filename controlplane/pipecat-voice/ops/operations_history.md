@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:38:34 — SIGNED_BY_AGENT
+Completed `10-ops-ui-chat-session-console`: wrote `ops/ui_chat_session_console_spec.md` with layout, NATS send/reply contracts, Echo visible CLI proof fields, terminal handoff, implementation slices, and QA requirements.
+
 ## 2026-05-18 15:38:14 — SIGNED_BY_AGENT
 Started `10-ops-ui-chat-session-console` by moving it from `ops/to_do/` to `ops/in_progress/` before writing the adapted chat/session console implementation spec.
 
