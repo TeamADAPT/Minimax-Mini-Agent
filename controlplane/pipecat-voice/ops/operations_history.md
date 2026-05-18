@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:41:59 — SIGNED_BY_AGENT
+Started `09-team-delegation-protocol` by moving it from `ops/to_do/` to `ops/in_progress/` before defining concrete nova routes, roles, output handling, and rollback rules.
+
 ## 2026-05-18 15:40:58 — SIGNED_BY_AGENT
 Completed `12-design-collaboration-workbench`: wrote `ops/design_collaboration_workbench_spec.md` with tool roles, Paperclip sync boundaries, systemd/auth gates, artifact naming, and dogfood QA cadence.
 

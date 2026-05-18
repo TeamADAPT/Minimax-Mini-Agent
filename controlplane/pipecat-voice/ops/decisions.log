@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:41:59 — SIGNED_BY_AGENT
+Decision: Keep Latch as the only task-board mover and final integrator in the delegation protocol.
+Reason: parallel nova work is useful only if ownership, rollback, and completion-report authority remain unambiguous.
+
 ## 2026-05-18 15:40:58 — SIGNED_BY_AGENT
 Decision: Gate CryptPad or any collaborative server behind systemd packaging and auth review.
 Reason: collaboration servers can create new exposed state and logs; they need the same operational discipline as agent services before becoming part of the platform.

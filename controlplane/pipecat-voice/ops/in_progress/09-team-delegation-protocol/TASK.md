@@ -2,7 +2,7 @@
 
 ## Status
 
-to_do
+in_progress
 
 ## Objective
 
@@ -34,4 +34,3 @@ Define how Latch should pull Vaeris, Tecton, Echo, Iris, Skipper, and other nova
 - There is a concrete delegation protocol.
 - It names exact agents and exact routes.
 - It keeps Latch as project owner and avoids unsupervised destructive work.
-
