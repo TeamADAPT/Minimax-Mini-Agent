@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-18 15:23:53 — SIGNED_BY_AGENT
+Decision: Keep the visible Echo TUI bridge as active rollback owner after proving the native Hermes NATS adapter.
+Reason: the native adapter works and returns real NATS replies without X11, but Echo's gateway provider path currently emits OpenAI/Codex `HTTP 401` before fallback, so making native ownership permanent would trade a stable visible path for a credential-risky default.
+
+## 2026-05-18 15:23:53 — SIGNED_BY_AGENT
+Decision: Use Hermes' plugin platform path for NATS instead of hard-coding `gateway/platforms/nats.py`.
+Reason: Hermes' own `ADDING_A_PLATFORM.md` recommends plugins for third-party/community adapters, and the plugin path gives native gateway behavior without editing core factory/config files.
+
 ## 2026-05-18 15:14:17 — SIGNED_BY_AGENT
 Decision: Treat the native Hermes NATS adapter as a spike with the temporary visible bridge kept as rollback.
 Reason: the visible bridge is now serialized and returns real answer text, so native adapter work can proceed without risking the current operator-visible path.
