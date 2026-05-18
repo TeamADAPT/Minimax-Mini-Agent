@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 13:54:08 — SIGNED_BY_AGENT
+Installed the fresh Codex CLI token into Echo's Hermes profile configuration by setting `model.api_key` in `/home/x/.hermes/profiles/echo/config.yaml`, synchronized Echo's `openai-codex` provider and credential-pool state in `/home/x/.hermes/profiles/echo/auth.json`, set both files to mode `600`, relaunched Echo's visible CLI from `/adapt/novas/active/echo`, and verified a `nova.echo.direct` proof completed visibly on `gpt-5.4-mini` without the prior `HTTP 401 token_revoked` fallback.
+
 ## 2026-05-18 13:42:22 — SIGNED_BY_AGENT
 Relaunched Echo's visible Hermes CLI after the terminal was closed, verified PID `2049008` runs from `/adapt/novas/active/echo`, sent a fresh `nova.echo.direct` proof message from Latch, and confirmed the visible CLI completed the turn. The terminal showed OpenAI/Codex `HTTP 401 token_revoked` before Hermes fell back to NVIDIA `minimax-m2.7`, which produced the visible answer.
 

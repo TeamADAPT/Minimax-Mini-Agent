@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 13:54:08 — SIGNED_BY_AGENT
+Decision: Put Echo's fresh OpenAI/Codex access token in `model.api_key` and also update Echo's `auth.json` provider/pool state.
+Reason: Hermes' `openai-codex` provider normally resolves OAuth from Echo's profile auth store, but the operator explicitly required the key to be in Echo's config; setting `model.api_key` makes the runtime use the fresh token directly, while synchronizing `auth.json` prevents the stale revoked pool entry from being selected on paths that still consult the auth store.
+
 ## 2026-05-18 13:42:22 — SIGNED_BY_AGENT
 Decision: Treat the visible terminal evidence as authoritative over Echo's self-report for provider status.
 Reason: Echo answered that no OpenAI token error appeared, but the terminal output showed `HTTP 401 token_revoked` followed by fallback to NVIDIA `minimax-m2.7`; NATS delivery works, while the OpenAI/Codex auth token remains stale or revoked.
