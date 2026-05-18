@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:43:40 — SIGNED_BY_AGENT
+Decision: Close the master task only after checking all child completion reports and live service/route state.
+Reason: the master task is an acceptance gate, not another planning document.
+
 ## 2026-05-18 15:42:28 — SIGNED_BY_AGENT
 Decision: Keep Skipper out of live NATS delegation until a dedicated Skipper owner is enabled.
 Reason: live ping validation still returns no responder for `nova.skipper.ping`, so treating Skipper as reachable over NATS would create silent task loss.

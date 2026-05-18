@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:43:40 — SIGNED_BY_AGENT
+Started `00-echo-nats-master-decomposition` by moving it from `ops/to_do/` to `ops/in_progress/` for the final acceptance audit across Echo transport, fleet ownership, Paperclip sync, UI/design task decomposition, and delegation protocol.
+
 ## 2026-05-18 15:42:28 — SIGNED_BY_AGENT
 Completed `09-team-delegation-protocol`: verified live nova ping routes and wrote `ops/team_delegation_protocol.md` with exact routes, role playbooks, output contracts, escalation rules, and rollback rules while keeping Latch as owner/integrator.
 

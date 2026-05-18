@@ -2,7 +2,7 @@
 
 ## Status
 
-to_do
+in_progress
 
 ## Goal
 
@@ -80,4 +80,3 @@ If Echo transport breaks:
 - Fleet NATS subjects have one owner each.
 - Paperclip contains synced fleet docs/config inventory.
 - UI/design extraction backlog exists as concrete task folders.
-
