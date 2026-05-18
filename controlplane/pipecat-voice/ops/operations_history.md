@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:01:18 — SIGNED_BY_AGENT
+Started `01-lock-current-state` by moving it from `ops/to_do/` to `ops/in_progress/` before verifying the Echo visible NATS path, active services, process cwd, and duplicate-responder state.
+
 ## 2026-05-18 14:27:18 — SIGNED_BY_AGENT
 Created the operational task board for the Echo/NATS project under `ops/to_do/`, `ops/in_progress/`, and `ops/completed/`. Added ten granular task folders covering current-state lock, bridge serialization, reply capture, native NATS adapter spike, fleet validation, phone path integration, Paperclip fleet sync for Skipper, UI design extraction, and team delegation protocol.
 

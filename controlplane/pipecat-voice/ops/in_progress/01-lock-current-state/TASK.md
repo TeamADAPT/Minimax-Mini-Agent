@@ -2,7 +2,7 @@
 
 ## Status
 
-to_do
+in_progress
 
 ## Objective
 
@@ -37,4 +37,3 @@ Capture and prove the current known-good Echo visible NATS path before changing 
 - The proof appears in the visible terminal.
 - Logs show the bridge delivered to Echo.
 - The report names every active service and owner.
-
