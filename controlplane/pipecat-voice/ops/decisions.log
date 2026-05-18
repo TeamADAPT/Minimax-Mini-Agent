@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:32:59 — SIGNED_BY_AGENT
+Decision: Extract UI patterns and implementation tasks, not code, from Hermes Web UI candidates.
+Reason: Chase explicitly asked to rebuild/adapt ideas rather than straight-pull another project's implementation.
+
 ## 2026-05-18 15:31:27 — SIGNED_BY_AGENT
 Decision: Paperclip receives a documentation adapter package for the Nova fleet before any direct runtime integration.
 Reason: stable docs/config inventory gives Skipper and future Paperclip agents a safe operating map without granting runtime mutation authority or exposing secrets.

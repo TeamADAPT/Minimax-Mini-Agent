@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:32:59 — SIGNED_BY_AGENT
+Started `08-hermes-ui-design-extraction` by moving it from `ops/to_do/` to `ops/in_progress/` before inventorying Hermes UI candidates and installed design-collaboration tools.
+
 ## 2026-05-18 15:31:27 — SIGNED_BY_AGENT
 Completed `07-paperclip-fleet-sync`: created Paperclip `docs/adapters/nova-fleet-ops.md`, updated Paperclip ops logs, and recorded redacted fleet subject/service/config guidance without copying secrets.
 
