@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:42:28 — SIGNED_BY_AGENT
+Decision: Keep Skipper out of live NATS delegation until a dedicated Skipper owner is enabled.
+Reason: live ping validation still returns no responder for `nova.skipper.ping`, so treating Skipper as reachable over NATS would create silent task loss.
+
 ## 2026-05-18 15:41:59 — SIGNED_BY_AGENT
 Decision: Keep Latch as the only task-board mover and final integrator in the delegation protocol.
 Reason: parallel nova work is useful only if ownership, rollback, and completion-report authority remain unambiguous.

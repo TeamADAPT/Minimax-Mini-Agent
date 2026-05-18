@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:42:28 — SIGNED_BY_AGENT
+Completed `09-team-delegation-protocol`: verified live nova ping routes and wrote `ops/team_delegation_protocol.md` with exact routes, role playbooks, output contracts, escalation rules, and rollback rules while keeping Latch as owner/integrator.
+
 ## 2026-05-18 15:41:59 — SIGNED_BY_AGENT
 Started `09-team-delegation-protocol` by moving it from `ops/to_do/` to `ops/in_progress/` before defining concrete nova routes, roles, output handling, and rollback rules.
 
