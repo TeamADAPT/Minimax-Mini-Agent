@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 13:42:22 — SIGNED_BY_AGENT
+Decision: Treat the visible terminal evidence as authoritative over Echo's self-report for provider status.
+Reason: Echo answered that no OpenAI token error appeared, but the terminal output showed `HTTP 401 token_revoked` followed by fallback to NVIDIA `minimax-m2.7`; NATS delivery works, while the OpenAI/Codex auth token remains stale or revoked.
+
 ## 2026-05-18 13:25:43 — SIGNED_BY_AGENT
 Decision: Relaunch Echo through the visible CLI path and keep the temporary NATS-to-TUI bridge as the immediate inspection path.
 Reason: Chase needed Echo reopened after switching accounts, and the next proof needed to hit the operator-visible session rather than only NATS monitor output. Echo's answer inferred a stale pipecat-voice cwd, so the process cwd was verified directly from `/proc/1991425/cwd`.

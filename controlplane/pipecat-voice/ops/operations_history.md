@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 13:42:22 — SIGNED_BY_AGENT
+Relaunched Echo's visible Hermes CLI after the terminal was closed, verified PID `2049008` runs from `/adapt/novas/active/echo`, sent a fresh `nova.echo.direct` proof message from Latch, and confirmed the visible CLI completed the turn. The terminal showed OpenAI/Codex `HTTP 401 token_revoked` before Hermes fell back to NVIDIA `minimax-m2.7`, which produced the visible answer.
+
 ## 2026-05-18 13:25:43 — SIGNED_BY_AGENT
 Relaunched Echo's visible Hermes CLI with `/home/x/.local/bin/hermes -p echo --yolo -c` from `/adapt/novas/active/echo`, confirmed `echo-tui-nats-bridge.service` remained active, sent a `nova.echo.direct` proof message from Latch, and verified Echo answered in the visible CLI. Verified the actual process cwd from `/proc/1991425/cwd` as `/adapt/novas/active/echo`.
 
