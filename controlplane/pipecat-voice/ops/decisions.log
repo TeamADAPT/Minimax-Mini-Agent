@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:39:24 — SIGNED_BY_AGENT
+Decision: Build analytics/logs around live NATS and systemd sources instead of cloned dashboard metrics.
+Reason: the platform's truth comes from bus traces, journal units, service ownership, and bridge reply capture rather than a separate web UI session database.
+
 ## 2026-05-18 15:38:34 — SIGNED_BY_AGENT
 Decision: Treat `reply_captured` as the authoritative UI boundary for assistant content.
 Reason: earlier Echo work proved delivery can succeed before actual assistant-row extraction, so the console must distinguish transport progress from captured answer text.
