@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 14:27:18 — SIGNED_BY_AGENT
+Created the operational task board for the Echo/NATS project under `ops/to_do/`, `ops/in_progress/`, and `ops/completed/`. Added ten granular task folders covering current-state lock, bridge serialization, reply capture, native NATS adapter spike, fleet validation, phone path integration, Paperclip fleet sync for Skipper, UI design extraction, and team delegation protocol.
+
 ## 2026-05-18 14:02:12 — SIGNED_BY_AGENT
 Fixed the `nova-nats-ops` skill frontmatter by quoting the `description` field that contains a colon, then validated both new skill frontmatters with `yaml.safe_load`.
 

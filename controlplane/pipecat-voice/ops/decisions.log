@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 14:27:18 — SIGNED_BY_AGENT
+Decision: Decompose the Echo/NATS plan into filesystem task folders instead of relying on a single plan document.
+Reason: Chase wants `/goal` to start from a concrete file path and expects the operator workflow `to_do -> in_progress -> completed` with `completion_report.md` per task. Separate task folders also make it safe to delegate Paperclip sync to Skipper and architecture/QA lanes to Vaeris, Tecton, Echo, and Iris.
+
 ## 2026-05-18 14:02:12 — SIGNED_BY_AGENT
 Decision: Quote frontmatter descriptions that contain colons.
 Reason: unquoted YAML scalar values cannot safely contain `: `, and the skill loader rejects invalid frontmatter before the skill body can be used.
