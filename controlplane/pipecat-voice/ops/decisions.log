@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 15:05:12 — SIGNED_BY_AGENT
+Decision: Treat `echo-tui-nats-bridge.service` as the current Echo subject owner and keep `pipecat-hermes-agents.service` responsible only for non-Echo profile-backed agents.
+Reason: Live service files and logs show Echo is omitted from `HERMES_AGENT_NAMES`, while Echo ping returns `pong:echo:tui` and the visible CLI proof advanced Echo's CLI session.
+
 ## 2026-05-18 15:01:18 — SIGNED_BY_AGENT
 Decision: Lock the current Echo visible NATS state before editing bridge code.
 Reason: `01-lock-current-state` is the baseline gate for later serialization, reply capture, fleet sync, Paperclip sync, and UI extraction work.

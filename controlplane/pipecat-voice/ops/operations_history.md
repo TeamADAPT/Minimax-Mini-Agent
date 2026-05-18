@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:05:12 — SIGNED_BY_AGENT
+Completed `01-lock-current-state`: verified active NATS, pipecat voice, profile-backed Hermes bridge, and Echo visible TUI bridge services; verified Echo PID `2088375` runs from `/adapt/novas/active/echo`; sent structured proof `state-lock-e1a7c656e8`; captured screenshot `/tmp/echo-state-lock-20260518-150234.png`; confirmed Echo session DB contains `NATS STATE LOCK OK`; confirmed no relevant 401/fallback/error/interrupt logs since task start.
+
 ## 2026-05-18 15:01:18 — SIGNED_BY_AGENT
 Started `01-lock-current-state` by moving it from `ops/to_do/` to `ops/in_progress/` before verifying the Echo visible NATS path, active services, process cwd, and duplicate-responder state.
 
