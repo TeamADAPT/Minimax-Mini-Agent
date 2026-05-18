@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 15:30:03 — SIGNED_BY_AGENT
+Completed `06-phone-voice-path-integration`: verified the live gateway route publishes Echo turns to `nova.echo.direct`, confirmed the SSE response contains Echo's actual assistant answer text, checked public `pipe.adaptdev.ai` health/profile status, captured `/tmp/echo-phone-path-20260518-1530.png`, and updated `ops/cx-pipe/ADMIN_GUIDE.md` to match the live timeout/roster/default peer.
+
 ## 2026-05-18 15:28:22 — SIGNED_BY_AGENT
 Started `06-phone-voice-path-integration` by moving it from `ops/to_do/` to `ops/in_progress/` before tracing the phone/CX pipe route to Echo.
 
