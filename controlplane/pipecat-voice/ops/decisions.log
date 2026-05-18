@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 14:02:12 — SIGNED_BY_AGENT
+Decision: Quote frontmatter descriptions that contain colons.
+Reason: unquoted YAML scalar values cannot safely contain `: `, and the skill loader rejects invalid frontmatter before the skill body can be used.
+
 ## 2026-05-18 13:58:43 — SIGNED_BY_AGENT
 Decision: Store the new Hermes/NATS operating procedures as skills in `skills_master` instead of only adding another plan note.
 Reason: Chase needs the next session to recover operational muscle memory quickly after sleep; skills are the reusable surface for opening/commanding agents and using NATS without re-deriving the exact commands.

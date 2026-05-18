@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 14:02:12 — SIGNED_BY_AGENT
+Fixed the `nova-nats-ops` skill frontmatter by quoting the `description` field that contains a colon, then validated both new skill frontmatters with `yaml.safe_load`.
+
 ## 2026-05-18 13:58:43 — SIGNED_BY_AGENT
 Created two operational skills in `/adapt/novas/active/skills_master`: `autonomous-ai-agents/hermes-agent-ops/SKILL.md` for opening, relaunching, configuring, and commanding Hermes nova agents, and `devops/nova-nats-ops/SKILL.md` for structured NATS envelopes, subjects, pings, service checks, and visible CLI bridge verification.
 
