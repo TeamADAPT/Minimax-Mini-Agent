@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-18 20:52:32 — SIGNED_BY_AGENT
+Decision: Complete the Rust bridge task without promoting Echo live ownership.
+Reason: the Rust bridge passed isolated NATS transport proof, but live promotion should happen only after a real Hermes-backed native subject test and an explicit secret scrub/rotation task.
+
+## 2026-05-18 20:51:58 — SIGNED_BY_AGENT
+Decision: Verify the Rust bridge with `/bin/echo` and isolated `nova.echo.native.test` subjects before any real Hermes model turn.
+Reason: this proves NATS ping, direct delivery, queueing path, and `reply_to` chunking without spending model tokens or disturbing the healthy visible Echo owner.
+
 ## 2026-05-18 20:35:08 — SIGNED_BY_AGENT
 Decision: Build the Hermes/NATS replacement as a Rust sidecar first, using a test subject before taking over Echo's live direct subject.
 Reason: Rust and systemd match the platform rules, but `nova.echo.direct` is currently healthy and should remain on the visible bridge until the Rust path proves reply, queue, trace, and rollback behavior.

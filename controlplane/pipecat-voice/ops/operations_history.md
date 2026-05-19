@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-18 20:52:32 — SIGNED_BY_AGENT
+Completed `13-rust-hermes-nats-bridge`: added the Rust bridge crate, systemd template, docs, verification results, isolated NATS smoke proof, and completion report while leaving Echo live ownership on the visible bridge.
+
+## 2026-05-18 20:51:58 — SIGNED_BY_AGENT
+Built the first Rust-native `nova-hermes-nats-bridge`, removed the hardcoded credential pattern from the local L6 NATS example, verified the Rust bridge with isolated Echo native test subjects, and documented promotion plus rollback in `ops/rust_hermes_nats_bridge.md`.
+
 ## 2026-05-18 20:35:31 — SIGNED_BY_AGENT
 Started `13-rust-hermes-nats-bridge` by moving it from `ops/to_do/` to `ops/in_progress/` before editing Rust NATS code and bridge artifacts.
 

@@ -1,0 +1,17 @@
+[Unit]
+Description=Nova Hermes Rust NATS bridge for %i
+After=nats-server.service
+
+[Service]
+Type=simple
+WorkingDirectory=/adapt/platform/novaops/controlplane/pipecat-voice/rust/nova-hermes-nats-bridge
+EnvironmentFile=/adapt/secrets/db.env
+Environment=NATS_AGENT_NAME=%i
+Environment=NOVA_DIRECT_SUBJECT=nova.%i.native
+Environment=NOVA_PING_SUBJECT=nova.%i.native.ping
+ExecStart=/adapt/platform/novaops/controlplane/pipecat-voice/rust/nova-hermes-nats-bridge/target/release/nova-hermes-nats-bridge
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
