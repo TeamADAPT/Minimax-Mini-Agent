@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 21:28:19 — SIGNED_BY_AGENT
+Decision: Treat the approved next steps as one bounded hardening task with separate proofs for Skipper, Rust bridge, secret guardrail, Paperclip sync, and fleet-control UI.
+Reason: the fleet route is now working enough to delegate, but promotion needs proof artifacts and guardrails before Echo ownership changes.
+
 ## 2026-05-18 21:12:26 — SIGNED_BY_AGENT
 Decision: Add Skipper to the existing profile-backed Hermes NATS bridge instead of creating a separate subject owner.
 Reason: Skipper has a valid Hermes profile and active directory, and `pipecat-hermes-agents.service` already owns the non-Echo profile-backed nova routes with one-owner semantics.

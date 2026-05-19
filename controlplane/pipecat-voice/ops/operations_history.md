@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-18 21:28:59 — SIGNED_BY_AGENT
+Moved task `14-fleet-hardening-next-steps` from `ops/to_do/` into `ops/in_progress/` before executing NATS, Rust bridge, guardrail, Paperclip, and UI work.
+
+## 2026-05-18 21:28:19 — SIGNED_BY_AGENT
+Started task `14-fleet-hardening-next-steps` to execute Skipper delegation, real-Hermes Rust bridge proof, secret guardrail, Paperclip sync refresh, and the first fleet-control UI slice.
+
 ## 2026-05-18 21:12:26 — SIGNED_BY_AGENT
 Enabled Skipper on the profile-backed NATS bridge by adding `skipper` to `HERMES_AGENT_NAMES` in `pipecat-hermes-agents.service`, reloaded and restarted the user service, verified `nova.skipper.ping` returns `pong:skipper:hermes`, verified direct proof `skipper-proof-0cf7238c` returned `SKIPPER NATS OK`, and updated fleet/delegation docs.
 
