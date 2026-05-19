@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-18 21:41:12 — SIGNED_BY_AGENT
+Added the first fleet-control UI slice at `client/fleet-control.html`, using existing gateway APIs for health, roster, presence, ops status, and direct test prompts without changing backend routes.
+
+## 2026-05-18 21:34:03 — SIGNED_BY_AGENT
+Added a tracked secret guardrail script at `scripts/scan_tracked_secrets.py` plus `ops/secret_guardrail.md` so current tracked files can be scanned without printing matched secret values.
+
 ## 2026-05-18 21:28:59 — SIGNED_BY_AGENT
 Moved task `14-fleet-hardening-next-steps` from `ops/to_do/` into `ops/in_progress/` before executing NATS, Rust bridge, guardrail, Paperclip, and UI work.
 

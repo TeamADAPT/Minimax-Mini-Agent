@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-18 21:41:12 — SIGNED_BY_AGENT
+Decision: Ship the fleet-control UI as a standalone static page under the existing gateway static mount.
+Reason: this proves the useful operator surface without editing the already-modified gateway or existing client shell.
+
+## 2026-05-18 21:34:03 — SIGNED_BY_AGENT
+Decision: Add a tracked-file scanner instead of a destructive cleanup hook.
+Reason: the branch scrub is complete, and the next guardrail should block reintroduction of common secret classes without printing values or mutating developer files.
+
 ## 2026-05-18 21:28:19 — SIGNED_BY_AGENT
 Decision: Treat the approved next steps as one bounded hardening task with separate proofs for Skipper, Rust bridge, secret guardrail, Paperclip sync, and fleet-control UI.
 Reason: the fleet route is now working enough to delegate, but promotion needs proof artifacts and guardrails before Echo ownership changes.

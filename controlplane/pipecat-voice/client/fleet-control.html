@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nova Fleet Control</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2307090d'/%3E%3Cpath d='M8 18h16M8 13h16M8 23h10' stroke='%2360a5fa' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07090d;
+      --band: #0f141b;
+      --panel: #151b24;
+      --panel-2: #111720;
+      --border: #273241;
+      --text: #edf2f7;
+      --muted: #95a3b8;
+      --faint: #5c687a;
+      --green: #4ade80;
+      --blue: #60a5fa;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --magenta: #f472b6;
+      --radius: 8px;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --sans: "Manrope", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    .shell {
+      width: min(1520px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 20px 0 28px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      padding: 16px 0 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1, h2 {
+      margin: 0;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    h1 { font-size: 28px; }
+    h2 { font-size: 16px; }
+
+    .subhead {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--faint);
+      flex: 0 0 auto;
+    }
+
+    .dot.good { background: var(--green); }
+    .dot.warn { background: var(--amber); }
+    .dot.bad { background: var(--red); }
+
+    main {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 16px;
+      padding-top: 16px;
+    }
+
+    section {
+      background: var(--band);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      min-width: 0;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-body { padding: 14px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      min-height: 74px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      font-family: var(--mono);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 680px;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      background: #101721;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .table-scroll {
+      overflow-x: auto;
+      border-radius: var(--radius);
+    }
+
+    td code {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #bfdbfe;
+    }
+
+    .route-owner {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .prompt-grid {
+      display: grid;
+      grid-template-columns: 150px 120px 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    select, textarea {
+      width: 100%;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      min-height: 42px;
+      padding: 10px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid #45617f;
+      border-radius: var(--radius);
+      color: var(--text);
+      background: #1d3349;
+      cursor: pointer;
+      padding: 0 14px;
+      font-weight: 700;
+    }
+
+    button.secondary {
+      border-color: var(--border);
+      background: var(--panel);
+      color: var(--muted);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
+    pre {
+      min-height: 320px;
+      max-height: 520px;
+      overflow: auto;
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #06080c;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      color: #d8dee9;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .trace {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .trace div {
+      min-height: 42px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      header, main, .prompt-grid { grid-template-columns: 1fr; }
+      .bar { justify-content: flex-start; }
+      .stats, .trace { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100vw - 20px, 1520px); }
+      .stats, .trace { grid-template-columns: 1fr; }
+      h1 { font-size: 24px; }
+      th, td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>Nova Fleet Control</h1>
+        <p class="subhead">Live health, subject ownership, and a direct NATS prompt test surface for the current Hermes fleet.</p>
+      </div>
+      <div class="bar">
+        <span class="pill"><span class="dot" id="gatewayDot"></span><span id="gatewayState">checking</span></span>
+        <span class="pill" id="updatedAt">not refreshed</span>
+        <button class="secondary" id="refreshButton" type="button">Refresh</button>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div class="section-head">
+          <h2>Fleet Health</h2>
+          <span class="pill">NATS routes</span>
+        </div>
+        <div class="section-body">
+          <div class="stats">
+            <div class="metric"><strong id="agentCount">-</strong><span>Roster agents</span></div>
+            <div class="metric"><strong id="onlineCount">-</strong><span>Online pings</span></div>
+            <div class="metric"><strong id="directCount">-</strong><span>Direct routes</span></div>
+            <div class="metric"><strong id="serviceCount">-</strong><span>Healthy services</span></div>
+          </div>
+          <div class="table-scroll">
+            <table aria-label="Nova route matrix">
+              <thead>
+                <tr>
+                  <th>Nova</th>
+                  <th>Ping</th>
+                  <th>Direct</th>
+                  <th>Owner</th>
+                </tr>
+              </thead>
+              <tbody id="routeRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Test Prompt</h2>
+          <div class="bar">
+            <button class="secondary" id="clearButton" type="button">Clear</button>
+            <button id="sendButton" type="button">Send</button>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="prompt-grid">
+            <select id="agentSelect" aria-label="Agent"></select>
+            <select id="channelSelect" aria-label="Channel">
+              <option value="direct">direct</option>
+              <option value="meet">meet</option>
+            </select>
+            <textarea id="promptInput">NATS UI proof. Reply with the route you received this on, whether this came through NATS, and one operational risk to check before promotion.</textarea>
+          </div>
+          <pre id="replyOutput">Waiting for a test prompt.</pre>
+          <div class="trace">
+            <div id="lastRoute">route: -</div>
+            <div id="lastStatus">status: idle</div>
+            <div id="lastBytes">bytes: 0</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const knownOwners = {
+      echo: "echo-tui-nats-bridge.service",
+      switch: "switch_agent.py",
+      skipper: "pipecat-hermes-agents.service",
+    };
+    const profileOwner = "pipecat-hermes-agents.service";
+    const state = { roster: [], presence: {}, services: {} };
+
+    const $ = (id) => document.getElementById(id);
+
+    function ownerFor(name) {
+      return knownOwners[name] || profileOwner;
+    }
+
+    function pingFor(name) {
+      const item = state.presence?.[name];
+      if (typeof item === "string") return item;
+      if (item?.reply) return item.reply;
+      if (item?.status) return item.status;
+      if (item?.online === true) return "online";
+      if (item?.online === false) return "offline";
+      return "unknown";
+    }
+
+    function statusClass(text) {
+      const value = String(text || "").toLowerCase();
+      if (value.includes("pong") || value === "online" || value === "active") return "good";
+      if (value.includes("error") || value.includes("failed") || value.includes("offline")) return "bad";
+      return "warn";
+    }
+
+    function render() {
+      const names = Array.from(new Set([
+        ...state.roster.map((agent) => agent.name),
+        ...Object.keys(state.presence || {}),
+        "skipper",
+      ])).sort();
+      const online = names.filter((name) => statusClass(pingFor(name)) === "good").length;
+      const healthyServices = Object.values(state.services || {})
+        .filter((value) => String(value).includes("active") || value === true).length;
+
+      $("agentCount").textContent = String(names.length);
+      $("onlineCount").textContent = String(online);
+      $("directCount").textContent = String(names.length);
+      $("serviceCount").textContent = String(healthyServices || "-");
+
+      $("routeRows").innerHTML = names.map((name) => {
+        const ping = pingFor(name);
+        const tier = state.roster.find((agent) => agent.name === name)?.tier || "core";
+        return `
+          <tr>
+            <td><strong>${name}</strong><br><span class="route-owner">${tier}</span></td>
+            <td><span class="pill"><span class="dot ${statusClass(ping)}"></span>${ping}</span></td>
+            <td><code>nova.${name}.direct</code></td>
+            <td><span class="route-owner">${ownerFor(name)}</span></td>
+          </tr>
+        `;
+      }).join("");
+
+      const prior = $("agentSelect").value;
+      $("agentSelect").innerHTML = names.map((name) => `<option value="${name}">${name}</option>`).join("");
+      if (names.includes(prior)) $("agentSelect").value = prior;
+    }
+
+    async function refresh() {
+      $("gatewayState").textContent = "refreshing";
+      $("gatewayDot").className = "dot warn";
+      const [health, roster, presence, ops] = await Promise.all([
+        fetch("/healthz").then((r) => r.json()),
+        fetch("/api/roster").then((r) => r.json()),
+        fetch("/api/presence").then((r) => r.json()),
+        fetch("/api/ops/status").then((r) => r.json()).catch(() => ({ services: {} })),
+      ]);
+      state.roster = roster.agents || [];
+      state.presence = presence || {};
+      state.services = ops.services || {};
+      $("gatewayState").textContent = health.status === "ok" ? "gateway ok" : "gateway degraded";
+      $("gatewayDot").className = `dot ${health.status === "ok" ? "good" : "bad"}`;
+      $("updatedAt").textContent = new Date().toLocaleTimeString();
+      render();
+    }
+
+    async function sendPrompt() {
+      const agent = $("agentSelect").value;
+      const channel = $("channelSelect").value;
+      const prompt = $("promptInput").value.trim();
+      if (!agent || !prompt) return;
+
+      $("sendButton").disabled = true;
+      $("replyOutput").textContent = "";
+      $("lastRoute").textContent = `route: nova.${agent}.${channel}`;
+      $("lastStatus").textContent = "status: streaming";
+      $("lastBytes").textContent = "bytes: 0";
+
+      try {
+        const response = await fetch(`/v1/chat/completions?peer=${encodeURIComponent(agent)}&channel=${encodeURIComponent(channel)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stream: true,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        });
+        if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let reply = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const events = buffer.split("\n\n");
+          buffer = events.pop() || "";
+          for (const event of events) {
+            for (const line of event.split("\n")) {
+              if (!line.startsWith("data:")) continue;
+              const data = line.slice(5).trim();
+              if (data === "[DONE]") continue;
+              try {
+                const payload = JSON.parse(data);
+                const delta = payload.choices?.[0]?.delta?.content || payload.choices?.[0]?.text || "";
+                reply += delta;
+              } catch {
+                reply += data + "\n";
+              }
+            }
+          }
+          $("replyOutput").textContent = reply || "Streaming...";
+          $("lastBytes").textContent = `bytes: ${reply.length}`;
+        }
+        $("lastStatus").textContent = "status: complete";
+      } catch (error) {
+        $("lastStatus").textContent = "status: error";
+        $("replyOutput").textContent = String(error?.message || error);
+      } finally {
+        $("sendButton").disabled = false;
+      }
+    }
+
+    $("refreshButton").addEventListener("click", refresh);
+    $("sendButton").addEventListener("click", sendPrompt);
+    $("clearButton").addEventListener("click", () => {
+      $("replyOutput").textContent = "Waiting for a test prompt.";
+      $("lastStatus").textContent = "status: idle";
+      $("lastBytes").textContent = "bytes: 0";
+    });
+
+    refresh().catch((error) => {
+      $("gatewayState").textContent = "gateway error";
+      $("gatewayDot").className = "dot bad";
+      $("replyOutput").textContent = String(error?.message || error);
+    });
+  </script>
+</body>
+</html>
