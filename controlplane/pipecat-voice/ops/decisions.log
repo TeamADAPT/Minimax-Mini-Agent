@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 23:20:03 — SIGNED_BY_AGENT
+Decision: Keep the PEA NATS transport as a small typed Rust crate and keep Hermes CLI turn execution in the existing control-plane bridge until the native bridge promotion gates pass.
+Reason: this gives bootstrap and Paperclip work a reusable subject/envelope/request layer now while avoiding an unproven live ownership switch for visible CLI sessions.
+
 ## 2026-05-18 23:10:48 — SIGNED_BY_AGENT
 Decision: Use a visible CLI-backed bridge for Skipper collaboration instead of the hidden profile-backed responder.
 Reason: Chase needs collaboration prompts to land in Skipper's visible CLI, and the profile bridge can prove NATS transport without making the work observable in the terminal.

@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 23:20:03 — SIGNED_BY_AGENT
+Completed the first PEA buildout pass: created the Rust `hermes-nats-adapter` crate, verified it with `cargo fmt`, `cargo clippy -- -D warnings`, `cargo test`, and `cargo build --release`, added local `.gitignore` files for Rust build/runtime artifacts, and added a `nova-bootstrap-rs` README documenting build, canary creation, validation, audit, and Paperclip entry points.
+
 ## 2026-05-18 23:10:48 — SIGNED_BY_AGENT
 Moved Skipper direct NATS ownership from `pipecat-hermes-agents.service` to `skipper-tui-nats-bridge.service`, bound the visible Skipper terminal as `Skipper CLI`, verified `nova.skipper.ping` returns `pong:skipper:tui`, and captured visible proof `skipper-visible-proof-29ca9f7c`. Started PEA/nova bootstrap buildout by making `nova-bootstrap-rs` build-clean, adding NATS route metadata to generated nova configs, and validating canary nova `PEA-Test`.
 
