@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-18 20:35:31 — SIGNED_BY_AGENT
+Started `13-rust-hermes-nats-bridge` by moving it from `ops/to_do/` to `ops/in_progress/` before editing Rust NATS code and bridge artifacts.
+
+## 2026-05-18 20:35:08 — SIGNED_BY_AGENT
+Created task `13-rust-hermes-nats-bridge` for the Rust-native Hermes/NATS bridge and L6 NATS credential cleanup work.
+
 ## 2026-05-18 15:44:47 — SIGNED_BY_AGENT
 Completed `00-echo-nats-master-decomposition`: audited all child completion reports, verified live service and NATS route state, sent Echo proof `master-audit-79b26ab12b`, received actual assistant text through `reply_to`, and wrote `ops/master_acceptance_audit.md`.
 
