@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 23:52:10 — SIGNED_BY_AGENT
+Ran multi-turn collaboration checks for Skipper and Echo. Echo returned a second-turn validation plan on event `pea-task-echo-9287cae7`. Skipper returned an unrelated/stale-looking response on event `pea-task-skipper-cf1e40a3`, then failed the nonce-bound freshness probe `fresh-skipper-ade70f8b` by timing out before returning the required nonce.
+
 ## 2026-05-18 23:22:55 — SIGNED_BY_AGENT
 Sent fresh Skipper visible-session collaboration prompt over `nova.skipper.direct` and captured reply for event `pea-visible-plan-2c102ecc`; Skipper confirmed the prompt came through NATS and returned a 5-step PEA/nova bootstrap collaboration plan covering Rust bootstrap, NATS adapter, Paperclip sync, zero-touch validation, and fleet rollout decomposition.
 
