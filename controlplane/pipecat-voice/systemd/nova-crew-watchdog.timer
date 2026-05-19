@@ -1,0 +1,11 @@
+[Unit]
+Description=Run nova crew control-loop watchdog on schedule
+
+[Timer]
+OnBootSec=180
+OnUnitActiveSec=600
+Persistent=true
+Unit=nova-crew-watchdog.service
+
+[Install]
+WantedBy=timers.target

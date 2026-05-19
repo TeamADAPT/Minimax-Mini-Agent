@@ -1,5 +1,14 @@
 # Operations History
 
+## 2026-05-19 10:48:16 — SIGNED_BY_AGENT
+Installed overnight crew control loops in `pipecat-voice`: added heartbeat, route-state, pipecat-health, and watchdog snapshot scripts; added matching user `systemd` service/timer units; copied them into `~/.config/systemd/user/`; enabled all four timers; verified runtime JSON snapshots under `ops/runtime/`; and proved watchdog recovery by stopping `nova-crew-heartbeat.timer` and confirming `nova-crew-watchdog.service` restarted it.
+
+## 2026-05-19 05:47:38 — SIGNED_BY_AGENT
+Reworked visible NATS delivery to bind replies by unique event ID instead of guessing the active Hermes CLI session, added `testova-tui-nats-bridge.service`, relaunched Echo/Skipper/Testova terminals, removed the orphan `hermes_nats_agents.py` subject owner, refreshed Echo/Testova Codex auth from the working Skipper profile, and verified current agent reachability as follows: Echo replies cleanly through the visible CLI, Testova replies through the single bridge using hidden CLI fallback when its visible terminal is unavailable, and Skipper retains visible proof with the same fallback protection enabled for terminal stalls.
+
+## 2026-05-19 04:50:11 — SIGNED_BY_AGENT
+Standardized the active Hermes fleet model configuration to `gpt-5.4` with `agent.reasoning_effort: medium`, preserved existing credential material in place, backfilled missing profile `auth.json` files from the known-good Codex auth for no-auth novas, and added reusable operator skills for separate GNOME Terminal launches plus comprehensive NATS operations.
+
 ## 2026-05-19 00:15:20 — SIGNED_BY_AGENT
 Added `latch-nats-inbox.service` as a stable inbound route for nova-initiated messages to Latch/Codex. The service subscribes to `nova.latch.direct`, `nova.latch.meet`, and `nova.latch.ping`, writes inbound messages to `ops/latch_inbox.jsonl`, returns ACKs when `reply_to` is supplied, and passed smoke with `pong:latch:inbox` plus Echo self-test `echo-latch-selftest`.
 

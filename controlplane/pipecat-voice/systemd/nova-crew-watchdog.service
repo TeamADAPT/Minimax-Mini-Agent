@@ -1,0 +1,9 @@
+[Unit]
+Description=Nova crew control-loop watchdog
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/adapt/platform/novaops/controlplane/pipecat-voice
+ExecStart=/usr/bin/python3 /adapt/platform/novaops/controlplane/pipecat-voice/scripts/crew_watchdog.py

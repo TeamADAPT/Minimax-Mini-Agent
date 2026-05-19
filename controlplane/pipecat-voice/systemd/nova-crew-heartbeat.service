@@ -1,0 +1,10 @@
+[Unit]
+Description=Nova crew heartbeat snapshot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/adapt/platform/novaops/controlplane/pipecat-voice
+EnvironmentFile=-/adapt/secrets/db.env
+ExecStart=/usr/bin/python3 /adapt/platform/novaops/controlplane/pipecat-voice/scripts/crew_heartbeat.py

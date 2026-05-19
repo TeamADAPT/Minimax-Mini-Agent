@@ -1,0 +1,11 @@
+[Unit]
+Description=Run nova crew route-state snapshot on schedule
+
+[Timer]
+OnBootSec=120
+OnUnitActiveSec=240
+Persistent=true
+Unit=nova-crew-route-state.service
+
+[Install]
+WantedBy=timers.target

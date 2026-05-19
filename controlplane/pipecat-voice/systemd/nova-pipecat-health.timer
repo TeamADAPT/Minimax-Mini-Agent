@@ -1,0 +1,11 @@
+[Unit]
+Description=Run pipecat control-plane health snapshot on schedule
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=120
+Persistent=true
+Unit=nova-pipecat-health.service
+
+[Install]
+WantedBy=timers.target

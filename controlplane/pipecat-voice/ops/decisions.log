@@ -1,5 +1,17 @@
 # Decisions Log
 
+## 2026-05-19 10:48:16 — SIGNED_BY_AGENT
+Decision: Spend overnight quota on telemetry and recovery loops instead of model-driven autonomous prompting.
+Reason: the operator wants the crew moving while asleep, but current quota is constrained and the highest-leverage overnight work is to preserve route health, session posture, and pipecat visibility without burning turns on speculative agent chatter.
+
+## 2026-05-19 05:47:38 — SIGNED_BY_AGENT
+Decision: Treat visible TUI delivery and subject continuity as separate concerns by keeping Echo on strict visible-CLI reply capture, while enabling hidden CLI fallback only for Skipper and Testova when their visible terminals fail to persist turns within the bridge timeout.
+Reason: Echo is currently stable on the visible route, but Skipper and Testova both exhibit intermittent GNOME Terminal/TUI persistence failures; a single-subject fallback inside the same bridge preserves collaboration without reintroducing overlapping NATS responders.
+
+## 2026-05-19 04:50:11 — SIGNED_BY_AGENT
+Decision: Apply the fleet model pass by rewriting Hermes config surfaces to `model.default: gpt-5.4`, `model.provider: openai-codex`, `model.base_url: https://chatgpt.com/backend-api/codex`, and `agent.reasoning_effort: medium`, while leaving existing key material untouched and only backfilling missing `auth.json` files from the already-working Codex auth source.
+Reason: The operator asked for one shared `gpt-5.4` medium-thinking baseline without rotating credentials, and the only safe way to avoid stranding no-auth novas was to supply the same working Codex auth to profiles that lacked it.
+
 ## 2026-05-19 00:15:20 — SIGNED_BY_AGENT
 Decision: Add `nova.latch.direct` as an inbox/logging service rather than pretending Codex is already a live NATS responder.
 Reason: Echo needed a stable target for initiating messages to Latch; durable capture plus ACK is the correct first step until a true interactive responder is built.

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run nova crew heartbeat snapshot on schedule
+
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=180
+Persistent=true
+Unit=nova-crew-heartbeat.service
+
+[Install]
+WantedBy=timers.target
