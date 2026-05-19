@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 21:12:26 — SIGNED_BY_AGENT
+Enabled Skipper on the profile-backed NATS bridge by adding `skipper` to `HERMES_AGENT_NAMES` in `pipecat-hermes-agents.service`, reloaded and restarted the user service, verified `nova.skipper.ping` returns `pong:skipper:hermes`, verified direct proof `skipper-proof-0cf7238c` returned `SKIPPER NATS OK`, and updated fleet/delegation docs.
+
 ## 2026-05-18 21:08:39 — SIGNED_BY_AGENT
 Scrubbed `feat/nats-gateway-warm-bridge` history for tracked plaintext secret material, removed the tracked secret-store symlink, force-updated the remote branch to rewritten commit `ec38a36`, and verified current branch history reports zero findings for the scanned secret classes. No credential rotation was performed.
 

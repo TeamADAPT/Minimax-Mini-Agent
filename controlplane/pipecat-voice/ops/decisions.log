@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 21:12:26 — SIGNED_BY_AGENT
+Decision: Add Skipper to the existing profile-backed Hermes NATS bridge instead of creating a separate subject owner.
+Reason: Skipper has a valid Hermes profile and active directory, and `pipecat-hermes-agents.service` already owns the non-Echo profile-backed nova routes with one-owner semantics.
+
 ## 2026-05-18 21:08:39 — SIGNED_BY_AGENT
 Decision: Perform branch/history scrubbing without credential rotation.
 Reason: Chase explicitly requested the scrub now and deferred rotation; the branch should stop carrying plaintext secret material while operational credentials remain unchanged until a separate rotation task.

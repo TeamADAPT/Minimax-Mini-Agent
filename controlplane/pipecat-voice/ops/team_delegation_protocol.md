@@ -17,7 +17,7 @@ No delegated nova should perform destructive actions, edit secrets, change syste
 
 ## Live Route Table
 
-Validated pings on 2026-05-18 15:42:28.
+Validated pings on 2026-05-18 21:12:26.
 
 | Agent | Route | Owner | Active dir | Best role | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -33,9 +33,9 @@ Validated pings on 2026-05-18 15:42:28.
 | Vox | `nova.vox.direct` | `pipecat-hermes-agents.service` | `/adapt/novas/active/vox` | voice pipeline checks and CX path review | `pong:vox:hermes` |
 | Zap | `nova.zap.direct` | `pipecat-hermes-agents.service` | `/adapt/novas/active/zap` | quick probes and small smoke tests | `pong:zap:hermes` |
 | Switch | `nova.switch.direct` | `switch_agent.py` | n/a | routing switchboard only | `pong` |
-| Skipper | not active | unassigned | `/adapt/novas/active/skipper` | Paperclip docs/package owner after NATS enablement | no responder |
+| Skipper | `nova.skipper.direct` | `pipecat-hermes-agents.service` | `/adapt/novas/active/skipper` | Paperclip docs/package owner, release/docs sync, completion-report packaging | `pong:skipper:hermes` |
 
-Skipper is not currently a live NATS route. Use filesystem tasks or a direct Hermes CLI session for Skipper until a dedicated Skipper NATS enablement task assigns one owner.
+Skipper is now a live NATS route. Direct proof `skipper-proof-0cf7238c` returned `SKIPPER NATS OK` through `reply_to`.
 
 ## Delegation Envelope
 
@@ -105,8 +105,10 @@ Latch converts accepted output into:
 
 ### Skipper
 
-- Use for Paperclip docs packaging once reachable.
-- Until NATS is enabled, assign Skipper work as a normal task folder and let Latch or a direct CLI session move artifacts.
+- Use for Paperclip docs packaging, release/documentation sync, and completion-report drafting.
+- Route through `nova.skipper.direct`.
+- Keep Skipper read-only unless a task explicitly grants a file write scope.
+- Latch still moves task folders and commits accepted output.
 
 ## Escalation Rules
 
