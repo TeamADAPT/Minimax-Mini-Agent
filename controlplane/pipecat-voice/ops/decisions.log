@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 21:08:39 — SIGNED_BY_AGENT
+Decision: Perform branch/history scrubbing without credential rotation.
+Reason: Chase explicitly requested the scrub now and deferred rotation; the branch should stop carrying plaintext secret material while operational credentials remain unchanged until a separate rotation task.
+
 ## 2026-05-18 20:52:32 — SIGNED_BY_AGENT
 Decision: Complete the Rust bridge task without promoting Echo live ownership.
 Reason: the Rust bridge passed isolated NATS transport proof, but live promotion should happen only after a real Hermes-backed native subject test and an explicit secret scrub/rotation task.

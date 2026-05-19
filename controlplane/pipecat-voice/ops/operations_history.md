@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 21:08:39 — SIGNED_BY_AGENT
+Scrubbed `feat/nats-gateway-warm-bridge` history for tracked plaintext secret material, removed the tracked secret-store symlink, force-updated the remote branch to rewritten commit `ec38a36`, and verified current branch history reports zero findings for the scanned secret classes. No credential rotation was performed.
+
 ## 2026-05-18 20:52:32 — SIGNED_BY_AGENT
 Completed `13-rust-hermes-nats-bridge`: added the Rust bridge crate, systemd template, docs, verification results, isolated NATS smoke proof, and completion report while leaving Echo live ownership on the visible bridge.
 
