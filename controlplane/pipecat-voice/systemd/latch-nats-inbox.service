@@ -1,0 +1,16 @@
+[Unit]
+Description=Latch NATS inbox
+After=default.target
+
+[Service]
+Type=simple
+Environment=SUBJECT_NS=nova
+Environment=LATCH_NATS_AGENT=latch
+Environment=LATCH_INBOX_ROOT=/adapt/platform/novaops/controlplane/pipecat-voice/ops
+WorkingDirectory=/adapt/platform/novaops/controlplane/pipecat-voice
+ExecStart=/usr/bin/python3 /adapt/platform/novaops/controlplane/pipecat-voice/scripts/latch_nats_inbox.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

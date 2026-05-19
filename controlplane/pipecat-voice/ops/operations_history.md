@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 00:15:20 — SIGNED_BY_AGENT
+Added `latch-nats-inbox.service` as a stable inbound route for nova-initiated messages to Latch/Codex. The service subscribes to `nova.latch.direct`, `nova.latch.meet`, and `nova.latch.ping`, writes inbound messages to `ops/latch_inbox.jsonl`, returns ACKs when `reply_to` is supplied, and passed smoke with `pong:latch:inbox` plus Echo self-test `echo-latch-selftest`.
+
 ## 2026-05-19 00:01:10 — SIGNED_BY_AGENT
 Tested direct Skipper prompting after NATS freshness issues. Desktop input required operator Return and did not advance the previous CLI session until manual intervention; a separate direct Hermes one-shot stalled on model/provider response and was terminated. Reclassified current Skipper issue as model/provider responsiveness rather than NATS bridge routing.
 

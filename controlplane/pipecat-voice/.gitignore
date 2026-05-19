@@ -5,3 +5,4 @@ __pycache__/
 !ops/decisions.log
 .remember/
 ops/runtime/
+ops/latch_inbox.jsonl

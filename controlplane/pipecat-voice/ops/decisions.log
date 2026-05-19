@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 00:15:20 — SIGNED_BY_AGENT
+Decision: Add `nova.latch.direct` as an inbox/logging service rather than pretending Codex is already a live NATS responder.
+Reason: Echo needed a stable target for initiating messages to Latch; durable capture plus ACK is the correct first step until a true interactive responder is built.
+
 ## 2026-05-19 00:01:10 — SIGNED_BY_AGENT
 Decision: Stop treating Skipper's latest missed turns as a bridge defect and use short direct prompts only after model/provider responsiveness is restored.
 Reason: Chase confirmed the direct Return path was manual/operator-side and the remaining failure is provider latency; the visible bridge and NATS route already have earlier proof events.
