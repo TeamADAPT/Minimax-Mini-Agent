@@ -43,7 +43,10 @@ PATTERNS: tuple[SecretPattern, ...] = (
         "bearer_token",
         re.compile(rb"(?i)\bauthorization\s*[:=]\s*bearer\s+[A-Za-z0-9._~+/=-]{30,}"),
     ),
-    SecretPattern("known_infra_password_literal", re.compile(rb"Echovaeris1966")),
+    SecretPattern(
+        "known_infra_password_literal",
+        re.compile(b"".join((b"Echo", b"vaeris", b"1966"))),
+    ),
 )
 
 

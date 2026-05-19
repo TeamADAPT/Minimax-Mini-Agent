@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 22:43:18 — SIGNED_BY_AGENT
+Decision: Keep the auth handoff as a locked local file and use NATS-visible collaboration proofs for Skipper and Echo rather than copying token material into memos or docs.
+Reason: the team needs account handoff continuity and collaboration state, but secrets must remain out of tracked artifacts and chat transcripts.
+
 ## 2026-05-18 21:41:12 — SIGNED_BY_AGENT
 Decision: Ship the fleet-control UI as a standalone static page under the existing gateway static mount.
 Reason: this proves the useful operator surface without editing the already-modified gateway or existing client shell.

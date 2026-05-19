@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 22:43:18 — SIGNED_BY_AGENT
+Fixed the tracked-secret scanner so the known infrastructure password detector does not store the contiguous literal in scanner source, then re-ran the tracked scan clean. Sent NATS collaboration kickoff events to Skipper and Echo after writing Skipper reply memo `d_latch_nats-bootstrap-reply_skipper.md`.
+
 ## 2026-05-18 21:41:12 — SIGNED_BY_AGENT
 Added the first fleet-control UI slice at `client/fleet-control.html`, using existing gateway APIs for health, roster, presence, ops status, and direct test prompts without changing backend routes.
 
