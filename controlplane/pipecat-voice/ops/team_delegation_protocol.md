@@ -17,7 +17,7 @@ No delegated nova should perform destructive actions, edit secrets, change syste
 
 ## Live Route Table
 
-Validated pings on 2026-05-18 21:12:26.
+Validated pings on 2026-05-18 23:10:48.
 
 | Agent | Route | Owner | Active dir | Best role | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -33,9 +33,9 @@ Validated pings on 2026-05-18 21:12:26.
 | Vox | `nova.vox.direct` | `pipecat-hermes-agents.service` | `/adapt/novas/active/vox` | voice pipeline checks and CX path review | `pong:vox:hermes` |
 | Zap | `nova.zap.direct` | `pipecat-hermes-agents.service` | `/adapt/novas/active/zap` | quick probes and small smoke tests | `pong:zap:hermes` |
 | Switch | `nova.switch.direct` | `switch_agent.py` | n/a | routing switchboard only | `pong` |
-| Skipper | `nova.skipper.direct` | `pipecat-hermes-agents.service` | `/adapt/novas/active/skipper` | Paperclip docs/package owner, release/docs sync, completion-report packaging | `pong:skipper:hermes` |
+| Skipper | `nova.skipper.direct` | `skipper-tui-nats-bridge.service` | `/adapt/novas/active/skipper` | Paperclip docs/package owner, release/docs sync, completion-report packaging | `pong:skipper:tui` |
 
-Skipper is now a live NATS route. Direct proof `skipper-proof-0cf7238c` returned `SKIPPER NATS OK` through `reply_to`.
+Skipper is now a visible CLI-backed NATS route. Visible proof `skipper-visible-proof-29ca9f7c` returned `SKIPPER VISIBLE OK` through `reply_to`.
 
 ## Delegation Envelope
 

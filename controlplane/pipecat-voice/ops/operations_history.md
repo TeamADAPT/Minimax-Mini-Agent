@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-18 23:10:48 — SIGNED_BY_AGENT
+Moved Skipper direct NATS ownership from `pipecat-hermes-agents.service` to `skipper-tui-nats-bridge.service`, bound the visible Skipper terminal as `Skipper CLI`, verified `nova.skipper.ping` returns `pong:skipper:tui`, and captured visible proof `skipper-visible-proof-29ca9f7c`. Started PEA/nova bootstrap buildout by making `nova-bootstrap-rs` build-clean, adding NATS route metadata to generated nova configs, and validating canary nova `PEA-Test`.
+
 ## 2026-05-18 22:43:18 — SIGNED_BY_AGENT
 Fixed the tracked-secret scanner so the known infrastructure password detector does not store the contiguous literal in scanner source, then re-ran the tracked scan clean. Sent NATS collaboration kickoff events to Skipper and Echo after writing Skipper reply memo `d_latch_nats-bootstrap-reply_skipper.md`.
 

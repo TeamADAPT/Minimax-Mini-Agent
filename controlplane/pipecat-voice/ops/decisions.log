@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-18 23:10:48 — SIGNED_BY_AGENT
+Decision: Use a visible CLI-backed bridge for Skipper collaboration instead of the hidden profile-backed responder.
+Reason: Chase needs collaboration prompts to land in Skipper's visible CLI, and the profile bridge can prove NATS transport without making the work observable in the terminal.
+
 ## 2026-05-18 22:43:18 — SIGNED_BY_AGENT
 Decision: Keep the auth handoff as a locked local file and use NATS-visible collaboration proofs for Skipper and Echo rather than copying token material into memos or docs.
 Reason: the team needs account handoff continuity and collaboration state, but secrets must remain out of tracked artifacts and chat transcripts.

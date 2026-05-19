@@ -1,5 +1,20 @@
 # Fleet Subject Matrix
 
+## 2026-05-18 23:10:48 — SIGNED_BY_AGENT
+
+Updated after moving Skipper collaboration from the hidden profile-backed bridge
+to a visible CLI-backed bridge.
+
+| Nova | Profile config | Active dir | Provider | Model | Subject owner | Ping | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| skipper | yes | yes | nvidia | qwen/qwen3.5-397b-a17b | `skipper-tui-nats-bridge.service` | `pong:skipper:tui` | Visible proof `skipper-visible-proof-29ca9f7c` returned `SKIPPER VISIBLE OK`. |
+
+Service ownership after visible Skipper bridge:
+
+- `skipper-tui-nats-bridge.service`: active; owns `nova.skipper.direct`, `nova.skipper.meet`, `nova.skipper.ping`.
+- `pipecat-hermes-agents.service`: active; owns `tecton`, `herald`, `iris`, `vaeris`, `synergy`, `cosmos`, `pathfinder`, `zap`, `oracle`, and `vox`.
+- `echo-tui-nats-bridge.service`: active; owns `nova.echo.direct`, `nova.echo.meet`, `nova.echo.ping`.
+
 ## 2026-05-18 21:12:26 — SIGNED_BY_AGENT
 
 Updated after adding Skipper to `pipecat-hermes-agents.service`.
