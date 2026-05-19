@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 00:01:10 — SIGNED_BY_AGENT
+Tested direct Skipper prompting after NATS freshness issues. Desktop input required operator Return and did not advance the previous CLI session until manual intervention; a separate direct Hermes one-shot stalled on model/provider response and was terminated. Reclassified current Skipper issue as model/provider responsiveness rather than NATS bridge routing.
+
 ## 2026-05-18 23:52:10 — SIGNED_BY_AGENT
 Ran multi-turn collaboration checks for Skipper and Echo. Echo returned a second-turn validation plan on event `pea-task-echo-9287cae7`. Skipper returned an unrelated/stale-looking response on event `pea-task-skipper-cf1e40a3`, then failed the nonce-bound freshness probe `fresh-skipper-ade70f8b` by timing out before returning the required nonce.
 

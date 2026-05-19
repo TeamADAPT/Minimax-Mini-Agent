@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 00:01:10 — SIGNED_BY_AGENT
+Decision: Stop treating Skipper's latest missed turns as a bridge defect and use short direct prompts only after model/provider responsiveness is restored.
+Reason: Chase confirmed the direct Return path was manual/operator-side and the remaining failure is provider latency; the visible bridge and NATS route already have earlier proof events.
+
 ## 2026-05-18 23:52:10 — SIGNED_BY_AGENT
 Decision: Treat Skipper as transport-reachable but not currently reliable for fresh multi-turn task ownership until the visible bridge proves nonce-correct replies.
 Reason: Echo returned a fresh second-turn task response, but Skipper produced one unrelated response and then timed out on a nonce-bound freshness probe.
