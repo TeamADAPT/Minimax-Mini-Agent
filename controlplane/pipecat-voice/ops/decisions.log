@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 19:47:49 — SIGNED_BY_AGENT
+Decision: Materialize the execution plan as task directories before resuming deeper implementation.
+Reason: Skipper needs a concrete queue with ownership, acceptance, and rollback boundaries in order to orchestrate effectively; keeping the plan only in chat would recreate ambiguity at handoff time.
+
 ## 2026-05-19 10:48:16 — SIGNED_BY_AGENT
 Decision: Spend overnight quota on telemetry and recovery loops instead of model-driven autonomous prompting.
 Reason: the operator wants the crew moving while asleep, but current quota is constrained and the highest-leverage overnight work is to preserve route health, session posture, and pipecat visibility without burning turns on speculative agent chatter.

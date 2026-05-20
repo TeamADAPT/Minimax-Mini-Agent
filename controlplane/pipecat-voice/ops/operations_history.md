@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 19:47:49 — SIGNED_BY_AGENT
+Created the next execution queue under `ops/to_do/` by decomposing the fleet/runtime/UI/orchestration follow-on work into task folders `16` through `28`, each with explicit owner, dependencies, steps, acceptance criteria, and rollback notes so Skipper can orchestrate directly against the queue.
+
 ## 2026-05-19 10:48:16 — SIGNED_BY_AGENT
 Installed overnight crew control loops in `pipecat-voice`: added heartbeat, route-state, pipecat-health, and watchdog snapshot scripts; added matching user `systemd` service/timer units; copied them into `~/.config/systemd/user/`; enabled all four timers; verified runtime JSON snapshots under `ops/runtime/`; and proved watchdog recovery by stopping `nova-crew-heartbeat.timer` and confirming `nova-crew-watchdog.service` restarted it.
 
