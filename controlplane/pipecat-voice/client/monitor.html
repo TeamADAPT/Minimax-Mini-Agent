@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NATS Monitor - Live Debug Stream</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/design-tokens.css" />
+  <style>
+    :root {
+      --monitor-bg: #080a0f;
+      --monitor-panel: #11151d;
+      --monitor-panel-2: #171d27;
+      --monitor-border: #273142;
+      --monitor-text: #e6edf5;
+      --monitor-dim: #98a7bb;
+      --monitor-muted: #64748b;
+      --monitor-blue: #60a5fa;
+      --monitor-green: #34d399;
+      --monitor-yellow: #fbbf24;
+      --monitor-red: #f87171;
+      --monitor-cyan: #22d3ee;
+      --monitor-violet: #a78bfa;
+      --monitor-radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: var(--monitor-bg);
+      color: var(--monitor-text);
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid var(--monitor-border);
+      border-radius: 6px;
+      background: var(--monitor-panel-2);
+      color: var(--monitor-text);
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--monitor-blue);
+      color: #ffffff;
+    }
+
+    button.primary {
+      border-color: var(--monitor-blue);
+      background: #1d4ed8;
+    }
+
+    button.danger {
+      border-color: #7f1d1d;
+      background: #451a1a;
+      color: #fecaca;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.8rem 1.25rem;
+      background: var(--monitor-panel);
+      border-bottom: 1px solid var(--monitor-border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #275176;
+      border-radius: 8px;
+      background: #0f2940;
+      color: var(--monitor-cyan);
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.1;
+      font-weight: 700;
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 0.2rem;
+      color: var(--monitor-dim);
+      font-size: 0.78rem;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar a,
+    .toolbar button {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.45rem 0.75rem;
+      border: 1px solid var(--monitor-border);
+      border-radius: 6px;
+      background: var(--monitor-panel-2);
+      color: var(--monitor-text);
+      text-decoration: none;
+      font-size: 0.84rem;
+    }
+
+    .connection {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-height: 36px;
+      padding: 0.45rem 0.7rem;
+      border: 1px solid var(--monitor-border);
+      border-radius: 6px;
+      background: #0c1118;
+      color: var(--monitor-dim);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.76rem;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--monitor-red);
+    }
+
+    .dot.connected {
+      background: var(--monitor-green);
+    }
+
+    main {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+    }
+
+    .monitor-sidebar {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 1rem;
+      background: var(--monitor-panel);
+      border-right: 1px solid var(--monitor-border);
+    }
+
+    .monitor-sidebar section {
+      margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+      margin: 0 0 0.65rem;
+      color: var(--monitor-dim);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .preset-grid {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .preset-grid button {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.4rem;
+      align-items: center;
+      padding: 0.65rem 0.7rem;
+      text-align: left;
+    }
+
+    .preset-grid strong {
+      font-size: 0.86rem;
+    }
+
+    .preset-grid code {
+      color: var(--monitor-dim);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.72rem;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.5rem;
+    }
+
+    .input-row input {
+      min-height: 40px;
+      width: 100%;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid var(--monitor-border);
+      border-radius: 6px;
+      background: #090d13;
+      color: var(--monitor-text);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.82rem;
+    }
+
+    .chips {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .chip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.5rem;
+      border: 1px solid var(--monitor-border);
+      border-radius: 6px;
+      background: #0c1118;
+    }
+
+    .chip code {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--monitor-text);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+
+    .chip button {
+      min-width: 32px;
+      min-height: 32px;
+      padding: 0;
+      color: var(--monitor-dim);
+    }
+
+    .hint {
+      margin: 0.65rem 0 0;
+      color: var(--monitor-muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    .stream {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: #070a0f;
+    }
+
+    .stream-header {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.75rem;
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--monitor-border);
+      background: #0b1017;
+    }
+
+    .stat {
+      min-width: 0;
+      padding: 0.65rem;
+      border: 1px solid var(--monitor-border);
+      border-radius: var(--monitor-radius);
+      background: var(--monitor-panel);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--monitor-dim);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 0.25rem;
+      overflow: hidden;
+      color: var(--monitor-text);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .message-list {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .empty {
+      max-width: 720px;
+      margin: 3rem auto;
+      padding: 1.5rem;
+      border: 1px dashed var(--monitor-border);
+      border-radius: var(--monitor-radius);
+      color: var(--monitor-dim);
+      text-align: center;
+    }
+
+    .message {
+      margin-bottom: 0.75rem;
+      padding: 0.85rem;
+      border: 1px solid var(--monitor-border);
+      border-left: 4px solid var(--monitor-blue);
+      border-radius: var(--monitor-radius);
+      background: var(--monitor-panel);
+    }
+
+    .message.proof {
+      border-left-color: var(--monitor-cyan);
+    }
+
+    .message.route {
+      border-left-color: var(--monitor-violet);
+    }
+
+    .message.failure {
+      border-left-color: var(--monitor-red);
+      background: #171014;
+    }
+
+    .message.ping {
+      border-left-color: var(--monitor-green);
+    }
+
+    .message.log {
+      border-left-color: var(--monitor-yellow);
+    }
+
+    .message-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .subject {
+      overflow-wrap: anywhere;
+      color: var(--monitor-blue);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .kind {
+      flex: 0 0 auto;
+      padding: 0.2rem 0.45rem;
+      border: 1px solid var(--monitor-border);
+      border-radius: 999px;
+      background: #0b1017;
+      color: var(--monitor-dim);
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .summary {
+      margin: 0;
+      color: var(--monitor-text);
+      font-size: 0.9rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.7rem;
+    }
+
+    .field {
+      min-width: 0;
+      padding: 0.45rem 0.5rem;
+      border: 1px solid #1d2736;
+      border-radius: 6px;
+      background: #0a0e14;
+    }
+
+    .field span {
+      display: block;
+      color: var(--monitor-muted);
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .field code {
+      display: block;
+      margin-top: 0.2rem;
+      overflow: hidden;
+      color: var(--monitor-text);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.76rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    details {
+      margin-top: 0.65rem;
+    }
+
+    summary {
+      color: var(--monitor-dim);
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
+
+    pre {
+      max-height: 280px;
+      overflow: auto;
+      margin: 0.5rem 0 0;
+      padding: 0.75rem;
+      border: 1px solid var(--monitor-border);
+      border-radius: 6px;
+      background: #05070b;
+      color: #dbeafe;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.76rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @media (max-width: 900px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .toolbar {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .monitor-sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--monitor-border);
+      }
+
+      .stream-header {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 540px) {
+      .stream-header {
+        grid-template-columns: 1fr;
+      }
+
+      .message-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="brand-mark">NM</div>
+        <div>
+          <h1>NATS Monitor</h1>
+          <span>Proofs, failures, route changes, and raw fallback</span>
+        </div>
+      </div>
+      <div class="toolbar">
+        <span class="connection"><span class="dot" id="connectionDot"></span><span id="connectionText">offline</span></span>
+        <a href="/">Voice</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/canvas">Canvas</a>
+        <button class="danger" onclick="clearMessages()">Clear</button>
+      </div>
+    </header>
+
+    <main>
+      <aside class="monitor-sidebar">
+        <section>
+          <h2 class="section-title">Debug Presets</h2>
+          <div class="preset-grid">
+            <button onclick="applyPreset('direct')"><strong>Direct turns</strong><code>nova.*.direct</code></button>
+            <button onclick="applyPreset('ping')"><strong>Ping health</strong><code>nova.*.ping</code></button>
+            <button onclick="applyPreset('logs')"><strong>Nova logs</strong><code>nova.logs.*</code></button>
+            <button onclick="applyPreset('routes')"><strong>Routes and metrics</strong><code>nova.metrics.*</code></button>
+            <button onclick="applyPreset('raw')"><strong>Raw fallback</strong><code>nova.&gt;</code></button>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="section-title">Manual Subject</h2>
+          <div class="input-row">
+            <input id="subjectInput" type="text" value="nova.*.direct" aria-label="NATS subject pattern" />
+            <button class="primary" onclick="addSubscriptionFromInput()">Add</button>
+          </div>
+          <p class="hint">Use NATS wildcards: <code>*</code> for one token and <code>&gt;</code> for the rest.</p>
+        </section>
+
+        <section>
+          <h2 class="section-title">Active Subscriptions</h2>
+          <div class="chips" id="subList"></div>
+          <p class="hint" id="activeSummary">No active subscriptions.</p>
+        </section>
+      </aside>
+
+      <section class="stream" aria-label="Live NATS stream">
+        <div class="stream-header">
+          <div class="stat"><span>Total</span><strong id="totalCount">0</strong></div>
+          <div class="stat"><span>Proofs</span><strong id="proofCount">0</strong></div>
+          <div class="stat"><span>Failures</span><strong id="failureCount">0</strong></div>
+          <div class="stat"><span>Routes</span><strong id="routeCount">0</strong></div>
+          <div class="stat"><span>Last Subject</span><strong id="lastSubject">none</strong></div>
+        </div>
+        <div class="message-list" id="messageList">
+          <div class="empty" id="emptyState">Waiting for live NATS traffic. Pick a preset or add a subject.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const presets = {
+      direct: ["nova.*.direct"],
+      ping: ["nova.*.ping"],
+      logs: ["nova.logs.*"],
+      routes: ["nova.*.route", "nova.metrics.*"],
+      raw: ["nova.>"]
+    };
+
+    const state = {
+      ws: null,
+      subscriptions: new Set(["nova.*.direct"]),
+      messages: 0,
+      proofs: 0,
+      failures: 0,
+      routes: 0,
+      reconnectTimer: null
+    };
+
+    const maxMessages = 150;
+
+    function connect() {
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      state.ws = new WebSocket(`${protocol}//${location.host}/ws/monitor`);
+
+      state.ws.onopen = () => {
+        setConnection(true);
+        for (const subject of state.subscriptions) {
+          sendSubscribe(subject);
+        }
+      };
+
+      state.ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === "message") {
+          addMessage(message.subject, message.payload, message.time);
+          return;
+        }
+        if (message.type === "system") {
+          addSystemMessage(message.text);
+        }
+      };
+
+      state.ws.onclose = () => {
+        setConnection(false);
+        clearTimeout(state.reconnectTimer);
+        state.reconnectTimer = setTimeout(connect, 2000);
+      };
+
+      state.ws.onerror = () => {
+        setConnection(false);
+      };
+    }
+
+    function setConnection(connected) {
+      document.getElementById("connectionDot").classList.toggle("connected", connected);
+      document.getElementById("connectionText").textContent = connected ? "connected" : "offline";
+    }
+
+    function sendSubscribe(subject) {
+      if (state.ws?.readyState === WebSocket.OPEN) {
+        state.ws.send(JSON.stringify({ action: "subscribe", subject }));
+      }
+    }
+
+    function sendUnsubscribe(subject) {
+      if (state.ws?.readyState === WebSocket.OPEN) {
+        state.ws.send(JSON.stringify({ action: "unsubscribe", subject }));
+      }
+    }
+
+    function applyPreset(name) {
+      for (const subject of state.subscriptions) {
+        sendUnsubscribe(subject);
+      }
+      state.subscriptions = new Set(presets[name] || []);
+      for (const subject of state.subscriptions) {
+        sendSubscribe(subject);
+      }
+      renderSubscriptions();
+    }
+
+    function addSubscriptionFromInput() {
+      const input = document.getElementById("subjectInput");
+      const subject = input.value.trim();
+      if (!subject || state.subscriptions.has(subject)) {
+        return;
+      }
+      state.subscriptions.add(subject);
+      sendSubscribe(subject);
+      renderSubscriptions();
+      input.value = "";
+    }
+
+    function removeSubscription(subject) {
+      state.subscriptions.delete(subject);
+      sendUnsubscribe(subject);
+      renderSubscriptions();
+    }
+
+    function renderSubscriptions() {
+      const list = document.getElementById("subList");
+      const subjects = Array.from(state.subscriptions);
+      list.innerHTML = subjects.map((subject) => `
+        <div class="chip">
+          <code title="${escapeHtml(subject)}">${escapeHtml(subject)}</code>
+          <button type="button" aria-label="Remove ${escapeHtml(subject)}" onclick="removeSubscription('${escapeJs(subject)}')">x</button>
+        </div>
+      `).join("");
+      document.getElementById("activeSummary").textContent = subjects.length
+        ? `${subjects.length} active subject${subjects.length === 1 ? "" : "s"}`
+        : "No active subscriptions.";
+    }
+
+    function addMessage(subject, payload, time) {
+      const list = document.getElementById("messageList");
+      document.getElementById("emptyState")?.remove();
+
+      const view = classifyMessage(subject, payload);
+      const div = document.createElement("article");
+      div.className = `message ${view.kind}`;
+      div.innerHTML = `
+        <div class="message-head">
+          <div class="subject">${escapeHtml(subject)}</div>
+          <div class="kind">${escapeHtml(view.kind)}</div>
+        </div>
+        <p class="summary">${escapeHtml(view.summary)}</p>
+        ${renderFields(view.fields)}
+        <details>
+          <summary>Raw payload</summary>
+          <pre>${escapeHtml(formatPayload(payload))}</pre>
+        </details>
+        <div class="field-grid">
+          <div class="field"><span>Time</span><code>${escapeHtml(time || new Date().toISOString())}</code></div>
+        </div>
+      `;
+      list.insertBefore(div, list.firstChild);
+
+      state.messages += 1;
+      state.proofs += view.kind === "proof" ? 1 : 0;
+      state.failures += view.kind === "failure" ? 1 : 0;
+      state.routes += view.kind === "route" ? 1 : 0;
+      updateStats(subject);
+
+      while (list.children.length > maxMessages) {
+        list.removeChild(list.lastChild);
+      }
+    }
+
+    function addSystemMessage(text) {
+      const list = document.getElementById("messageList");
+      document.getElementById("emptyState")?.remove();
+      const div = document.createElement("article");
+      div.className = "message";
+      div.innerHTML = `<p class="summary">${escapeHtml(text)}</p>`;
+      list.insertBefore(div, list.firstChild);
+    }
+
+    function classifyMessage(subject, payload) {
+      const text = typeof payload === "string" ? payload : JSON.stringify(payload);
+      const lower = `${subject} ${text}`.toLowerCase();
+      const fields = extractFields(payload);
+      let kind = "message";
+
+      if (subject.includes(".ping") || /^pong:/i.test(text)) {
+        kind = "ping";
+      }
+      if (subject.startsWith("nova.logs.")) {
+        kind = "log";
+      }
+      if (lower.includes("route") || lower.includes("fallback-active") || lower.includes("visible-ready")) {
+        kind = "route";
+      }
+      if (lower.includes("proof") || lower.includes("visible") || lower.includes("reply_to")) {
+        kind = "proof";
+      }
+      if (
+        lower.includes("error") ||
+        lower.includes("failed") ||
+        lower.includes("failure") ||
+        lower.includes("timeout") ||
+        lower.includes("exception") ||
+        lower.includes("blocked")
+      ) {
+        kind = "failure";
+      }
+
+      return { kind, summary: summarizePayload(payload), fields };
+    }
+
+    function extractFields(payload) {
+      if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+        return {};
+      }
+      const keys = [
+        "id",
+        "from",
+        "to",
+        "reply_to",
+        "mode",
+        "route_mode",
+        "route_health",
+        "reply_mode",
+        "status",
+        "error",
+        "level",
+        "agent"
+      ];
+      return keys.reduce((acc, key) => {
+        if (payload[key] !== undefined && payload[key] !== null && payload[key] !== "") {
+          acc[key] = String(payload[key]);
+        }
+        return acc;
+      }, {});
+    }
+
+    function summarizePayload(payload) {
+      if (payload === null || payload === undefined) {
+        return "Empty payload";
+      }
+      if (typeof payload === "string") {
+        return payload.slice(0, 360);
+      }
+      if (typeof payload !== "object") {
+        return String(payload);
+      }
+      const message = payload.message || payload.text || payload.summary || payload.error || payload.chunk;
+      if (message) {
+        return String(message).slice(0, 360);
+      }
+      const compact = Object.entries(payload)
+        .filter(([, value]) => typeof value !== "object")
+        .slice(0, 6)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", ");
+      return compact || "Structured payload";
+    }
+
+    function renderFields(fields) {
+      const entries = Object.entries(fields);
+      if (!entries.length) {
+        return "";
+      }
+      return `<div class="field-grid">${entries.map(([key, value]) => `
+        <div class="field"><span>${escapeHtml(key)}</span><code title="${escapeHtml(value)}">${escapeHtml(value)}</code></div>
+      `).join("")}</div>`;
+    }
+
+    function formatPayload(payload) {
+      return typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
+    }
+
+    function updateStats(subject) {
+      document.getElementById("totalCount").textContent = String(state.messages);
+      document.getElementById("proofCount").textContent = String(state.proofs);
+      document.getElementById("failureCount").textContent = String(state.failures);
+      document.getElementById("routeCount").textContent = String(state.routes);
+      document.getElementById("lastSubject").textContent = subject;
+    }
+
+    function clearMessages() {
+      const list = document.getElementById("messageList");
+      list.innerHTML = '<div class="empty" id="emptyState">Waiting for live NATS traffic. Pick a preset or add a subject.</div>';
+      state.messages = 0;
+      state.proofs = 0;
+      state.failures = 0;
+      state.routes = 0;
+      updateStats("none");
+    }
+
+    function escapeHtml(value) {
+      const div = document.createElement("div");
+      div.textContent = String(value);
+      return div.innerHTML;
+    }
+
+    function escapeJs(value) {
+      return String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      renderSubscriptions();
+      connect();
+    });
+  </script>
+</body>
+</html>

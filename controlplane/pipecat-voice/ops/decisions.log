@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-19 21:04:10 — SIGNED_BY_AGENT
+Decision: Make the monitor client classify and summarize live NATS events while retaining `nova.>` as the raw fallback preset.
+Reason: Operators need fast proof, failure, route, ping, and log recognition during live debugging, but raw payload access must remain one click away for low-level inspection.
+
+## 2026-05-19 21:03:20 — SIGNED_BY_AGENT
+Decision: Remove the duplicate placeholder `/ws/monitor` route and let the NATS streaming handler be the only websocket owner.
+Reason: Duplicate route registration can shadow the working stream and make the monitor appear connected without delivering live NATS traffic.
+
 ## 2026-05-19 20:57:20 — SIGNED_BY_AGENT
 Decision: Keep monitor cleanup focused on the static `/monitor` client and existing `/ws/monitor` stream.
 Reason: Task 21 can improve live NATS debugging without altering held Testova prompt state or widening the already-dirty gateway surface.

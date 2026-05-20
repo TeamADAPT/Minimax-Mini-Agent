@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 21:04:10 — SIGNED_BY_AGENT
+Completed `21-monitor-stream-cleanup`: replaced the monitor with focused NATS debug presets for direct, ping, logs, route/metrics, and raw fallback; added proof/failure/route/log rendering; removed the duplicate placeholder `/ws/monitor` route so the real NATS stream owns the path; verified py_compile, static preset checks, websocket smoke traffic, Playwright desktop/mobile renders, zero final console errors, and focused pytest with 23 passing tests.
+
 ## 2026-05-19 20:57:20 — SIGNED_BY_AGENT
 Started `21-monitor-stream-cleanup` by moving it from `ops/to_do/` into `ops/in_progress/` before replacing the raw monitor firehose with focused NATS debug presets and clearer event rendering.
 

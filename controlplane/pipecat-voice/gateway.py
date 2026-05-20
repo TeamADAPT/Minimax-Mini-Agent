@@ -1093,33 +1093,6 @@ async def monitor_page() -> Any:
     return Response(content=html, media_type="text/html")
 
 
-@app.websocket("/ws/monitor")
-async def ws_monitor(ws: WebSocket) -> None:
-    """WebSocket endpoint for NATS message monitoring."""
-    await ws.accept()
-    subscriptions = set()
-    logger.info("Monitor: client connected")
-    
-    try:
-        while True:
-            data = await ws.receive_text()
-            msg = json.loads(data)
-            action = msg.get("action")
-            
-            if action == "subscribe":
-                subject = msg.get("subject")
-                if subject:
-                    subscriptions.add(subject)
-                    logger.info(f"Monitor: subscribed to {subject}")
-            elif action == "unsubscribe":
-                subject = msg.get("subject")
-                subscriptions.discard(subject)
-    except Exception as exc:
-        logger.error(f"Monitor error: {exc}")
-    finally:
-        logger.info("Monitor: client disconnected")
-
-
 @app.post("/api/route")
 async def set_route(body: dict) -> dict:
     """Broadcast a route-change event; the client reconfigures its DG WS settings."""
