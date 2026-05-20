@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:35:43 — SIGNED_BY_AGENT
+Decision: Start Task 33 while Skipper and Echo process live NATS assignments.
+Reason: The operator requested the whole team working; Task 33 can advance from existing dashboard/session-state/monitor surfaces while preserving the held Testova gate and current live direct subject owners.
+
 ## 2026-05-19 22:33:49 — SIGNED_BY_AGENT
 Decision: Complete Task 32 with a read-only plus dry-run hook instead of enabling live pipecat-to-NATS publishing.
 Reason: Task 22 has not yet validated end-to-end voice turns; the safest useful hook is an inspectable target/envelope contract that preserves default voice behavior and cannot publish unless a later explicit gate enables it.

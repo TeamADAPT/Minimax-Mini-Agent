@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:35:43 — SIGNED_BY_AGENT
+Started `33-ops-metrics-graphs-dashboard-pass` by moving it from `ops/to_do/` into `ops/in_progress/`; Echo has been assigned a parallel Task 33 implementation brief over `nova.echo.direct`, and Skipper has been assigned active queue orchestration over `nova.skipper.direct`.
+
 ## 2026-05-19 22:33:49 — SIGNED_BY_AGENT
 Completed `32-pipecat-direct-nats-session-hook`: added a guarded dry-run direct NATS session hook in `direct_nats_session_hook.py`, exposed `GET /api/direct-nats-session-hook` and `POST /api/direct-nats-session-hook/dry-run`, documented guardrails in `ops/pipecat_direct_nats_session_hook.md`, verified `py_compile`, focused pytest with 22 passing tests, and preserved default voice behavior plus live subject ownership.
 
