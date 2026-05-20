@@ -89,7 +89,11 @@ def service_env_flag(unit: str, key: str) -> str | None:
     return None
 
 
-def window_present(window_name: str) -> bool:
+def window_present(window_name: str, window_class: str | None = None) -> bool:
+    if window_class:
+        proc = run_command(["xdotool", "search", "--class", window_class], timeout=10)
+        if proc.returncode == 0 and proc.stdout.strip():
+            return True
     proc = run_command(["xdotool", "search", "--name", window_name], timeout=10)
     return proc.returncode == 0 and bool(proc.stdout.strip())
 

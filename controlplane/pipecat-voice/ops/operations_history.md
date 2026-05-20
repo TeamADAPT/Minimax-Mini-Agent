@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-19 20:57:20 — SIGNED_BY_AGENT
+Started `21-monitor-stream-cleanup` by moving it from `ops/to_do/` into `ops/in_progress/` before replacing the raw monitor firehose with focused NATS debug presets and clearer event rendering.
+
+## 2026-05-19 20:56:40 — SIGNED_BY_AGENT
+Added route-state support for class-addressed visible terminals after dashboard QA showed Testova could be visible while title-based checks still reported missing. `window_present` now accepts an optional window class, `crew_route_state.py` records the class in the window snapshot, and focused tests cover class-first discovery.
+
 ## 2026-05-19 20:55:18 — SIGNED_BY_AGENT
 Completed `20-dashboard-session-voice-observability`: added the Blackline Observatory dashboard with `/api/session-state` route cards for Echo, Skipper, Testova, and Latch; added gateway/NATS/visible/fallback health strips; committed required static assets; verified `py_compile`, focused pytest, FastAPI TestClient responses, and Playwright desktop/mobile checks with four route cards, four health strip items, visible/fallback posture text, and no console errors.
 

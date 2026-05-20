@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-19 20:57:20 — SIGNED_BY_AGENT
+Decision: Keep monitor cleanup focused on the static `/monitor` client and existing `/ws/monitor` stream.
+Reason: Task 21 can improve live NATS debugging without altering held Testova prompt state or widening the already-dirty gateway surface.
+
+## 2026-05-19 20:56:40 — SIGNED_BY_AGENT
+Decision: Treat class-based terminal discovery as equivalent to title discovery in route-state snapshots.
+Reason: visible Hermes terminals can be intentionally addressed by stable GNOME class when the title is mutable, and the dashboard must reflect the bridge's actual targeting contract.
+
 ## 2026-05-19 20:55:18 — SIGNED_BY_AGENT
 Decision: Keep the observability dashboard backed by `/api/session-state` and existing status endpoints instead of adding live model/NATS probes.
 Reason: the dashboard must be safe for frequent polling and should show current route posture without burning model quota or disturbing held Testova proof work.

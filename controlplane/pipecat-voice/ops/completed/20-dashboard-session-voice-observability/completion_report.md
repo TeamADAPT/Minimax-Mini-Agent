@@ -10,6 +10,7 @@ Completed `20-dashboard-session-voice-observability`.
 - Added dashboard route/session/voice visibility backed by `/api/session-state`.
 - Added route cards for `echo`, `skipper`, `testova`, and `latch`.
 - Added health strip indicators for gateway, NATS, visible-ready count, and fallback-active count.
+- Updated route-state window checks to count `ECHO_TUI_WINDOW_CLASS` when a bridge uses class-based terminal targeting.
 - Added dashboard static assets:
   - `client/blackline.css`
   - `client/pwa.js`
@@ -21,6 +22,8 @@ Completed `20-dashboard-session-voice-observability`.
 
 - `python3 -m py_compile gateway.py session_state_api.py`
 - `pytest -q tests/test_session_state_api.py`
+- `python3 -m py_compile scripts/ops_loop_common.py scripts/crew_route_state.py`
+- `pytest -q tests/test_crew_route_state.py tests/test_session_state_api.py`
 - FastAPI TestClient:
   - `GET /dashboard` returned `200`.
   - `GET /api/session-state` returned `200` with `agents`, `summary`, `snapshots`, and `operator_inbox`.

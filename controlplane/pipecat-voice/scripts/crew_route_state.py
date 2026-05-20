@@ -144,10 +144,11 @@ def main() -> None:
     for agent in AGENTS:
         unit = str(agent["unit"])
         window_name = str(agent["window"])
+        window_class = service_env_flag(unit, "ECHO_TUI_WINDOW_CLASS")
         profile_root = Path(agent["profile_root"])
         subject = f"nova.{agent['name']}.direct"
         service = {"unit": unit, **systemctl_state(unit, user=True)}
-        window_found = window_present(window_name)
+        window_found = window_present(window_name, window_class)
         fallback_enabled = env_bool(unit, "ECHO_TUI_ALLOW_CLI_FALLBACK")
         mode, health, reason = classify_route(
             service_active=str(service.get("active") or "unknown"),
@@ -161,6 +162,7 @@ def main() -> None:
                 "service": service,
                 "window": {
                     "name": window_name,
+                    "class": window_class,
                     "present": window_found,
                 },
                 "route_mode": mode,
