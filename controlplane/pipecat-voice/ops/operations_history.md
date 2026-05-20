@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-19 21:24:03 — SIGNED_BY_AGENT
+Completed `24-skipper-echo-execution-lane`: restored Echo and Skipper visible terminals, identified continued Echo sessions (`-c`) as the cause of visible output without NATS reply capture, relaunched Echo fresh without `-c` on `qwen/qwen3.5-397b-a17b` via NVIDIA, and verified three consecutive Skipper-style `nova.echo.direct` assignments returned cleanly with event ids `task24-echo-fresh-a22f3e98`, `task24-echo-proof-format-e3857e47`, and `task24-echo-ready-report-d5e92e7c`. Final route state reports Echo and Skipper `visible-ready` and healthy.
+
+## 2026-05-19 21:12:14 — SIGNED_BY_AGENT
+Started `24-skipper-echo-execution-lane` by moving it from `ops/to_do/` into `ops/in_progress/`. Initial route check found no discoverable `Echo CLI` or `Skipper CLI` desktop windows, so the first gate is to restore visible terminals before attempting three Skipper-directed Echo completions.
+
 ## 2026-05-19 21:10:47 — SIGNED_BY_AGENT
 Completed `23-skipper-orchestration-contract`: created `ops/skipper_orchestration_contract.md` with Skipper's assignment envelope, owner/proof/checkback rules, Echo/Testova/Latch handoffs, status cadence, escalation, stale-task handling, and proof acceptance. Verified required contract fields locally. Skipper's NATS ping returned `pong:skipper:tui`, but the visible window was missing, fallback reply capture timed out with no text, and the orphan fallback process was stopped; the contract records this route caveat.
 

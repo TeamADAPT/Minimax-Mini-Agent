@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-19 21:24:03 — SIGNED_BY_AGENT
+Decision: Treat fresh visible sessions, not continued `-c` sessions, as the required launch mode for Echo execution-lane proof.
+Reason: Echo visibly answered while continued from an old session, but the bridge could not correlate the turn to the NATS reply inbox; a fresh no-continue launch returned three consecutive replies cleanly.
+
+## 2026-05-19 21:12:14 — SIGNED_BY_AGENT
+Decision: Treat visible terminal restoration as the first gate for Task 24.
+Reason: The execution lane requires a stable Echo route and Skipper-directed completions, but live checks showed both `Echo CLI` and `Skipper CLI` windows missing.
+
 ## 2026-05-19 21:10:47 — SIGNED_BY_AGENT
 Decision: Complete Task 23 from the local contract artifact despite Skipper's reply timeout.
 Reason: The acceptance criterion is a usable delegation contract, and Skipper's timeout is route/session evidence already captured in the contract caveat rather than missing contract content.
