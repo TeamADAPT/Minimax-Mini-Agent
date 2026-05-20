@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-19 21:28:48 — SIGNED_BY_AGENT
+Completed `27-task-decomposition-enforcement`: closed umbrella Task 14 with a completion report, added `ops/task_queue_enforcement.md`, audited active `to_do` and `in_progress` task folders for required objective/owner/acceptance/rollback fields, and verified `active task queue check passed`.
+
+## 2026-05-19 21:28:48 — SIGNED_BY_AGENT
+Started `27-task-decomposition-enforcement` by moving it from `ops/to_do/` into `ops/in_progress/` before auditing active task folders for vague umbrella work, missing owners, and missing completion paths.
+
 ## 2026-05-19 21:27:34 — SIGNED_BY_AGENT
 Completed `26-paperclip-fleet-sync-refresh`: updated Paperclip `docs/adapters/nova-fleet-ops.md` with current route posture, Task 24 Echo proof ids, Skipper visible bridge ownership, Testova held/degraded status, Latch inbox role, and Skipper contract guidance. Verified required doc content and pushed Paperclip commit `e16da011`.
 

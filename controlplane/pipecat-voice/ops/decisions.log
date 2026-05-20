@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-19 21:28:48 — SIGNED_BY_AGENT
+Decision: Enforce decomposition against active queues only, while preserving historical completed tasks that predate the stricter template.
+Reason: Task 27 acceptance concerns current and future executable work; rewriting older completed task files would create documentation churn without improving the active operating surface.
+
+## 2026-05-19 21:28:48 — SIGNED_BY_AGENT
+Decision: Treat the old Task 14 umbrella as closable audit debt under Task 27.
+Reason: The concrete Task 14 slices have been completed as separate task folders and commits, so leaving the umbrella in `ops/in_progress` violates the one-ownable-slice rule.
+
 ## 2026-05-19 21:27:34 — SIGNED_BY_AGENT
 Decision: Keep Paperclip fleet sync as an adapter-facing documentation refresh, not a live Paperclip data mutation.
 Reason: The task acceptance requires Paperclip-facing artifacts to reflect real fleet posture; updating the redacted adapter notes avoids storing secrets or changing runtime state while making the current routes and constraints visible.
