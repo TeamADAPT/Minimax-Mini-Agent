@@ -734,3 +734,6 @@ Global API key. Installed and enabled `pipecat-voice.service` systemd unit.
 Verified: HTTPS through tunnel returns 200; NATS streaming round-trip with
 simulated echo agent works (envelope sent on `adapt.echo.direct`, chunks
 streamed back on `reply_to` inbox in order, terminator received).
+## 2026-05-19 23:16:27 — SIGNED_BY_AGENT
+Opened Directive 35 (Crew Collaboration Launch) and created task folders 35, 37, 39 for the first wave: six-way crew online, Swift Brane pilot, and crew consensus protocol.
+
