@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:54:10 — SIGNED_BY_AGENT
+Decision: Start Task 34 as a no-prompt resume-gate preparation task while leaving Task 25 locked.
+Reason: Testova remains under operator hold, so the only valid Testova work is state inspection and a documented pass/fail gate; Task 25 cannot be accepted until Testova is explicitly released and returns usable validation outputs.
+
 ## 2026-05-19 22:52:13 — SIGNED_BY_AGENT
 Decision: Count Task 22 acceptance against the `vox` voice route, not Echo or Skipper.
 Reason: The objective is end-to-end voice validation through the active gateway/STT/NATS/reply/TTS path; Echo and Skipper are currently reply-capture degraded for work prompts, while Vox produced three complete voice turns without changing live direct subject ownership or touching held Testova proof work.

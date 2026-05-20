@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:54:10 — SIGNED_BY_AGENT
+Started `34-testova-validation-resume-gate` by moving it from `ops/to_do/` into `ops/in_progress/`; this task will prepare the no-prompt Testova resume procedure and inspect current route state without lifting the operator hold or sending Testova proof traffic.
+
 ## 2026-05-19 22:52:13 — SIGNED_BY_AGENT
 Completed `22-voice-path-validation`: verified gateway health/token/session-state/direct-hook endpoints, passed three `/v1/chat/completions` NATS-backed SSE turns through Iris/Vox, then passed three full synthetic-audio `/ws/voice` turns through Deepgram STT, public HTTPS think endpoint, NATS-backed Vox replies, and Deepgram TTS `AgentAudioDone`; documented root causes `stale-gateway-code`, `deepgram-invalid-local-think-endpoint`, `client-audio-stream-ended-before-think`, and `slow-think-request` in `ops/voice_path_validation_report.md`.
 
