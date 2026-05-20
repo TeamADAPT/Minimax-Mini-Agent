@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:25:51 — SIGNED_BY_AGENT
+Decision: Start Task 31 instead of resuming Testova Task 17.
+Reason: The operator hold on Testova proof work remains active; Paperclip adapter packaging is independent of Testova live prompts and continues the post-Task-30 Action Plan without disturbing current route owners.
+
 ## 2026-05-19 22:24:53 — SIGNED_BY_AGENT
 Decision: Push the `/adapt/novas` Task 30 adapter artifact to `origin/task30-hermes-nats-adapter-promotion-gates`.
 Reason: Local `/adapt/novas` `main` is not suitable for a direct main push because the remote main is non-fast-forward; a task branch preserves the verified adapter artifact without merging unrelated remote history.

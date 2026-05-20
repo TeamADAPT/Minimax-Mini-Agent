@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:25:51 — SIGNED_BY_AGENT
+Started `31-paperclip-nova-adapter-package` by moving it from `ops/to_do/` into `ops/in_progress/`; Testova proof work remains held, so the next non-held queue item is the Paperclip-facing Nova/Hermes adapter package plan.
+
 ## 2026-05-19 22:24:53 — SIGNED_BY_AGENT
 Committed `/adapt/novas/active/projects/nats-adapter` as `da12311` and pushed it to `origin/task30-hermes-nats-adapter-promotion-gates` after focused verification with `cargo fmt --check`, `cargo test`, `cargo clippy -- -D warnings`, and `cargo build`.
 
