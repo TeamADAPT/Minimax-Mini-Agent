@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:44:19 — SIGNED_BY_AGENT
+Restarted `pipecat-voice.service` after Task 22 validation found the live gateway was stale: `/healthz` and `/token` returned successfully, but `/api/session-state` returned `404` despite the completed repo endpoint. The service restarted cleanly on `127.0.0.1:18085` with NATS connected.
+
 ## 2026-05-19 22:42:59 — SIGNED_BY_AGENT
 Started `22-voice-path-validation` by moving it from `ops/to_do/` into `ops/in_progress/`; validation will use bounded gateway/NATS/Deepgram checks, preserve the current voice path, and name root causes for any path that cannot produce three successful end-to-end voice turns.
 

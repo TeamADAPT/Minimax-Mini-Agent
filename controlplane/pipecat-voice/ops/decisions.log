@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:44:19 — SIGNED_BY_AGENT
+Decision: Restart `pipecat-voice.service` during Task 22 validation.
+Reason: The live service was active but stale relative to committed gateway code, producing a concrete `404` on `/api/session-state`; restarting the single gateway service loaded the current code without changing NATS subject ownership or held Testova state.
+
 ## 2026-05-19 22:42:59 — SIGNED_BY_AGENT
 Decision: Start Task 22 with bounded diagnostics rather than forcing live audio if upstream or agent reply capture is degraded.
 Reason: Task 22 acceptance requires three successful voice turns or named root causes for failures; current Echo/Skipper direct prompt capture is already degraded, so validation must measure each path and avoid destabilizing the gateway.
