@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:05:47 — SIGNED_BY_AGENT
+Completed `29-nova-bootstrap-rust-build-verify`: verified Rust format, clippy, tests, release build, and canary generation/validation; fixed dotenv-safe `.env` generation and NIM model context length overrides; cleaned generated canary artifacts; committed `/adapt/novas` project changes as `961df5c` and pushed them to `origin/task29-nova-bootstrap-rust-verify` after `origin/main` rejected non-fast-forward.
+
 ## 2026-05-19 22:01:28 — SIGNED_BY_AGENT
 Started `29-nova-bootstrap-rust-build-verify` by moving it from `ops/to_do/` into `ops/in_progress/`; Testova Task 17 remains held on operator instruction, so Rust bootstrap verification is the next non-held execution slice.
 

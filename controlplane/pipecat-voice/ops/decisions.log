@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-19 22:05:47 — SIGNED_BY_AGENT
+Decision: Push the `/adapt/novas` bootstrap verifier commit to `origin/task29-nova-bootstrap-rust-verify` instead of pulling and merging remote `main`.
+Reason: `origin/main` rejected the direct push as non-fast-forward; a task branch preserves the exact verified artifact without introducing unrelated remote merge risk during Task 29 completion.
+
+## 2026-05-19 22:05:47 — SIGNED_BY_AGENT
+Decision: Fix bootstrap generation defects discovered during canary verification instead of reporting a pass-only result.
+Reason: The canary exposed two operationally material issues: dotenv-incompatible shell control flow in generated `.env` files and an incorrect Kimi context length.
+
 ## 2026-05-19 22:01:28 — SIGNED_BY_AGENT
 Decision: Start Task 29 while leaving Task 17 in progress and held.
 Reason: Testova proof work requires explicit operator release, but Rust bootstrap build verification is independent and advances the PEA/nova bootstrap queue without burning model quota or changing live nova sessions.
