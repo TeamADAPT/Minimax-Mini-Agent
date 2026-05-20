@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:00:23 — SIGNED_BY_AGENT
+Decision: Relaunch Skipper fresh without `-c` while pinning `moonshotai/kimi-k2.6`.
+Reason: Prior Echo/Skipper route proof showed continued sessions can visibly answer while weakening NATS reply capture, so the visible Skipper lane should use the fresh-session posture.
+
 ## 2026-05-19 21:31:30 — SIGNED_BY_AGENT
 Decision: Gate Testova follow-up as Task 34 instead of folding it into the active PEA queue.
 Reason: The operator hold on Testova prompts remains in force, so the queue should preserve the resume procedure without accidentally executing it.

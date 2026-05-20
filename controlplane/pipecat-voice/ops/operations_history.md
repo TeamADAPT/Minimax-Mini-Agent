@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:00:23 — SIGNED_BY_AGENT
+Reopened Skipper as a fresh visible Hermes CLI session in `/adapt/novas/active/skipper` using NVIDIA model `moonshotai/kimi-k2.6`, restarted `skipper-tui-nats-bridge.service`, verified the process cwd, verified the `Skipper CLI` desktop window, and confirmed `nova.skipper.ping` returns `pong:skipper:tui`.
+
 ## 2026-05-19 21:31:30 — SIGNED_BY_AGENT
 Completed `28-pea-bootstrap-execution-queue`: created six executable follow-up task folders (`29` through `34`) covering Rust bootstrap verification, Hermes/NATS adapter promotion gates, Paperclip adapter packaging, pipecat direct NATS session hook, ops metrics/graphs dashboard pass, and Testova resume gate; added `ops/pea_bootstrap_execution_queue.md`; verified each new task has owner, dependencies, steps, acceptance, and rollback.
 
