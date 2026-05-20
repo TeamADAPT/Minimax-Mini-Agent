@@ -50,6 +50,7 @@ from nats.aio.subscription import Subscription
 
 from canvas import handle_canvas_ws, canvas_state
 from kanban import kanban_board
+from session_state_api import build_session_state
 
 ROOT = Path(__file__).parent
 ROSTER_PATH = ROOT / "roster.json"
@@ -1013,6 +1014,12 @@ async def get_ops_status() -> dict:
         "recent_errors": _recent_errors(),
         "agentops": _agentops_handoff(),
     }
+
+
+@app.get("/api/session-state")
+async def get_session_state() -> dict:
+    """Return read-only agent route/session/proof state for dashboards."""
+    return build_session_state(ROOT)
 
 
 @app.get("/api/rooms/history")

@@ -1,7 +1,13 @@
 # Operations History
 
+## 2026-05-19 20:49:20 — SIGNED_BY_AGENT
+Completed `19-pipecat-session-state-api`: added the read-only `session_state_api.py` runtime snapshot aggregator, wired `GET /api/session-state` in `gateway.py`, added focused tests, verified `py_compile`, verified `pytest -q tests/test_session_state_api.py tests/test_gateway.py` with 17 passing tests, and confirmed a FastAPI TestClient request returned `200` with agent/session/route/proof summary keys for `echo`, `skipper`, and `testova`.
+
 ## 2026-05-19 20:42:11 — SIGNED_BY_AGENT
 Hardened Testova visible-window targeting without sending a new proof prompt: added optional class/window-id targeting to `scripts/echo_tui_nats_bridge.py`, configured `testova-tui-nats-bridge.service` with `ECHO_TUI_WINDOW_CLASS=TestovaCLI`, relaunched Testova in a classed GNOME Terminal, verified `py_compile`, confirmed `xdotool search --class TestovaCLI` finds the visible terminal, and restarted the bridge. Task 17 remains in progress pending the held three-turn visible-only NATS proof.
+
+## 2026-05-19 20:41:59 — SIGNED_BY_AGENT
+Started `19-pipecat-session-state-api` by moving it from `ops/to_do/` into `ops/in_progress/` before adding a read-only API surface for route, proof, and live session summaries.
 
 ## 2026-05-19 20:40:43 — SIGNED_BY_AGENT
 Completed `18-route-state-fidelity-upgrade`: extended `scripts/crew_route_state.py` to preserve existing consumer fields while adding explicit route modes, `route_health`, `route_reason`, reply-capture timeout, latest proof metadata, latest proof timestamp, and latest reply mode; verified with `py_compile`, `pytest -q tests/test_crew_route_state.py`, and a live snapshot generation.

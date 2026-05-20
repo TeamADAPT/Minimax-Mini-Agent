@@ -1,8 +1,16 @@
 # Decisions Log
 
+## 2026-05-19 20:49:20 — SIGNED_BY_AGENT
+Decision: Expose session state through a separate read-only `/api/session-state` route instead of overloading `/api/ops/status`.
+Reason: dashboard and monitor clients need frequent polling of agent route/session/proof state without triggering model calls, NATS request traffic, service restarts, journal scans, or writes.
+
 ## 2026-05-19 20:42:11 — SIGNED_BY_AGENT
 Decision: Prefer class/window-id targeting over title-only targeting for Testova visible bridge delivery.
 Reason: GNOME Terminal can reset the displayed title to `Terminal` while the Hermes process remains alive, which makes title-only `xdotool search --name` unsuitable as the sole routing key.
+
+## 2026-05-19 20:41:59 — SIGNED_BY_AGENT
+Decision: Implement the session-state API as a read-only runtime-snapshot aggregation layer.
+Reason: frequent dashboard polling should not trigger NATS requests, journal scans, model calls, or filesystem writes; the route should assemble existing snapshots into one safe response.
 
 ## 2026-05-19 20:40:43 — SIGNED_BY_AGENT
 Decision: Classify route state from bridge service activity, visible window discovery, and fallback configuration, with proof metadata as evidence rather than the primary health switch.
