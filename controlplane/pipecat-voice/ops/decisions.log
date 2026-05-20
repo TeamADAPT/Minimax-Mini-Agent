@@ -4,6 +4,14 @@
 Decision: Expose session state through a separate read-only `/api/session-state` route instead of overloading `/api/ops/status`.
 Reason: dashboard and monitor clients need frequent polling of agent route/session/proof state without triggering model calls, NATS request traffic, service restarts, journal scans, or writes.
 
+## 2026-05-19 20:47:13 — SIGNED_BY_AGENT
+Decision: Map current Codex OAuth auth into Testova's Hermes auth schema instead of copying the raw Codex auth file over it.
+Reason: Hermes expects provider and credential-pool fields; raw-copying `/home/x/.codex/auth.json` would lose the active-provider structure Testova needs.
+
+## 2026-05-19 20:45:02 — SIGNED_BY_AGENT
+Decision: Remove the Testova bridge `ECHO_TUI_WINDOW_CLASS` override and rely on the explicit `Testova CLI` title.
+Reason: the bridge checks class before title when class is set, and the GNOME Terminal window was discoverable by title while class lookup failed.
+
 ## 2026-05-19 20:42:11 — SIGNED_BY_AGENT
 Decision: Prefer class/window-id targeting over title-only targeting for Testova visible bridge delivery.
 Reason: GNOME Terminal can reset the displayed title to `Terminal` while the Hermes process remains alive, which makes title-only `xdotool search --name` unsuitable as the sole routing key.
