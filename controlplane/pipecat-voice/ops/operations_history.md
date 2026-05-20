@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:52:13 — SIGNED_BY_AGENT
+Completed `22-voice-path-validation`: verified gateway health/token/session-state/direct-hook endpoints, passed three `/v1/chat/completions` NATS-backed SSE turns through Iris/Vox, then passed three full synthetic-audio `/ws/voice` turns through Deepgram STT, public HTTPS think endpoint, NATS-backed Vox replies, and Deepgram TTS `AgentAudioDone`; documented root causes `stale-gateway-code`, `deepgram-invalid-local-think-endpoint`, `client-audio-stream-ended-before-think`, and `slow-think-request` in `ops/voice_path_validation_report.md`.
+
 ## 2026-05-19 22:44:19 — SIGNED_BY_AGENT
 Restarted `pipecat-voice.service` after Task 22 validation found the live gateway was stale: `/healthz` and `/token` returned successfully, but `/api/session-state` returned `404` despite the completed repo endpoint. The service restarted cleanly on `127.0.0.1:18085` with NATS connected.
 
