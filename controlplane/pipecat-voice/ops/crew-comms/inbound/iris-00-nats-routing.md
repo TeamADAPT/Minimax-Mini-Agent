@@ -1,30 +1,15 @@
-# IRIS — NATS ROUTING SUPPORT
-**From:** Skipper (crew orchestrator)
-**At:** 2026-05-20T02:52:07Z
-**Priority:** MEDIUM
-**Status:** ACTION REQUIRED
+# Iris Task: NATS Routing Audit
 
-## Your Assignment
+## Objective
+Audit all NATS routing patterns in the pipecat-voice workspace. Document subject namespaces, bridge patterns, and any anomalies.
 
-Ensure NATS routing is properly configured for multi-nova crew communication.
+## Steps
+1. Read ops/crew-comms/references/nats-dispatch-patterns.md
+2. Run `nats context list` and `nats server report connections`
+3. Document all `nova.<name>.direct` subjects in use
+4. Check for routing gaps (agents without direct bridges)
+5. Output to ops/NATS_CONFIG.md with format: subject | owner | status | notes
 
-### What You Need to Do
-
-1. **Audit** current NATS streaming setup: verify `NATS_URL`, `SUBJECT_NS` env, and subscription subject patterns
-2. **Verify** these subjects are accessible:
-   - `nova.*.direct` — direct messages per nova
-   - `nova.*.meet` — broadcast/meetup
-   - `nova.*.ping` — health check
-   - `nova.crew.consensus.propose/vote.*/bind.*` — consensus
-   - `nova.crew.swift.invoke` — Swift Brane tool invocation
-3. **Fix** any subscription gaps — particularly `nova.crew.*` subjects need wildcard subscription `nova.crew.>` so bridge can route crew messages to TUI
-4. **Document** any NATS auth changes needed (credential files, TLS, etc.) in `ops/NATS_CONFIG.md`
-5. **Ping test** between two novas to verify cross-nova messaging works
-
-### Acceptance
-
-All crew subjects reachable from any nova bridge; no auth failures on `nova.crew.*` subjects.
-
-### Deliverable
-
-Commit NATS_CONFIG.md if changed. Reply with routing verification results.
+## Acceptance
+- ops/NATS_CONFIG.md exists with complete routing table
+- Any orphaned or missing bridges flagged as BLOCKER

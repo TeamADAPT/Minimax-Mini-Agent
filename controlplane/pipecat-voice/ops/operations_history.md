@@ -763,3 +763,45 @@ Skipper (crew orchestrator) pushed crew tasks via Hermes profile chat single-que
 - synergy: Same as forge — workspace path mismatch. Absolute paths added; re-ping pending.
 - tecton: Task scope received, acknowledged, available and ready.
 Action taken: ops/crew-comms/inbound/ forge-00- and synergy-00- task files updated with absolute paths. Re-ping via hermes profile chat scheduled.
+
+## 2026-05-20 08:44:34 — crew verification complete (SIGNED_BY_AGENT)
+All 5 crew members confirmed via `hermes sessions export` (actual session read-back):
+- iris: Session 20260520_073859_55bb35 — read file, ack, "available and ready"
+- zap: Session 20260520_074005_1a83e8 — read file, ack, "ready to execute Task 35 immediately"
+- tecton: Session 20260520_074211_ccd07d — read file, ack, "available and ready"
+- forge: Session 20260520_074512_dd016d — read file, ack, "available and ready to work"
+- synergy: Session 20260520_074542_2d2d62 — read file, ack, "available and ready to work"
+All task files were found and read by each profile. No path errors on retry.
+Outstanding: They are all one-shot `chat -q` sessions. No background processes started.
+Need: define mechanism for crew to actually execute (cronjob vs gateway vs delegate_task).
+
+## 2026-05-20 09:17:00 — crew orchestration: visible terminal launch + Task 30 close
+Skipper took operational lead after Latch quota-max event. Crew expanded: Iris, Zap, Forge, Synergy, Tecton.
+
+### Visible terminal launch (NATS origin, event: team-skipper-orchestrate-7dfa32d7)
+All 5 crew members launched in separate visible GNOME Terminal windows via `hermes-visible-terminal-ops` pattern:
+```bash
+DISPLAY=:0 gnome-terminal --title='<Name> CLI' --working-directory=/adapt/novas/active/<name> -- bash -lc 'exec hermes -p <name> --yolo -c'
+```
+Verified all windows open and process PIDs confirmed:
+- Iris: pid=2646489, window=79650786, cwd=/adapt/novas/active/iris ✓
+- Zap: pid=2656025, window=79653968 ✓
+- Forge: pid=2656846, window=79654381 ✓
+- Synergy: pid=2674257, window=79655109 ✓
+- Tecton: pid=2674274, window=79655778 ✓
+
+Task files dispatched via xdotool to each crew member's visible window.
+
+### Task 30 closure
+- Task 30 (hermes-nats-adapter-promotion-gates) already pushed as b5daa30
+- Completion report in: ops/completed/30-hermes-nats-adapter-promotion-gates/completion_report.md
+- Live bridge ownership: NO-GO (TUI bridges remain primary, adapter to replace later)
+- Isolated proof passed: proof id=nova-84e0fea8ba8d41309b72be5eec7e7e24 status=ok
+- Folder moved from in_progress/ → completed/ ✓
+
+### Active crew assignments
+- Iris: NATS routing audit → ops/NATS_CONFIG.md
+- Zap: TUI-NATS bridge verification → ops/BRIDGE_STATUS.md
+- Forge: wasm64 build chain review → ops/WASM64_STATUS.md
+- Synergy: Consensus protocol design → ops/crew-coordination-architecture.md
+- Tecton: SignalCore/NovaOps architecture decomposition → ops/ARCHITECTURE_DECOMPOSITION.md
