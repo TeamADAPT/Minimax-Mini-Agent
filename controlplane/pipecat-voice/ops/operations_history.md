@@ -743,3 +743,23 @@ Crew infrastructure scaffolded and Swift Brane wasm64 pilot compiled. Created: s
 
 ## 2026-05-20 02:21:10 — SIGNED_BY_AGENT
 Completed Task 39 decomposition: protocol spec written to ops/to_do/39-crew-consensus-protocol/TASK.md with NATS subject contract, proposal/vote/bind payload schemas, quorum rules, and acceptance criteria. Ready for Synergy to implement.
+
+## 2026-05-20 07:43:14 — crew outbound ping results
+Hermes profile chat results (single-query, no TTY):
+- iris: Task scope received, acknowledged, proceeding.
+- zap:  Task scope received, acknowledged, ready now.
+- forge: Path resolution failed — forge-tui-bridge workspace mismatch. Task content NOT loaded.
+- synergy: Path resolution failed — synergy-tui-bridge workspace mismatch. Task content NOT loaded.
+- tecton: Task scope received, acknowledged, available now.
+Echo: skip (already has live bridge).
+Total confirmed: iris, zap, tecton (3/5 crew).
+Action: Provide absolute / workspace-corrected paths for forge and synergy; re-ping.
+
+## 2026-05-20 07:47:21 — crew outbound ping results
+Skipper (crew orchestrator) pushed crew tasks via Hermes profile chat single-query:
+- iris: Task scope received, acknowledged, proceeding.
+- zap:  Task scope received, acknowledged, ready to execute Task 35 immediately.
+- forge: Path resolution failed in `hermes -p forge chat` — resolved to `/adapt/novas/active/skipper/` instead of pipecat-voice. Absolute paths added to task file; re-ping pending.
+- synergy: Same as forge — workspace path mismatch. Absolute paths added; re-ping pending.
+- tecton: Task scope received, acknowledged, available and ready.
+Action taken: ops/crew-comms/inbound/ forge-00- and synergy-00- task files updated with absolute paths. Re-ping via hermes profile chat scheduled.
