@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-19 21:27:34 — SIGNED_BY_AGENT
+Decision: Keep Paperclip fleet sync as an adapter-facing documentation refresh, not a live Paperclip data mutation.
+Reason: The task acceptance requires Paperclip-facing artifacts to reflect real fleet posture; updating the redacted adapter notes avoids storing secrets or changing runtime state while making the current routes and constraints visible.
+
+## 2026-05-19 21:26:20 — SIGNED_BY_AGENT
+Decision: Refresh Paperclip from live route-state and recent task completions rather than copying historical fleet assumptions.
+Reason: Paperclip must mirror current operating truth: Echo and Skipper are visible-ready after Task 24, Testova remains held/degraded, and Skipper orchestration uses the Task 23 contract.
+
 ## 2026-05-19 21:24:03 — SIGNED_BY_AGENT
 Decision: Treat fresh visible sessions, not continued `-c` sessions, as the required launch mode for Echo execution-lane proof.
 Reason: Echo visibly answered while continued from an old session, but the bridge could not correlate the turn to the NATS reply inbox; a fresh no-continue launch returned three consecutive replies cleanly.

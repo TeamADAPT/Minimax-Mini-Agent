@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-19 21:27:34 — SIGNED_BY_AGENT
+Completed `26-paperclip-fleet-sync-refresh`: updated Paperclip `docs/adapters/nova-fleet-ops.md` with current route posture, Task 24 Echo proof ids, Skipper visible bridge ownership, Testova held/degraded status, Latch inbox role, and Skipper contract guidance. Verified required doc content and pushed Paperclip commit `e16da011`.
+
+## 2026-05-19 21:26:20 — SIGNED_BY_AGENT
+Started `26-paperclip-fleet-sync-refresh` by moving it from `ops/to_do/` into `ops/in_progress/` before refreshing the Paperclip-facing Nova fleet package from current route state, orchestration contract, and completed Task 24 proof.
+
 ## 2026-05-19 21:24:03 — SIGNED_BY_AGENT
 Completed `24-skipper-echo-execution-lane`: restored Echo and Skipper visible terminals, identified continued Echo sessions (`-c`) as the cause of visible output without NATS reply capture, relaunched Echo fresh without `-c` on `qwen/qwen3.5-397b-a17b` via NVIDIA, and verified three consecutive Skipper-style `nova.echo.direct` assignments returned cleanly with event ids `task24-echo-fresh-a22f3e98`, `task24-echo-proof-format-e3857e47`, and `task24-echo-ready-report-d5e92e7c`. Final route state reports Echo and Skipper `visible-ready` and healthy.
 
