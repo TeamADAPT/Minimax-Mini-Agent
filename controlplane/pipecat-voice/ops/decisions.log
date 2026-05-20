@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:42:59 — SIGNED_BY_AGENT
+Decision: Start Task 22 with bounded diagnostics rather than forcing live audio if upstream or agent reply capture is degraded.
+Reason: Task 22 acceptance requires three successful voice turns or named root causes for failures; current Echo/Skipper direct prompt capture is already degraded, so validation must measure each path and avoid destabilizing the gateway.
+
 ## 2026-05-19 22:40:41 — SIGNED_BY_AGENT
 Decision: Treat Echo and Skipper work-prompt timeouts as route-capture blockers while continuing team work through Iris, Tecton, and Vox.
 Reason: Ping health alone is not proof of usable team execution; Iris, Tecton, and Vox produced bounded replies, but Echo/Skipper did not return usable assignment responses and should not be represented as working until reply capture is recovered.

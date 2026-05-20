@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:42:59 — SIGNED_BY_AGENT
+Started `22-voice-path-validation` by moving it from `ops/to_do/` into `ops/in_progress/`; validation will use bounded gateway/NATS/Deepgram checks, preserve the current voice path, and name root causes for any path that cannot produce three successful end-to-end voice turns.
+
 ## 2026-05-19 22:40:41 — SIGNED_BY_AGENT
 Recorded live team dispatch results for the operator escalation: Skipper event `team-skipper-orchestrate-7dfa32d7` reached the bridge but hidden fallback timed out, Echo event `team-echo-task33-brief-27bce23b` timed out, while Iris `team-iris-e0530a9d`, Tecton `team-tecton-c07da4c3`, and Vox `team-vox-a4dd38f7` returned bounded review/validation replies.
 
