@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:24:53 — SIGNED_BY_AGENT
+Committed `/adapt/novas/active/projects/nats-adapter` as `da12311` and pushed it to `origin/task30-hermes-nats-adapter-promotion-gates` after focused verification with `cargo fmt --check`, `cargo test`, `cargo clippy -- -D warnings`, and `cargo build`.
+
 ## 2026-05-19 22:22:39 — SIGNED_BY_AGENT
 Completed `30-hermes-nats-adapter-promotion-gates`: documented Rust adapter promotion gates in `/adapt/novas/active/projects/nats-adapter/PROMOTION_GATES.md`, recorded isolated proof `nova-84e0fea8ba8d41309b72be5eec7e7e24` on `nova.adapter-proof.direct` with logs on `nova.logs.adapter-proof`, kept `nova.echo.direct` and `nova.skipper.direct` on the existing TUI bridge owners, and marked live-owner promotion as no-go pending a later visible-turn capture task.
 

@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:24:53 — SIGNED_BY_AGENT
+Decision: Push the `/adapt/novas` Task 30 adapter artifact to `origin/task30-hermes-nats-adapter-promotion-gates`.
+Reason: Local `/adapt/novas` `main` is not suitable for a direct main push because the remote main is non-fast-forward; a task branch preserves the verified adapter artifact without merging unrelated remote history.
+
 ## 2026-05-19 22:22:39 — SIGNED_BY_AGENT
 Decision: Keep the Rust Hermes NATS adapter at no-go for live direct-subject ownership after Task 30.
 Reason: The isolated proof passed correlation, reply, log, timeout, and secret-handling gates on `nova.adapter-proof.direct`, but live `nova.echo.direct` and `nova.skipper.direct` still require visible Hermes CLI turn delivery and final answer capture through their current TUI bridge owners.
