@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:29:33 — SIGNED_BY_AGENT
+Decision: Start Task 32 as a guarded, non-default pipecat session hook.
+Reason: Voice validation is still pending under Task 22, so Task 32 must expose or dry-run route/session targets without changing the default voice path or stealing NATS subject ownership.
+
 ## 2026-05-19 22:28:32 — SIGNED_BY_AGENT
 Decision: Keep Task 31 as a package plan artifact in NovaOps ops docs instead of modifying the Paperclip source tree.
 Reason: The task acceptance is a concrete adapter package plan; Paperclip already contains refreshed Nova fleet notes, and the Paperclip repository has unrelated dirty ops-log work that should not be touched for this planning slice.

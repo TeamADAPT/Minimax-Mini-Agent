@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:29:33 — SIGNED_BY_AGENT
+Started `32-pipecat-direct-nats-session-hook` by moving it from `ops/to_do/` into `ops/in_progress/` after completing the Paperclip adapter package plan; the first hook will be guarded and must preserve default voice behavior until Task 22 validates live voice turns.
+
 ## 2026-05-19 22:28:32 — SIGNED_BY_AGENT
 Completed `31-paperclip-nova-adapter-package`: created `ops/paperclip_nova_adapter_package_plan.md` with the external adapter package shape, redacted Nova route config schema, Paperclip UI fields, data boundaries, implementation ownership, and verification gates for `@adaptnova/paperclip-adapter-nova-nats`.
 
