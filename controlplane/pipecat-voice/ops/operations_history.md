@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:33:49 — SIGNED_BY_AGENT
+Completed `32-pipecat-direct-nats-session-hook`: added a guarded dry-run direct NATS session hook in `direct_nats_session_hook.py`, exposed `GET /api/direct-nats-session-hook` and `POST /api/direct-nats-session-hook/dry-run`, documented guardrails in `ops/pipecat_direct_nats_session_hook.md`, verified `py_compile`, focused pytest with 22 passing tests, and preserved default voice behavior plus live subject ownership.
+
 ## 2026-05-19 22:29:33 — SIGNED_BY_AGENT
 Started `32-pipecat-direct-nats-session-hook` by moving it from `ops/to_do/` into `ops/in_progress/` after completing the Paperclip adapter package plan; the first hook will be guarded and must preserve default voice behavior until Task 22 validates live voice turns.
 

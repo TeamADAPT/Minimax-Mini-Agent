@@ -49,12 +49,14 @@ from nats.aio.client import Client as NATSClient
 from nats.aio.subscription import Subscription
 
 from canvas import handle_canvas_ws, canvas_state
+from direct_nats_session_hook import build_direct_nats_session_hook, build_dry_run_envelope
 from kanban import kanban_board
 from session_state_api import build_session_state
 
 ROOT = Path(__file__).parent
 ROSTER_PATH = ROOT / "roster.json"
 ROOM_HISTORY_PATH = ROOT / "ops" / "cx-pipe" / "room_history.jsonl"
+HERMES_PROFILE_ROOT = Path(os.environ.get("HERMES_PROFILE_ROOT", "/home/x/.hermes/profiles"))
 
 for _env in (Path("/adapt/secrets/db.env"), Path("/adapt/secrets/m2.env"), ROOT / ".env"):
     if _env.exists():
@@ -83,6 +85,58 @@ PROFILE_BLOCKERS = {
     # - vox: real Hermes profile now exists
     # Add entries here only if a profile needs manual remediation.
 }
+
+
+def _profile_path(name: str) -> Path:
+    return HERMES_PROFILE_ROOT / name
+
+
+def _latest_profile_session(name: str) -> dict[str, Any] | None:
+    sessions_dir = _profile_path(name) / "sessions"
+    if not sessions_dir.exists():
+        return None
+    try:
+        sessions = [
+            p
+            for p in sessions_dir.iterdir()
+            if p.is_file() and p.name.startswith("session_") and p.suffix == ".json"
+        ]
+        if not sessions:
+            return None
+        latest = max(sessions, key=lambda p: p.stat().st_mtime)
+        return {
+            "id": latest.stem.removeprefix("session_"),
+            "file": latest.name,
+            "updated_at": datetime.fromtimestamp(
+                latest.stat().st_mtime, tz=timezone.utc
+            ).isoformat(),
+        }
+    except Exception as exc:
+        logger.debug(f"session scan failed for {name}: {exc}")
+        return None
+
+
+def _profile_cli_processes() -> dict[str, list[dict[str, Any]]]:
+    result = _run_readonly(["pgrep", "-af", "/home/x/.local/bin/hermes"], timeout=3)
+    processes: dict[str, list[dict[str, Any]]] = {}
+    if not result["stdout"]:
+        return processes
+    for line in result["stdout"].splitlines():
+        match = re.match(r"^\s*(\d+)\s+(.*)$", line)
+        if not match:
+            continue
+        pid, command = match.groups()
+        profile_match = re.search(r"(?:^|\s)-p\s+([a-z][a-z0-9_-]{1,30})(?:\s|$)", command)
+        if not profile_match:
+            continue
+        profile = profile_match.group(1)
+        kind = "gateway" if " gateway run" in command else "cli"
+        if " chat " in command:
+            kind = "chat"
+        processes.setdefault(profile, []).append(
+            {"pid": int(pid), "kind": kind, "command": command[-240:]}
+        )
+    return processes
 
 # ------------------------------------------------------------------ NATS client
 # ------------------------------------------------------------------ NATS streaming helper
@@ -392,6 +446,7 @@ def _profile_health() -> dict:
     roster = load_roster()
     configured = set(_configured_group_targets(roster))
     online = presence.state
+    cli_processes = _profile_cli_processes()
     agents: list[dict[str, Any]] = []
     for agent in roster.get("agents", []):
         name = (agent.get("name") or "").strip().lower()
@@ -419,6 +474,10 @@ def _profile_health() -> dict:
                 "label": agent.get("label") or name.capitalize(),
                 "tier": agent.get("tier") or "core",
                 "online": is_online,
+                "profile_exists": _profile_path(name).exists(),
+                "cli_open": bool(cli_processes.get(name)),
+                "cli_processes": cli_processes.get(name, []),
+                "latest_session": _latest_profile_session(name),
                 "group_enabled": name in configured,
                 "status": status,
                 "reason": reason,
@@ -1022,6 +1081,24 @@ async def get_session_state() -> dict:
     return build_session_state(ROOT)
 
 
+@app.get("/api/direct-nats-session-hook")
+async def get_direct_nats_session_hook() -> dict:
+    """Return guarded direct NATS session targets without changing voice routing."""
+    return build_direct_nats_session_hook(ROOT)
+
+
+@app.post("/api/direct-nats-session-hook/dry-run")
+async def dry_run_direct_nats_session_hook(body: dict) -> dict:
+    """Build the direct-session NATS envelope without publishing it."""
+    try:
+        target = str(body.get("target") or "")
+        message = str(body.get("message") or "")
+        from_agent = str(body.get("from") or "pipecat")
+        return build_dry_run_envelope(ROOT, target, message, from_agent)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.get("/api/rooms/history")
 async def get_room_history(limit: int = 40) -> dict:
     return {"events": _room_history(limit)}
@@ -1084,6 +1161,16 @@ async def whiteboard_page() -> Any:
     """Serve the Iris whiteboard page."""
     html = (CLIENT_DIR / "whiteboard.html").read_text()
     return Response(content=html, media_type="text/html")
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker() -> FileResponse:
+    """Serve the shared service worker with root-scope permission."""
+    return FileResponse(
+        CLIENT_DIR / "sw.js",
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"},
+    )
 
 
 @app.get("/monitor", include_in_schema=False)

@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:33:49 — SIGNED_BY_AGENT
+Decision: Complete Task 32 with a read-only plus dry-run hook instead of enabling live pipecat-to-NATS publishing.
+Reason: Task 22 has not yet validated end-to-end voice turns; the safest useful hook is an inspectable target/envelope contract that preserves default voice behavior and cannot publish unless a later explicit gate enables it.
+
 ## 2026-05-19 22:29:33 — SIGNED_BY_AGENT
 Decision: Start Task 32 as a guarded, non-default pipecat session hook.
 Reason: Voice validation is still pending under Task 22, so Task 32 must expose or dry-run route/session targets without changing the default voice path or stealing NATS subject ownership.
