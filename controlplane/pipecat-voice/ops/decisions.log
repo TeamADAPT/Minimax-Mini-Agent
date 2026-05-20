@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-19 21:31:30 — SIGNED_BY_AGENT
+Decision: Gate Testova follow-up as Task 34 instead of folding it into the active PEA queue.
+Reason: The operator hold on Testova prompts remains in force, so the queue should preserve the resume procedure without accidentally executing it.
+
+## 2026-05-19 21:31:30 — SIGNED_BY_AGENT
+Decision: Decompose PEA/bootstrap follow-up into new numbered task folders instead of expanding Task 28 itself.
+Reason: Task 28 acceptance requires at least five executable tasks with disjoint owners and order; keeping implementation detail inside Task 28 would recreate an umbrella task.
+
 ## 2026-05-19 21:28:48 — SIGNED_BY_AGENT
 Decision: Enforce decomposition against active queues only, while preserving historical completed tasks that predate the stricter template.
 Reason: Task 27 acceptance concerns current and future executable work; rewriting older completed task files would create documentation churn without improving the active operating surface.

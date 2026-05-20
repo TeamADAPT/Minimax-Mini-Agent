@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-19 21:31:30 — SIGNED_BY_AGENT
+Completed `28-pea-bootstrap-execution-queue`: created six executable follow-up task folders (`29` through `34`) covering Rust bootstrap verification, Hermes/NATS adapter promotion gates, Paperclip adapter packaging, pipecat direct NATS session hook, ops metrics/graphs dashboard pass, and Testova resume gate; added `ops/pea_bootstrap_execution_queue.md`; verified each new task has owner, dependencies, steps, acceptance, and rollback.
+
+## 2026-05-19 21:31:30 — SIGNED_BY_AGENT
+Started `28-pea-bootstrap-execution-queue` by moving it from `ops/to_do/` into `ops/in_progress/` before creating the next independently executable PEA/bootstrap task slices with owners, dependencies, acceptance criteria, and rollback paths.
+
 ## 2026-05-19 21:28:48 — SIGNED_BY_AGENT
 Completed `27-task-decomposition-enforcement`: closed umbrella Task 14 with a completion report, added `ops/task_queue_enforcement.md`, audited active `to_do` and `in_progress` task folders for required objective/owner/acceptance/rollback fields, and verified `active task queue check passed`.
 
