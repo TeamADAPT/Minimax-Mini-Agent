@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Observatory" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="/static/manifest-observatory.json" />
+  <title>Nova Blackline Observatory</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/blackline.css?v=orange7" />
+  <style>
+    .ops-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .ops-strip-item,
+    .route-card {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background: rgba(16, 16, 15, 0.86);
+      padding: 0.85rem;
+    }
+
+    .ops-strip-item {
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .strip-label,
+    .route-label {
+      color: #a3a39b;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .strip-value,
+    .route-title {
+      color: #f1f1ea;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .route-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .route-card {
+      min-height: 164px;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .route-card[data-health="healthy"] {
+      border-color: rgba(121, 199, 124, 0.46);
+    }
+
+    .route-card[data-health="degraded"] {
+      border-color: rgba(255, 160, 0, 0.5);
+    }
+
+    .route-card[data-health="down"] {
+      border-color: rgba(207, 116, 99, 0.55);
+    }
+
+    .route-meta {
+      display: grid;
+      gap: 0.3rem;
+      color: #d6d4ca;
+      font-size: 0.86rem;
+    }
+
+    .route-meta .mono {
+      color: #a3a39b;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 1080px) {
+      .ops-strip,
+      .route-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .ops-strip,
+      .route-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="pwa-content" style="max-width: 1600px; margin: 0 auto;">
+    <header class="topbar">
+      <div class="page-head">
+        <div class="eyebrow">App Two</div>
+        <h1>Blackline Observatory</h1>
+        <p>Fleet telemetry, service posture, and a live stream of NATS traffic in one installable shell.</p>
+      </div>
+      <div class="row">
+        <button type="button" class="button-muted" id="refreshButton">Refresh</button>
+      </div>
+    </header>
+
+    <nav class="topbar-links" aria-label="Primary" style="margin-bottom: 1rem;">
+      <a href="/">Ops</a>
+      <a class="is-active" href="/dashboard">Observatory</a>
+      <a href="/canvas">Studio</a>
+    </nav>
+
+    <section class="ops-strip" id="voiceHealthStrip" aria-label="Voice and route health"></section>
+    <section class="route-grid" id="routeCards" aria-label="Agent route state"></section>
+
+    <section class="hero-grid">
+      <article class="panel hero-card">
+        <div class="hero-copy">
+          <div class="eyebrow">Operations Signal</div>
+          <h1>See fleet state, not just endpoints.</h1>
+          <p>
+            Observatory collapses dashboard and monitor duties into a single black-mode PWA:
+            profile health, service counts, NATS subscriptions, task posture, and live traffic.
+          </p>
+          <div class="status-pill-row">
+            <span class="status-pill is-accent"><span class="dot warn"></span> Live websocket monitor</span>
+            <span class="status-pill"><span class="dot good"></span> Chart refresh every 30s</span>
+            <span class="status-pill"><span class="dot warn"></span> Mobile installable</span>
+          </div>
+        </div>
+      </article>
+      <article class="panel panel-soft">
+        <div class="panel-inner metric-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="statLive">-</div>
+            <div class="metric-label">Live agents</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="statServices">-</div>
+            <div class="metric-label">Healthy services</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="statNats">-</div>
+            <div class="metric-label">NATS subscriptions</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="statTasks">-</div>
+            <div class="metric-label">Tracked tasks</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="chart-grid">
+      <article class="chart-card span-4">
+        <div class="section-head">
+          <h2>Agent distribution</h2>
+          <span class="mono" id="healthTimestamp">waiting</span>
+        </div>
+        <canvas id="agentChart"></canvas>
+      </article>
+
+      <article class="chart-card span-8">
+        <div class="section-head">
+          <h2>Live health timeline</h2>
+          <span class="mono">last 12 refreshes</span>
+        </div>
+        <canvas id="healthChart"></canvas>
+      </article>
+
+      <article class="chart-card span-6">
+        <div class="section-head">
+          <h2>Kanban lane counts</h2>
+          <span class="mono">repo planning surface</span>
+        </div>
+        <canvas id="taskChart"></canvas>
+      </article>
+
+      <article class="chart-card span-6">
+        <div class="section-head">
+          <h2>System posture</h2>
+          <span class="mono">ops snapshot</span>
+        </div>
+        <canvas id="taskStatusChart"></canvas>
+      </article>
+    </section>
+
+    <section class="workspace-grid" style="margin-top: 1rem;">
+      <article class="stream-shell">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Traffic Stream</div>
+            <h2 class="stream-title">Live NATS messages</h2>
+          </div>
+          <div class="row">
+            <span class="status-pill"><span class="dot" id="monitorDot"></span><span id="monitorStatus">connecting</span></span>
+            <button type="button" class="button-muted" id="clearStream">Clear</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top: 0.75rem;">
+          <input class="field" id="subjectInput" type="text" value="nova.*" />
+          <button type="button" class="button-primary" id="subscribeButton">Subscribe</button>
+        </div>
+        <div class="pill-row" id="subscriptionPills" style="margin-top: 0.75rem;"></div>
+        <div class="stream-list" id="messageList"></div>
+      </article>
+
+      <article class="workspace-card">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Profile Health</div>
+            <h2>Agent roster by status</h2>
+          </div>
+          <span class="mono" id="profileSummary">waiting</span>
+        </div>
+        <div class="stack" id="agentBadges" style="margin-top: 1rem;"></div>
+        <p class="footer-note">
+          Observatory reuses the repo's `/api/profile-health`, `/api/ops/status`,
+          `/api/kanban`, and `/ws/monitor` surfaces without creating a parallel backend.
+        </p>
+      </article>
+    </section>
+  </main>
+
+  <script src="/static/pwa.js?v=orange7"></script>
+  <script>
+    const subscriptions = new Set(["nova.*"]);
+    let agentChartInst;
+    let healthChartInst;
+    let taskChartInst;
+    let postureChartInst;
+    let monitorSocket = null;
+    let messageCount = 0;
+    const maxMessages = 120;
+
+    function chartTextColor() {
+      return "#a3a39b";
+    }
+
+    function chartGridColor() {
+      return "rgba(255,255,255,0.08)";
+    }
+
+    function buildCharts() {
+      const sharedScales = {
+        y: { beginAtZero: true, grid: { color: chartGridColor() }, ticks: { color: chartTextColor() } },
+        x: { grid: { color: "transparent" }, ticks: { color: chartTextColor() } },
+      };
+
+      agentChartInst = new Chart(document.getElementById("agentChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Live", "Blocked", "Offline"],
+          datasets: [{ data: [0, 0, 0], backgroundColor: ["#79c77c", "#cf7463", "#5f5f59"], borderWidth: 0 }],
+        },
+        options: { responsive: true, plugins: { legend: { labels: { color: chartTextColor() } } } },
+      });
+
+      healthChartInst = new Chart(document.getElementById("healthChart"), {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [{
+            label: "Live agents",
+            data: [],
+            borderColor: "#ff5f05",
+            backgroundColor: "rgba(255, 95, 5, 0.16)",
+            fill: true,
+            tension: 0.24,
+          }],
+        },
+        options: { responsive: true, scales: sharedScales, plugins: { legend: { labels: { color: chartTextColor() } } } },
+      });
+
+      taskChartInst = new Chart(document.getElementById("taskChart"), {
+        type: "bar",
+        data: {
+          labels: ["Todo", "In Progress", "Review", "Done"],
+          datasets: [{
+            data: [0, 0, 0, 0],
+            backgroundColor: ["#77756d", "#ff5f05", "#ffa000", "#d9e0de"],
+            borderRadius: 10,
+          }],
+        },
+        options: { responsive: true, scales: sharedScales, plugins: { legend: { display: false } } },
+      });
+
+      postureChartInst = new Chart(document.getElementById("taskStatusChart"), {
+        type: "radar",
+        data: {
+          labels: ["Services", "NATS", "Live Agents", "Done Tasks", "In Progress"],
+          datasets: [{
+            label: "Posture",
+            data: [0, 0, 0, 0, 0],
+            borderColor: "#ffa000",
+            backgroundColor: "rgba(255, 95, 5, 0.16)",
+            pointBackgroundColor: "#ffd166",
+          }],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            r: {
+              angleLines: { color: chartGridColor() },
+              grid: { color: chartGridColor() },
+              pointLabels: { color: chartTextColor() },
+              ticks: { display: false },
+            },
+          },
+          plugins: { legend: { labels: { color: chartTextColor() } } },
+        },
+      });
+    }
+
+    function updateAgentBadgeList(agents) {
+      const container = document.getElementById("agentBadges");
+      container.innerHTML = agents.map((agent) => `
+        <div class="card">
+          <div class="head">
+            <span class="name">${escapeHtml(agent.label || agent.name)}</span>
+            <span class="status-pill">
+              <span class="dot ${agent.status === "live" ? "good" : agent.status === "blocked" ? "danger" : "warn"}"></span>
+              ${escapeHtml(agent.status)}
+            </span>
+          </div>
+          <div class="meta-line">${escapeHtml(agent.reason || "No blocker detail reported.")}</div>
+        </div>
+      `).join("");
+    }
+
+    function addMessage(subject, payload, time) {
+      const list = document.getElementById("messageList");
+      const wrapper = document.createElement("article");
+      wrapper.className = "stream-message";
+      wrapper.innerHTML = `
+        <div class="section-head">
+          <span class="mono">${escapeHtml(subject)}</span>
+          <span class="stream-meta">${escapeHtml(time || new Date().toISOString())}</span>
+        </div>
+        <div class="payload mono">${escapeHtml(JSON.stringify(payload, null, 2))}</div>
+      `;
+      list.prepend(wrapper);
+      messageCount += 1;
+      while (list.children.length > maxMessages) {
+        list.removeChild(list.lastChild);
+      }
+    }
+
+    function renderSubscriptions() {
+      const container = document.getElementById("subscriptionPills");
+      container.innerHTML = Array.from(subscriptions).map((subject) => `
+        <span class="status-pill">${escapeHtml(subject)}</span>
+      `).join("");
+    }
+
+    function connectMonitor() {
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      monitorSocket = new WebSocket(`${protocol}//${location.host}/ws/monitor`);
+
+      monitorSocket.onopen = () => {
+        document.getElementById("monitorDot").className = "dot good";
+        document.getElementById("monitorStatus").textContent = "connected";
+        subscriptions.forEach((subject) => {
+          monitorSocket.send(JSON.stringify({ action: "subscribe", subject }));
+        });
+      };
+
+      monitorSocket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "message") {
+          addMessage(data.subject, data.payload, data.time);
+        }
+      };
+
+      monitorSocket.onclose = () => {
+        document.getElementById("monitorDot").className = "dot danger";
+        document.getElementById("monitorStatus").textContent = "reconnecting";
+        setTimeout(connectMonitor, 2000);
+      };
+    }
+
+    function formatTime(value) {
+      if (!value) return "none";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleTimeString();
+    }
+
+    function dotClassForHealth(value) {
+      if (value === "healthy" || value === "ok" || value === "active") return "good";
+      if (value === "down" || value === "error" || value === "inactive") return "danger";
+      return "warn";
+    }
+
+    function renderSessionState(sessionState, ops) {
+      const rawHealth = sessionState.raw?.pipecat_health || {};
+      const gatewayOk = rawHealth.gateway_health?.ok || ops.health?.gateway === "ok";
+      const natsOk = rawHealth.nats_subscriptions?.ok || (ops.nats?.count || 0) > 0;
+      const visibleReady = (sessionState.agents || [])
+        .filter((agent) => agent.route_mode === "visible-ready").length;
+      const fallbackActive = (sessionState.agents || [])
+        .filter((agent) => agent.route_mode === "fallback-active").length;
+      const strips = [
+        ["Gateway", gatewayOk ? "ok" : "check", gatewayOk ? "healthy" : "degraded"],
+        ["NATS", natsOk ? `${ops.nats?.count || 0} subs` : "check", natsOk ? "healthy" : "degraded"],
+        ["Visible", `${visibleReady}/${sessionState.agents?.length || 0}`, visibleReady ? "healthy" : "degraded"],
+        ["Fallback", String(fallbackActive), fallbackActive ? "degraded" : "healthy"],
+      ];
+      document.getElementById("voiceHealthStrip").innerHTML = strips.map(([label, value, health]) => `
+        <div class="ops-strip-item">
+          <span class="strip-label">${escapeHtml(label)}</span>
+          <span class="strip-value"><span class="dot ${dotClassForHealth(health)}"></span> ${escapeHtml(value)}</span>
+        </div>
+      `).join("");
+
+      const agentMap = new Map((sessionState.agents || []).map((agent) => [agent.name, agent]));
+      const cards = ["echo", "skipper", "testova"].map((name) => agentMap.get(name) || { name });
+      cards.push({
+        name: "latch",
+        subject: sessionState.operator_inbox?.subject,
+        route_mode: sessionState.operator_inbox?.route_mode || "inbox",
+        route_health: sessionState.operator_inbox?.service?.active === "active" ? "healthy" : "degraded",
+        route_reason: sessionState.operator_inbox?.service?.unit || "operator inbox",
+        bridge_owner: sessionState.operator_inbox?.service?.unit,
+        bridge_active: sessionState.operator_inbox?.service?.active,
+        latest_session_id: "operator",
+      });
+      document.getElementById("routeCards").innerHTML = cards.map((agent) => `
+        <article class="route-card" data-health="${escapeHtml(agent.route_health || "unknown")}">
+          <div>
+            <div class="route-label">${escapeHtml(agent.subject || `nova.${agent.name}.direct`)}</div>
+            <div class="route-title">${escapeHtml(agent.name || "unknown")}</div>
+          </div>
+          <div class="route-meta">
+            <span><span class="dot ${dotClassForHealth(agent.route_health)}"></span> ${escapeHtml(agent.route_mode || "unknown")}</span>
+            <span>${escapeHtml(agent.route_reason || "no route reason")}</span>
+            <span class="mono">session ${escapeHtml(agent.latest_session_id || "none")}</span>
+            <span class="mono">proof ${escapeHtml(formatTime(agent.latest_proof_timestamp))} · ${escapeHtml(agent.latest_reply_mode || "none")}</span>
+            <span class="mono">bridge ${escapeHtml(agent.bridge_owner || "none")} ${escapeHtml(agent.bridge_active || "")}</span>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    async function loadAllData() {
+      const [health, ops, kanban, sessionState] = await Promise.all([
+        fetch("/api/profile-health").then((response) => response.json()),
+        fetch("/api/ops/status").then((response) => response.json()),
+        fetch("/api/kanban").then((response) => response.json()),
+        fetch("/api/session-state").then((response) => response.json()),
+      ]);
+
+      const counts = { live: 0, blocked: 0, offline: 0 };
+      for (const agent of health.agents || []) {
+        if (agent.status === "live") {
+          counts.live += 1;
+        } else if (agent.status === "blocked") {
+          counts.blocked += 1;
+        } else {
+          counts.offline += 1;
+        }
+      }
+
+      const cards = Object.values(kanban.cards || {});
+      const taskCounts = { todo: 0, in_progress: 0, review: 0, done: 0 };
+      for (const card of cards) {
+        if (taskCounts[card.column_id] !== undefined) {
+          taskCounts[card.column_id] += 1;
+        }
+      }
+
+      agentChartInst.data.datasets[0].data = [counts.live, counts.blocked, counts.offline];
+      agentChartInst.update();
+
+      const stamp = new Date().toLocaleTimeString();
+      document.getElementById("healthTimestamp").textContent = stamp;
+      healthChartInst.data.labels.push(stamp);
+      healthChartInst.data.datasets[0].data.push(counts.live);
+      if (healthChartInst.data.labels.length > 12) {
+        healthChartInst.data.labels.shift();
+        healthChartInst.data.datasets[0].data.shift();
+      }
+      healthChartInst.update();
+
+      taskChartInst.data.datasets[0].data = [
+        taskCounts.todo,
+        taskCounts.in_progress,
+        taskCounts.review,
+        taskCounts.done,
+      ];
+      taskChartInst.update();
+
+      const healthyServices = (ops.services || []).filter((service) => service.ok).length;
+      const natsCount = ops.nats?.count || 0;
+      postureChartInst.data.datasets[0].data = [
+        healthyServices,
+        natsCount,
+        counts.live,
+        taskCounts.done,
+        taskCounts.in_progress,
+      ];
+      postureChartInst.update();
+
+      document.getElementById("statLive").textContent = String(counts.live);
+      document.getElementById("statServices").textContent = String(healthyServices);
+      document.getElementById("statNats").textContent = String(natsCount);
+      document.getElementById("statTasks").textContent = String(cards.length);
+      document.getElementById("profileSummary").textContent =
+        `${counts.live} live / ${counts.blocked} blocked / ${counts.offline} offline`;
+      updateAgentBadgeList(health.agents || []);
+      renderSessionState(sessionState, ops);
+    }
+
+    function escapeHtml(value) {
+      const node = document.createElement("div");
+      node.textContent = value;
+      return node.innerHTML;
+    }
+
+    document.getElementById("subscribeButton").addEventListener("click", () => {
+      const input = document.getElementById("subjectInput");
+      const subject = input.value.trim();
+      if (!subject) {
+        return;
+      }
+      subscriptions.add(subject);
+      renderSubscriptions();
+      if (monitorSocket?.readyState === WebSocket.OPEN) {
+        monitorSocket.send(JSON.stringify({ action: "subscribe", subject }));
+      }
+    });
+
+    document.getElementById("clearStream").addEventListener("click", () => {
+      document.getElementById("messageList").innerHTML = "";
+      messageCount = 0;
+    });
+
+    document.getElementById("refreshButton").addEventListener("click", () => {
+      loadAllData().catch(console.error);
+    });
+
+    buildCharts();
+    renderSubscriptions();
+    connectMonitor();
+    loadAllData().catch(console.error);
+    setInterval(() => loadAllData().catch(console.error), 30000);
+  </script>
+</body>
+</html>

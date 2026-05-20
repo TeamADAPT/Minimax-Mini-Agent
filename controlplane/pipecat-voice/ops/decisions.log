@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 20:55:18 — SIGNED_BY_AGENT
+Decision: Keep the observability dashboard backed by `/api/session-state` and existing status endpoints instead of adding live model/NATS probes.
+Reason: the dashboard must be safe for frequent polling and should show current route posture without burning model quota or disturbing held Testova proof work.
+
 ## 2026-05-19 20:49:20 — SIGNED_BY_AGENT
 Decision: Expose session state through a separate read-only `/api/session-state` route instead of overloading `/api/ops/status`.
 Reason: dashboard and monitor clients need frequent polling of agent route/session/proof state without triggering model calls, NATS request traffic, service restarts, journal scans, or writes.

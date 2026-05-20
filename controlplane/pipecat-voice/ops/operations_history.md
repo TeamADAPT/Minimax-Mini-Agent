@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 20:55:18 — SIGNED_BY_AGENT
+Completed `20-dashboard-session-voice-observability`: added the Blackline Observatory dashboard with `/api/session-state` route cards for Echo, Skipper, Testova, and Latch; added gateway/NATS/visible/fallback health strips; committed required static assets; verified `py_compile`, focused pytest, FastAPI TestClient responses, and Playwright desktop/mobile checks with four route cards, four health strip items, visible/fallback posture text, and no console errors.
+
 ## 2026-05-19 20:50:40 — SIGNED_BY_AGENT
 Started `20-dashboard-session-voice-observability` by moving it from `ops/to_do/` into `ops/in_progress/` before adding dashboard widgets backed by `/api/session-state`.
 
