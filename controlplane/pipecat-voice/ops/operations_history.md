@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-19 22:40:41 — SIGNED_BY_AGENT
+Recorded live team dispatch results for the operator escalation: Skipper event `team-skipper-orchestrate-7dfa32d7` reached the bridge but hidden fallback timed out, Echo event `team-echo-task33-brief-27bce23b` timed out, while Iris `team-iris-e0530a9d`, Tecton `team-tecton-c07da4c3`, and Vox `team-vox-a4dd38f7` returned bounded review/validation replies.
+
+## 2026-05-19 22:39:57 — SIGNED_BY_AGENT
+Completed `33-ops-metrics-graphs-dashboard-pass`: added Observatory route health, proof age, voice gateway, and NATS traffic metric cards; updated the system posture chart to route/NATS/stream metrics; fixed mobile chart overflow; verified `py_compile`, focused pytest with 22 passing tests, desktop/mobile Playwright screenshots, nonblank chart pixels, mobile no-overflow, and no console warnings/errors after favicon fix.
+
 ## 2026-05-19 22:35:43 — SIGNED_BY_AGENT
 Started `33-ops-metrics-graphs-dashboard-pass` by moving it from `ops/to_do/` into `ops/in_progress/`; Echo has been assigned a parallel Task 33 implementation brief over `nova.echo.direct`, and Skipper has been assigned active queue orchestration over `nova.skipper.direct`.
 

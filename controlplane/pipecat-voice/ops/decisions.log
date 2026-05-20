@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-19 22:40:41 — SIGNED_BY_AGENT
+Decision: Treat Echo and Skipper work-prompt timeouts as route-capture blockers while continuing team work through Iris, Tecton, and Vox.
+Reason: Ping health alone is not proof of usable team execution; Iris, Tecton, and Vox produced bounded replies, but Echo/Skipper did not return usable assignment responses and should not be represented as working until reply capture is recovered.
+
+## 2026-05-19 22:39:57 — SIGNED_BY_AGENT
+Decision: Implement Task 33 as a dashboard-only metrics slice backed by existing API and websocket surfaces.
+Reason: The task requires actionable route/voice/NATS metrics without raw JSON hunting; existing `/api/session-state`, `/api/ops/status`, and `/ws/monitor` already expose enough real/derived data, so adding backend routes or changing live services would increase risk without improving the acceptance target.
+
 ## 2026-05-19 22:35:43 — SIGNED_BY_AGENT
 Decision: Start Task 33 while Skipper and Echo process live NATS assignments.
 Reason: The operator requested the whole team working; Task 33 can advance from existing dashboard/session-state/monitor surfaces while preserving the held Testova gate and current live direct subject owners.

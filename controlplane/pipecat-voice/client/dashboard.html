@@ -7,6 +7,7 @@
   <meta name="apple-mobile-web-app-title" content="Observatory" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#000000" />
+  <link rel="icon" href="data:," />
   <link rel="manifest" href="/static/manifest-observatory.json" />
   <title>Nova Blackline Observatory</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -89,17 +90,67 @@
       overflow-wrap: anywhere;
     }
 
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .signal-card {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background: rgba(16, 16, 15, 0.72);
+      padding: 0.85rem;
+      min-height: 118px;
+      display: grid;
+      align-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .signal-value {
+      color: #f1f1ea;
+      font-size: clamp(1.35rem, 2vw, 2.1rem);
+      font-weight: 800;
+      line-height: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .signal-caption {
+      color: #a3a39b;
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
     @media (max-width: 1080px) {
       .ops-strip,
-      .route-grid {
+      .route-grid,
+      .signal-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
     @media (max-width: 640px) {
       .ops-strip,
-      .route-grid {
+      .route-grid,
+      .signal-grid {
         grid-template-columns: 1fr;
+      }
+
+      .chart-grid,
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .span-4,
+      .span-6,
+      .span-8,
+      .span-12 {
+        grid-column: 1 / -1;
+      }
+
+      .chart-card canvas {
+        height: 240px;
       }
     }
   </style>
@@ -125,6 +176,36 @@
 
     <section class="ops-strip" id="voiceHealthStrip" aria-label="Voice and route health"></section>
     <section class="route-grid" id="routeCards" aria-label="Agent route state"></section>
+    <section class="signal-grid" aria-label="Operational metrics">
+      <article class="signal-card">
+        <div>
+          <div class="strip-label">Route health</div>
+          <div class="signal-value" id="metricRouteHealth">-</div>
+        </div>
+        <div class="signal-caption" id="metricRouteHealthNote">real snapshot</div>
+      </article>
+      <article class="signal-card">
+        <div>
+          <div class="strip-label">Proof age</div>
+          <div class="signal-value" id="metricProofAge">-</div>
+        </div>
+        <div class="signal-caption" id="metricProofAgeNote">derived from latest proof timestamps</div>
+      </article>
+      <article class="signal-card">
+        <div>
+          <div class="strip-label">Voice gateway</div>
+          <div class="signal-value" id="metricVoiceGateway">-</div>
+        </div>
+        <div class="signal-caption" id="metricVoiceGatewayNote">real service/API state</div>
+      </article>
+      <article class="signal-card">
+        <div>
+          <div class="strip-label">NATS traffic</div>
+          <div class="signal-value" id="metricNatsTraffic">0</div>
+        </div>
+        <div class="signal-caption" id="metricNatsTrafficNote">real websocket stream events this page load</div>
+      </article>
+    </section>
 
     <section class="hero-grid">
       <article class="panel hero-card">
@@ -301,7 +382,7 @@
       postureChartInst = new Chart(document.getElementById("taskStatusChart"), {
         type: "radar",
         data: {
-          labels: ["Services", "NATS", "Live Agents", "Done Tasks", "In Progress"],
+          labels: ["Services", "NATS Subs", "Route Ready", "Route Degraded", "Stream Events"],
           datasets: [{
             label: "Posture",
             data: [0, 0, 0, 0, 0],
@@ -354,6 +435,7 @@
       `;
       list.prepend(wrapper);
       messageCount += 1;
+      document.getElementById("metricNatsTraffic").textContent = String(messageCount);
       while (list.children.length > maxMessages) {
         list.removeChild(list.lastChild);
       }
@@ -398,6 +480,16 @@
       return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleTimeString();
     }
 
+    function formatDuration(ms) {
+      if (!Number.isFinite(ms) || ms < 0) return "none";
+      const minutes = Math.floor(ms / 60000);
+      if (minutes < 1) return "<1m";
+      if (minutes < 60) return `${minutes}m`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 48) return `${hours}h`;
+      return `${Math.floor(hours / 24)}d`;
+    }
+
     function dotClassForHealth(value) {
       if (value === "healthy" || value === "ok" || value === "active") return "good";
       if (value === "down" || value === "error" || value === "inactive") return "danger";
@@ -408,10 +500,19 @@
       const rawHealth = sessionState.raw?.pipecat_health || {};
       const gatewayOk = rawHealth.gateway_health?.ok || ops.health?.gateway === "ok";
       const natsOk = rawHealth.nats_subscriptions?.ok || (ops.nats?.count || 0) > 0;
+      const agents = sessionState.agents || [];
       const visibleReady = (sessionState.agents || [])
         .filter((agent) => agent.route_mode === "visible-ready").length;
       const fallbackActive = (sessionState.agents || [])
         .filter((agent) => agent.route_mode === "fallback-active").length;
+      const degradedRoutes = agents
+        .filter((agent) => agent.route_health && agent.route_health !== "healthy").length;
+      const proofTimes = agents
+        .map((agent) => new Date(agent.latest_proof_timestamp || "").getTime())
+        .filter((value) => Number.isFinite(value));
+      const newestProofAge = proofTimes.length
+        ? Date.now() - Math.max(...proofTimes)
+        : Number.NaN;
       const strips = [
         ["Gateway", gatewayOk ? "ok" : "check", gatewayOk ? "healthy" : "degraded"],
         ["NATS", natsOk ? `${ops.nats?.count || 0} subs` : "check", natsOk ? "healthy" : "degraded"],
@@ -424,6 +525,20 @@
           <span class="strip-value"><span class="dot ${dotClassForHealth(health)}"></span> ${escapeHtml(value)}</span>
         </div>
       `).join("");
+
+      document.getElementById("metricRouteHealth").textContent =
+        `${visibleReady}/${agents.length || 0}`;
+      document.getElementById("metricRouteHealthNote").textContent =
+        `${degradedRoutes} degraded route${degradedRoutes === 1 ? "" : "s"}`;
+      document.getElementById("metricProofAge").textContent = formatDuration(newestProofAge);
+      document.getElementById("metricProofAgeNote").textContent =
+        proofTimes.length ? "youngest captured proof" : "no proof timestamps in snapshot";
+      document.getElementById("metricVoiceGateway").textContent = gatewayOk ? "ok" : "check";
+      document.getElementById("metricVoiceGatewayNote").textContent =
+        `NATS ${natsOk ? "ok" : "check"} · direct hook dry-run`;
+      document.getElementById("metricNatsTraffic").textContent = String(messageCount);
+      document.getElementById("metricNatsTrafficNote").textContent =
+        `${ops.nats?.count || 0} matching nova subscriptions`;
 
       const agentMap = new Map((sessionState.agents || []).map((agent) => [agent.name, agent]));
       const cards = ["echo", "skipper", "testova"].map((name) => agentMap.get(name) || { name });
@@ -504,12 +619,16 @@
 
       const healthyServices = (ops.services || []).filter((service) => service.ok).length;
       const natsCount = ops.nats?.count || 0;
+      const routeReady = (sessionState.agents || [])
+        .filter((agent) => agent.route_mode === "visible-ready").length;
+      const routeDegraded = (sessionState.agents || [])
+        .filter((agent) => agent.route_health && agent.route_health !== "healthy").length;
       postureChartInst.data.datasets[0].data = [
         healthyServices,
         natsCount,
-        counts.live,
-        taskCounts.done,
-        taskCounts.in_progress,
+        routeReady,
+        routeDegraded,
+        messageCount,
       ];
       postureChartInst.update();
 
