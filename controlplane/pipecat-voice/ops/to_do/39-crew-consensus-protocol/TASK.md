@@ -1,8 +1,8 @@
-#Crew Consensus Protocol
+# 39 Crew Consensus Protocol
 
 ## Objective
 
-Define and prototype a multi-nova consensus binding: propose → vote → bind, with timeout handling and NO_QUORUM fallbacks.
+Design and implement a multi-nova consensus binding protocol: propose → vote → bind, with quorum enforcement and timeout handling. Synergy owns this; other crew members act as voters.
 
 ## Owner
 
@@ -10,20 +10,60 @@ Synergy
 
 ## Dependencies
 
-Task 35 (multi-subject reachability) for real voting; can mock with just Skipper/Echo for protocol validation.
+Task 35 (multi-subject reachability) for real voting; mock voting works without it.
+
+## Protocol
+
+### NATS Subjects
+
+| Subject | Direction | Purpose |
+|---------|-----------|---------|
+| `nova.crew.consensus.propose` | publish | Synergy broadcasts new proposal |
+| `nova.crew.consensus.vote.<topic>` | subscribe+publish | Each nova replies YES/NO/ABSTAIN |
+| `nova.crew.consensus.bind.<topic>` | publish | Synergy announces binding result |
+
+### Proposal Payload
+
+```json
+{
+  "topic": "deploy-rust-bridge-v1",
+  "evidence": "...",
+  "proposer": "synergy",
+  "quorum": 3,
+  "timeout_seconds": 120,
+  "proposal_id": "prop-001"
+}
+```
+
+### Vote Payload
+
+```json
+{
+  "proposal_id": "prop-001",
+  "voter": "iris",
+  "decision": "YES",
+  "reasoning": "aligned with wasm64 goal"
+}
+```
+
+### Binding Rules
+
+- YES/NO votes counted; ABSTAIN ignored
+- Binding if YES ≥ quorum
+- NO-BIND if time expires without quorum
+- NO_QUORUM if insufficient voters respond
 
 ## Steps
 
-1. Define consensus state machine and NATS subjects (propose, vote, bind)
-2. Implement mock voter echo service for testing
-3. Run 3-nova mock proposal to binding
-4. Implement timeout → NO_QUORUM
-5. Document protocol contract in ops/crew_consensus_protocol.md
+1. Design protocol state machine and NATS subject contract
+2. Implement consensus service (Rust or Python)
+3. Mock 3-nova vote with real NATS pub/sub
+4. Verify binding/non-binding with correct quorum
 
 ## Acceptance
 
-Mock 3-nova vote yields correct binding result; timed-out vote returns NO_QUORUM; protocol spec committed.
+Mock 3-nova vote (skipper, echo, synergy as mock voters) yields correct binding; timeout produces NO_QUORUM.
 
 ## Rollback
 
-Stop the proposal subscriber; no data binding without explicit commit.
+Stop consensus subscriber; no data bound without explicit binding message.

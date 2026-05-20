@@ -740,3 +740,6 @@ Opened Directive 35 (Crew Collaboration Launch) and created task folders 35, 37,
 
 ## 2026-05-20 02:05:03 — SIGNED_BY_AGENT
 Crew infrastructure scaffolded and Swift Brane wasm64 pilot compiled. Created: systemd/nova-tui-bridge@.service (parameterized bridge template), scripts/crew_nova_config.py (nova→model/provider map for iris/zap/forge/synergy/tecton). Swift Brane scaffold built with nightly + -Zbuild-std=core,alloc,panic_abort + wasm64-unknown-unknown; libswift_brane_file_read.rlib produced (5KB ar archive). Build required rust-src component. Crew TUI launch pending operator TTY open for new novas; Swift Brane host shim is the natural next step.
+
+## 2026-05-20 02:21:10 — SIGNED_BY_AGENT
+Completed Task 39 decomposition: protocol spec written to ops/to_do/39-crew-consensus-protocol/TASK.md with NATS subject contract, proposal/vote/bind payload schemas, quorum rules, and acceptance criteria. Ready for Synergy to implement.
