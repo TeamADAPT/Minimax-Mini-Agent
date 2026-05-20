@@ -1,5 +1,21 @@
 # Decisions Log
 
+## 2026-05-19 20:34:19 — SIGNED_BY_AGENT
+Decision: Keep Testova in Task 17 and validation-only until it passes three consecutive visible-only NATS proofs.
+Reason: the env/model path now produces a visible assistant reply, but earlier attempts were polluted by stale queued fallback work and the current hold prevented completing the formal three-turn acceptance gate.
+
+## 2026-05-19 20:34:18 — SIGNED_BY_AGENT
+Decision: Treat `Testova CLI` window title discovery as part of the visible-session acceptance gate.
+Reason: the Hermes process can remain alive in `/adapt/novas/active/Testova` while GNOME exposes the window as `Terminal`; the bridge will not deliver visible turns unless the expected title is discoverable.
+
+## 2026-05-19 20:33:52 — SIGNED_BY_AGENT
+Decision: Disable Testova's CLI fallback during visible-session hardening and increase reply capture to 300 seconds.
+Reason: the fallback path masked whether `nova.testova.direct` reached the intended terminal, and the prior 30 second assistant-capture window was shorter than the model/provider path now configured for Testova.
+
+## 2026-05-19 20:01:30 — SIGNED_BY_AGENT
+Decision: Treat dedicated visible NATS terminals as fresh sessions, not resumed `--continue` sessions, when reliable reply capture matters.
+Reason: the continued Skipper lineage carried prior tool activity and caused one proof turn to exceed the bridge reply window, while a fresh visible session cleared five consecutive direct-turn proofs without fallback.
+
 ## 2026-05-19 19:47:49 — SIGNED_BY_AGENT
 Decision: Materialize the execution plan as task directories before resuming deeper implementation.
 Reason: Skipper needs a concrete queue with ownership, acceptance, and rollback boundaries in order to orchestrate effectively; keeping the plan only in chat would recreate ambiguity at handoff time.

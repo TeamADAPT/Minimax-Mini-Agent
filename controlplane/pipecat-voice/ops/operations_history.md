@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-19 20:34:19 — SIGNED_BY_AGENT
+Advanced `17-testova-visible-session-hardening` without completing it: corrected Testova's active/profile `.env` files to valid `python-dotenv` syntax, switched `testova-tui-nats-bridge.service` to load shared model secrets, disabled CLI fallback, raised visible reply capture to 300 seconds, added a tracked `systemd/testova-tui-nats-bridge.service`, relaunched `Testova CLI` from `/adapt/novas/active/Testova`, and stopped the active proof publisher when Chase requested hold. After clearing the held proof state, Testova was restored to an idle visible terminal with the bridge active; when GNOME reset the window title to `Terminal`, retitling the existing window back to `Testova CLI` restored bridge discovery. The required three consecutive no-fallback `nova.testova.direct` proof is still pending.
+
+## 2026-05-19 20:01:30 — SIGNED_BY_AGENT
+Completed `16-skipper-visible-session-hardening`: confirmed the original failure was a stale `--continue`-based visible session with no live desktop window, relaunched `Skipper CLI` in `/adapt/novas/active/skipper`, verified that the continued session still leaked one fallback during proof traffic, then relaunched Skipper without `--continue` into fresh session `20260519_195954_d467fc` and passed five consecutive `nova.skipper.direct` visible proofs with no fallback.
+
 ## 2026-05-19 19:47:49 — SIGNED_BY_AGENT
 Created the next execution queue under `ops/to_do/` by decomposing the fleet/runtime/UI/orchestration follow-on work into task folders `16` through `28`, each with explicit owner, dependencies, steps, acceptance criteria, and rollback notes so Skipper can orchestrate directly against the queue.
 
