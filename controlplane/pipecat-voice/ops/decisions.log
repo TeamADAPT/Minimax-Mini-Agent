@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:07:36 — SIGNED_BY_AGENT
+Decision: Start Task 30 as an isolated-subject adapter promotion gate pass.
+Reason: Echo and Skipper visible TUI bridges are the current live owners; adapter promotion must prove correlation, reply, logging, and rollback behavior without stealing live direct subjects.
+
 ## 2026-05-19 22:05:47 — SIGNED_BY_AGENT
 Decision: Push the `/adapt/novas` bootstrap verifier commit to `origin/task29-nova-bootstrap-rust-verify` instead of pulling and merging remote `main`.
 Reason: `origin/main` rejected the direct push as non-fast-forward; a task branch preserves the exact verified artifact without introducing unrelated remote merge risk during Task 29 completion.
