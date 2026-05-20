@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:01:28 — SIGNED_BY_AGENT
+Started `29-nova-bootstrap-rust-build-verify` by moving it from `ops/to_do/` into `ops/in_progress/`; Testova Task 17 remains held on operator instruction, so Rust bootstrap verification is the next non-held execution slice.
+
 ## 2026-05-19 22:00:23 — SIGNED_BY_AGENT
 Reopened Skipper as a fresh visible Hermes CLI session in `/adapt/novas/active/skipper` using NVIDIA model `moonshotai/kimi-k2.6`, restarted `skipper-tui-nats-bridge.service`, verified the process cwd, verified the `Skipper CLI` desktop window, and confirmed `nova.skipper.ping` returns `pong:skipper:tui`.
 
