@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 22:28:32 — SIGNED_BY_AGENT
+Completed `31-paperclip-nova-adapter-package`: created `ops/paperclip_nova_adapter_package_plan.md` with the external adapter package shape, redacted Nova route config schema, Paperclip UI fields, data boundaries, implementation ownership, and verification gates for `@adaptnova/paperclip-adapter-nova-nats`.
+
 ## 2026-05-19 22:25:51 — SIGNED_BY_AGENT
 Started `31-paperclip-nova-adapter-package` by moving it from `ops/to_do/` into `ops/in_progress/`; Testova proof work remains held, so the next non-held queue item is the Paperclip-facing Nova/Hermes adapter package plan.
 

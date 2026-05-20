@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:28:32 — SIGNED_BY_AGENT
+Decision: Keep Task 31 as a package plan artifact in NovaOps ops docs instead of modifying the Paperclip source tree.
+Reason: The task acceptance is a concrete adapter package plan; Paperclip already contains refreshed Nova fleet notes, and the Paperclip repository has unrelated dirty ops-log work that should not be touched for this planning slice.
+
 ## 2026-05-19 22:25:51 — SIGNED_BY_AGENT
 Decision: Start Task 31 instead of resuming Testova Task 17.
 Reason: The operator hold on Testova proof work remains active; Paperclip adapter packaging is independent of Testova live prompts and continues the post-Task-30 Action Plan without disturbing current route owners.
