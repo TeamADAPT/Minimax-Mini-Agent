@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-19 21:10:47 — SIGNED_BY_AGENT
+Completed `23-skipper-orchestration-contract`: created `ops/skipper_orchestration_contract.md` with Skipper's assignment envelope, owner/proof/checkback rules, Echo/Testova/Latch handoffs, status cadence, escalation, stale-task handling, and proof acceptance. Verified required contract fields locally. Skipper's NATS ping returned `pong:skipper:tui`, but the visible window was missing, fallback reply capture timed out with no text, and the orphan fallback process was stopped; the contract records this route caveat.
+
+## 2026-05-19 21:06:39 — SIGNED_BY_AGENT
+Started `23-skipper-orchestration-contract` by moving it from `ops/to_do/` into `ops/in_progress/` before defining Skipper's concrete task envelope, owner/proof/checkback contract, stale-task handling, and crew handoff rules.
+
 ## 2026-05-19 21:04:10 — SIGNED_BY_AGENT
 Completed `21-monitor-stream-cleanup`: replaced the monitor with focused NATS debug presets for direct, ping, logs, route/metrics, and raw fallback; added proof/failure/route/log rendering; removed the duplicate placeholder `/ws/monitor` route so the real NATS stream owns the path; verified py_compile, static preset checks, websocket smoke traffic, Playwright desktop/mobile renders, zero final console errors, and focused pytest with 23 passing tests.
 

@@ -1,5 +1,17 @@
 # Decisions Log
 
+## 2026-05-19 21:10:47 — SIGNED_BY_AGENT
+Decision: Complete Task 23 from the local contract artifact despite Skipper's reply timeout.
+Reason: The acceptance criterion is a usable delegation contract, and Skipper's timeout is route/session evidence already captured in the contract caveat rather than missing contract content.
+
+## 2026-05-19 21:09:29 — SIGNED_BY_AGENT
+Decision: Record current visible-route degradation inside the Skipper contract instead of presenting the orchestration surface as fully stable.
+Reason: Live route state reported Echo `visible-missing` and Skipper `fallback-active`, so the contract must distinguish assignment structure from visible-only proof readiness.
+
+## 2026-05-19 21:06:39 — SIGNED_BY_AGENT
+Decision: Build Task 23 as a Skipper-specific orchestration contract that references the existing team delegation protocol instead of replacing it.
+Reason: `ops/team_delegation_protocol.md` already defines broad fleet safety and route rules; Skipper needs the narrower operational format for issuing owner-bound tasks with proof and return routes.
+
 ## 2026-05-19 21:04:10 — SIGNED_BY_AGENT
 Decision: Make the monitor client classify and summarize live NATS events while retaining `nova.>` as the raw fallback preset.
 Reason: Operators need fast proof, failure, route, ping, and log recognition during live debugging, but raw payload access must remain one click away for low-level inspection.
