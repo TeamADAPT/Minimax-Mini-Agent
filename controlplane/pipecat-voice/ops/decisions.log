@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-19 20:40:43 — SIGNED_BY_AGENT
+Decision: Classify route state from bridge service activity, visible window discovery, and fallback configuration, with proof metadata as evidence rather than the primary health switch.
+Reason: a route can be currently ready or degraded independent of the last proof outcome; the snapshot needs both live posture and historical proof/reply context.
+
+## 2026-05-19 20:38:10 — SIGNED_BY_AGENT
+Decision: Preserve the existing `crew_route_state.json` fields while adding richer route posture fields.
+Reason: downstream consumers already read `route_mode`, `fallback_enabled`, service, window, and session fields; Task 18 should improve fidelity without breaking existing UI/backend readers.
+
 ## 2026-05-19 20:34:19 — SIGNED_BY_AGENT
 Decision: Keep Testova in Task 17 and validation-only until it passes three consecutive visible-only NATS proofs.
 Reason: the env/model path now produces a visible assistant reply, but earlier attempts were polluted by stale queued fallback work and the current hold prevented completing the formal three-turn acceptance gate.

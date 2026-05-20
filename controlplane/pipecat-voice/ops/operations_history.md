@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-19 20:40:43 — SIGNED_BY_AGENT
+Completed `18-route-state-fidelity-upgrade`: extended `scripts/crew_route_state.py` to preserve existing consumer fields while adding explicit route modes, `route_health`, `route_reason`, reply-capture timeout, latest proof metadata, latest proof timestamp, and latest reply mode; verified with `py_compile`, `pytest -q tests/test_crew_route_state.py`, and a live snapshot generation.
+
+## 2026-05-19 20:38:10 — SIGNED_BY_AGENT
+Started `18-route-state-fidelity-upgrade` by moving it from `ops/to_do/` into `ops/in_progress/` before extending `crew_route_state.json` with explicit routing posture, proof metadata, and bridge/window reasons.
+
 ## 2026-05-19 20:34:19 — SIGNED_BY_AGENT
 Advanced `17-testova-visible-session-hardening` without completing it: corrected Testova's active/profile `.env` files to valid `python-dotenv` syntax, switched `testova-tui-nats-bridge.service` to load shared model secrets, disabled CLI fallback, raised visible reply capture to 300 seconds, added a tracked `systemd/testova-tui-nats-bridge.service`, relaunched `Testova CLI` from `/adapt/novas/active/Testova`, and stopped the active proof publisher when Chase requested hold. After clearing the held proof state, Testova was restored to an idle visible terminal with the bridge active; when GNOME reset the window title to `Terminal`, retitling the existing window back to `Testova CLI` restored bridge discovery. The required three consecutive no-fallback `nova.testova.direct` proof is still pending.
 
