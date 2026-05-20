@@ -1,0 +1,15 @@
+[Unit]
+Description=Nova TUI NATS Bridge for %i
+After=network.target
+
+[Service]
+Type=simple
+Environment=SUBJECT_NS=nova
+Environment=ECHO_TUI_AGENT=%i
+Environment=ECHO_TUI_WINDOW_NAME=%i CLI
+ExecStart=/usr/bin/python3 /adapt/platform/novaops/controlplane/pipecat-voice/scripts/echo_tui_nats_bridge.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
