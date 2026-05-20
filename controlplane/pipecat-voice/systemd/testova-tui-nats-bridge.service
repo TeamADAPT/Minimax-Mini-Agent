@@ -11,6 +11,7 @@ EnvironmentFile=-/adapt/secrets/m2.env
 Environment=DISPLAY=:0
 Environment=ECHO_TUI_AGENT=testova
 Environment="ECHO_TUI_WINDOW_NAME=Testova CLI"
+Environment=ECHO_TUI_WINDOW_CLASS=TestovaCLI
 Environment=ECHO_PROFILE_ROOT=/home/x/.hermes/profiles/testova
 Environment=ECHO_TUI_ALLOW_CLI_FALLBACK=0
 Environment=ECHO_TUI_DELIVERY_TIMEOUT=90

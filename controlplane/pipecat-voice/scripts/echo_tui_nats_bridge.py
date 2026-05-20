@@ -28,6 +28,8 @@ from loguru import logger
 NS = os.environ.get("SUBJECT_NS", "nova")
 AGENT = os.environ.get("ECHO_TUI_AGENT", "echo")
 WINDOW_NAME = os.environ.get("ECHO_TUI_WINDOW_NAME", "Echo CLI")
+WINDOW_CLASS = os.environ.get("ECHO_TUI_WINDOW_CLASS", "").strip()
+WINDOW_ID = os.environ.get("ECHO_TUI_WINDOW_ID", "").strip()
 DELIVERY_TIMEOUT = float(os.environ.get("ECHO_TUI_DELIVERY_TIMEOUT", "300"))
 IDLE_POLL_SECONDS = float(os.environ.get("ECHO_TUI_IDLE_POLL_SECONDS", "1.5"))
 MAX_QUEUE_DEPTH = int(os.environ.get("ECHO_TUI_MAX_QUEUE_DEPTH", "8"))
@@ -75,10 +77,19 @@ def _run_xdotool(*args: str, input_text: str | None = None, timeout: float = 30)
 
 
 def _window_id() -> str:
+    if WINDOW_ID:
+        _run_xdotool("getwindowname", WINDOW_ID, timeout=10)
+        return WINDOW_ID
+    if WINDOW_CLASS:
+        output = _run_xdotool("search", "--class", WINDOW_CLASS, timeout=10)
+        ids = [line.strip() for line in output.splitlines() if line.strip()]
+        if ids:
+            return ids[-1]
     output = _run_xdotool("search", "--name", WINDOW_NAME, timeout=10)
     ids = [line.strip() for line in output.splitlines() if line.strip()]
     if not ids:
-        raise RuntimeError(f"{WINDOW_NAME!r} window not found")
+        target = WINDOW_CLASS or WINDOW_NAME
+        raise RuntimeError(f"{target!r} window not found")
     return ids[-1]
 
 
@@ -100,6 +111,8 @@ async def _wait_for_idle_window() -> str:
             if title != last_title:
                 logger.info(f"Echo TUI active title: {title!r}")
                 last_title = title
+            if WINDOW_ID or WINDOW_CLASS:
+                return win
             if title == WINDOW_NAME:
                 return win
         except Exception as exc:

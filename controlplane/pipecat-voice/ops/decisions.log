@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 20:42:11 — SIGNED_BY_AGENT
+Decision: Prefer class/window-id targeting over title-only targeting for Testova visible bridge delivery.
+Reason: GNOME Terminal can reset the displayed title to `Terminal` while the Hermes process remains alive, which makes title-only `xdotool search --name` unsuitable as the sole routing key.
+
 ## 2026-05-19 20:40:43 — SIGNED_BY_AGENT
 Decision: Classify route state from bridge service activity, visible window discovery, and fallback configuration, with proof metadata as evidence rather than the primary health switch.
 Reason: a route can be currently ready or degraded independent of the last proof outcome; the snapshot needs both live posture and historical proof/reply context.

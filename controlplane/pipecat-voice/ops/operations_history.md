@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-19 20:42:11 — SIGNED_BY_AGENT
+Hardened Testova visible-window targeting without sending a new proof prompt: added optional class/window-id targeting to `scripts/echo_tui_nats_bridge.py`, configured `testova-tui-nats-bridge.service` with `ECHO_TUI_WINDOW_CLASS=TestovaCLI`, relaunched Testova in a classed GNOME Terminal, verified `py_compile`, confirmed `xdotool search --class TestovaCLI` finds the visible terminal, and restarted the bridge. Task 17 remains in progress pending the held three-turn visible-only NATS proof.
+
 ## 2026-05-19 20:40:43 — SIGNED_BY_AGENT
 Completed `18-route-state-fidelity-upgrade`: extended `scripts/crew_route_state.py` to preserve existing consumer fields while adding explicit route modes, `route_health`, `route_reason`, reply-capture timeout, latest proof metadata, latest proof timestamp, and latest reply mode; verified with `py_compile`, `pytest -q tests/test_crew_route_state.py`, and a live snapshot generation.
 
