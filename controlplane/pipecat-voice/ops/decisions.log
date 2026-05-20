@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-19 22:22:39 — SIGNED_BY_AGENT
+Decision: Keep the Rust Hermes NATS adapter at no-go for live direct-subject ownership after Task 30.
+Reason: The isolated proof passed correlation, reply, log, timeout, and secret-handling gates on `nova.adapter-proof.direct`, but live `nova.echo.direct` and `nova.skipper.direct` still require visible Hermes CLI turn delivery and final answer capture through their current TUI bridge owners.
+
 ## 2026-05-19 22:07:36 — SIGNED_BY_AGENT
 Decision: Start Task 30 as an isolated-subject adapter promotion gate pass.
 Reason: Echo and Skipper visible TUI bridges are the current live owners; adapter promotion must prove correlation, reply, logging, and rollback behavior without stealing live direct subjects.
