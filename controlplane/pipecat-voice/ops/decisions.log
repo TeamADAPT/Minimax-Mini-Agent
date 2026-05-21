@@ -689,3 +689,6 @@ legacy fallback for non-streaming agents that publish back on
 ## 2026-05-20 09:17:00 — crew visible terminal orchestration
 Skipper took lead after Latch quota-max. Launched all 5 crew (Iris, Zap, Forge, Synergy, Tecton) in separate visible GNOME Terminal windows. Pattern: `DISPLAY=:0 gnome-terminal --title='<Name> CLI' --working-directory=/adapt/novas/active/<name> -- bash -lc 'exec hermes -p <name> --yolo -c'`. Verified via pgrep, xdotool window search, and readlink /proc/<pid>/cwd. Task files staged at ops/crew-comms/inbound/. Dispatch via xdotool type to each visible window.
 Task 30 promotion: no-go on replacing TUI bridges. Adapter proves isolated behavior but live CLI turn execution stays with echo-tui-nats-bridge.service and skipper-tui-nats-bridge.service pending explicit future promotion.
+
+## 2026-05-20 09:10:00 — NATS Comms Training: Echo confirms, Tecton pending
+NATS delivery into visible Echo CLI confirmed at nova.skipper.direct. Echo executed the lesson: sent 1-on-1 to tecton, looped broadcast to crew, reported envelope schema {id, from, message, reply_to}. Tecton window live but no inbound confirmation yet.

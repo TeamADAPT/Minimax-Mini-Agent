@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-20 16:35:27 — SIGNED_BY_AGENT
+Completed `39-crew-consensus-protocol`: upgraded `scripts/crew_consensus_service.py` from single-active skeleton to a proposal registry with explicit `PROPOSED → VOTING → BIND | NO_QUORUM | NO_BIND` resolution, YES/NO/ABSTAIN tallies, invalid quorum rejection, unknown-voter filtering, timeout monitors, and wildcard `nova.crew.consensus.vote.*` handling. Updated `ops/crew-coordination-architecture.md` with the final Consensus Protocol section, including the ephemeral in-memory persistence decision, message schemas, quorum rules, and failure handling. Verification passed with `python3 -m py_compile scripts/crew_consensus_service.py tests/test_crew_consensus_service.py` and `pytest -q tests/test_crew_consensus_service.py` (`4 passed`), including real NATS pub/sub proof proposals `proof-bind-001` → `BIND` and `proof-timeout-001` → `NO_QUORUM`.
+
+## 2026-05-20 09:30:00 — SIGNED_BY_AGENT
+Completed Tecton architecture decomposition directive: read `ops/directives/Action_Plan.md` and `ops/operations_history.md`, identified the top three architectural priorities (runtime truth, observability/control-plane integration, decomposed multi-nova execution), and wrote `ops/ARCHITECTURE_DECOMPOSITION.md` with dependencies, blocked work, parallel lanes, and recommended build order focused on externalizing context without stopping live crew loops.
+
 ## 2026-05-19 22:54:10 — SIGNED_BY_AGENT
 Started `34-testova-validation-resume-gate` by moving it from `ops/to_do/` into `ops/in_progress/`; this task will prepare the no-prompt Testova resume procedure and inspect current route state without lifting the operator hold or sending Testova proof traffic.
 
@@ -805,3 +811,13 @@ Task files dispatched via xdotool to each crew member's visible window.
 - Forge: wasm64 build chain review → ops/WASM64_STATUS.md
 - Synergy: Consensus protocol design → ops/crew-coordination-architecture.md
 - Tecton: SignalCore/NovaOps architecture decomposition → ops/ARCHITECTURE_DECOMPOSITION.md
+
+## 2026-05-20 09:10:00 — NATS Comms Training dispatched to Echo + Tecton
+Subject: nova.skipper.direct  
+Sender: echo  
+Event ID: echo-lesson-complete  
+
+- Echo confirmed: 1-on-1 (nova.tecton.direct), broadcast (loop to iris/zap/forge/synergy/tecton)
+- Patterns confirmed: nova.<name>.direct for 1-on-1 via TUI-NATS bridge; crew broadcast as loop
+- Envelope: {id, from, message, reply_to} — validated by echo
+- Tecton: still pending (visible window dispatched but confirmation not yet inbound)
