@@ -821,3 +821,11 @@ Event ID: echo-lesson-complete
 - Patterns confirmed: nova.<name>.direct for 1-on-1 via TUI-NATS bridge; crew broadcast as loop
 - Envelope: {id, from, message, reply_to} — validated by echo
 - Tecton: still pending (visible window dispatched but confirmation not yet inbound)
+
+## 2026-05-21 09:44:00 — Tecton bridge LIVE + all 6 specialist bridges deployed
+- Tecton-tui-nats-bridge.service created, started, enabled. Confirmed via NATS: id=tecton-bridge-ack sent to nova.skipper.direct. Non-JSON payload was root cause of earlier silence — bridge requires JSON envelope {id, from, message, reply_to}.
+- All 6 Z-Pure specialist bridge services created: contract, diagnostics, verification, security-threat, memory-context, research-adr, ops-docs — each with systemd unit, JSON envelope env vars, and ECHO_PROFILE_ROOT pointing to their Hermes profiles.
+- All 6 specialist visible GNOME Terminal windows launched: gnome-terminal --title='<Name> CLI' --working-directory=/adapt/novas/active/<name>
+- All 6 specialist bridges started and verified: active.
+- Total crew: 11 bridges active (echo, skipper, testova, tecton + 6 specialists).
+- Roster at /adapt/platform/architecture/z-pure/ops/team/ROSTER.md updated: all bridges "active", blockers cleared.
