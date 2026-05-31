@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 09:13:10 — SIGNED_BY_AGENT
+Decision: Repair user-facing provider routes incrementally, starting with Iris, Echo, and Tecton.
+Reason: The Rust transport path is proven; remaining failures are profile-specific provider/account/model problems, so single-profile repair with backups and proofs reduces blast radius while moving the original Task 42 dependency set toward promotion.
+
 ## 2026-05-31 09:11:23 — SIGNED_BY_AGENT
 Decision: Promote the Rust API-session path only for `commscanary` and create Task 47 for user-facing provider repair.
 Reason: The native bridge path is now proven with streamed chunks, route metadata, and session persistence, but user-facing profiles still fail on provider/account/model state; separating provider repair prevents a transport win from being hidden behind unrelated upstream failures.

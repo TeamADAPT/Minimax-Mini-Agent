@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 09:13:10 — SIGNED_BY_AGENT
+Started `47-user-facing-provider-route-repair` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will repair Iris, Echo, and Tecton provider/model routes one at a time using backups and non-secret systemd credential wrappers before promoting them onto the proven Rust API-session path.
+
 ## 2026-05-31 09:11:23 — SIGNED_BY_AGENT
 Advanced `42-native-hermes-session-push`: added route metadata to Rust bridge final reply chunks, rebuilt the release binary, restarted `nova-hermes-nats-bridge.service`, added `commscanary` to the Rust runtime roster, proved live `nova.commscanary.rust.direct` returns streamed chunks through Hermes API-session delivery, and verified Hermes session `nats_commscanary_codex` persisted user and assistant rows.
 
