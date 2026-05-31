@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 16:58:10 — SIGNED_BY_AGENT
+Reopened `39-crew-consensus-protocol` through `ops/in_progress/` after finding the task directory still in `ops/to_do/` despite prior implementation notes. Current execution will promote the consensus protocol to a Rust-owned service/CLI while preserving the existing NATS subject contract.
+
 ## 2026-05-31 16:55:35 — SIGNED_BY_AGENT
 Installed Rust voice provider binaries to `/usr/local/bin/nova-voice-provider-plan` and `/usr/local/bin/nova-voice-provider-tts-probe`; updated `pipecat-voice.service` to use the stable planner path instead of an ignored Cargo target path.
 
