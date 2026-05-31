@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 09:24:30 — SIGNED_BY_AGENT
+Started `48-phone-auto-route-rust-cutover` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will inspect phone/browser route selection and cut repaired agents over to the proven Rust runtime path with explicit rollback.
+
 ## 2026-05-31 09:22:58 — SIGNED_BY_AGENT
 Completed `42-native-hermes-session-push`: native NATS delivery into Hermes API sessions is proven through the Rust bridge for `commscanary`, Iris, Echo, and Tecton; streamed chunks include route metadata; Hermes sessions persist user and assistant rows; and Task 48 now owns phone/browser `auto` route cutover.
 

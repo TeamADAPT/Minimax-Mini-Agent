@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 09:24:30 — SIGNED_BY_AGENT
+Decision: Start phone/browser route cutover after transport proof, not before.
+Reason: The UI should change only after the Rust route has proof IDs, route metadata, denoised chunks, and rollback instructions; this keeps operator-facing behavior tied to verified runtime health.
+
 ## 2026-05-31 09:22:58 — SIGNED_BY_AGENT
 Decision: Close Task 42 at runtime-scoped Rust route promotion and split phone/browser `auto` cutover into Task 48.
 Reason: The transport/session path is now proven, but changing the default UI route is a separate operator-facing behavior change that needs its own rollback and proof surface.
