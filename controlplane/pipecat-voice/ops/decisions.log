@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-31 08:39:08 — SIGNED_BY_AGENT
+Decision: Do not promote the Rust API-session path to live subject ownership yet.
+Reason: Hermes API session endpoints are available and the Rust bridge can now call them, but all tested provider-backed proofs failed before assistant persistence; promotion requires a successful streamed assistant response and both user/assistant rows in `state.db`.
+
+## 2026-05-31 08:32:00 — SIGNED_BY_AGENT
+Decision: Force-kill and restart `hermes-gateway-echo.service` after a bounded API-session proof exposed a long provider retry loop.
+Reason: The proof had already exceeded the client timeout and the gateway continued retrying an invalid provider/model route; force restart stopped wasted provider retries and restored the Echo gateway to active service.
+
 ## 2026-05-31 08:20:40 — SIGNED_BY_AGENT
 Decision: Start native Hermes session push with inspection and bounded proofs instead of immediately switching route ownership.
 Reason: The active voice path is working and should not be destabilized; session attachment behavior must be measured across Hermes API, native adapter, and existing bridge paths before CommsOps can retire visible-terminal injection.

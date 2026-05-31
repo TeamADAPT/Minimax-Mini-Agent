@@ -69,3 +69,14 @@ Legacy non-runtime subjects are no longer the preferred owner path for new work.
 5. Emit canonical transcript events for every voice/text turn.
 6. Expose route latency, route owner, transcript status, and provider status on
    the activity dashboard.
+
+## 2026-05-31 08:39:08 - SIGNED_BY_AGENT
+
+Task 42 update:
+
+- Hermes API server has the session endpoints needed for native push.
+- A local Hermes API-server bug was patched: duplicate `model` argument during
+  API agent creation.
+- Rust bridge now attempts API session delivery before subprocess fallback.
+- Promotion remains blocked until one provider-backed proof returns assistant
+  content and persists both user and assistant rows.

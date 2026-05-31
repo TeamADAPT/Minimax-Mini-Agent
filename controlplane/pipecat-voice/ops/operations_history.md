@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 08:39:08 — SIGNED_BY_AGENT
+Advanced `42-native-hermes-session-push`: inspected Hermes API session endpoints, patched local Hermes API server duplicate-model crash, verified the patch with `python3 -m py_compile`, restarted selected gateways for bounded proofs, identified provider/credit/model failures as the current promotion blocker, and updated the Rust NATS bridge to attempt Hermes API session delivery before subprocess fallback. Rust verification passed with `cargo fmt`, `cargo fmt --check`, `cargo check`, and `cargo build --release`.
+
 ## 2026-05-31 08:20:40 — SIGNED_BY_AGENT
 Started `42-native-hermes-session-push` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will prove the current Hermes API/native adapter session semantics before promoting any runtime owner and will avoid changing live subject ownership until proof data is captured.
 
