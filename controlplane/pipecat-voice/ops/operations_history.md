@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-31 09:22:58 — SIGNED_BY_AGENT
+Completed `42-native-hermes-session-push`: native NATS delivery into Hermes API sessions is proven through the Rust bridge for `commscanary`, Iris, Echo, and Tecton; streamed chunks include route metadata; Hermes sessions persist user and assistant rows; and Task 48 now owns phone/browser `auto` route cutover.
+
+## 2026-05-31 09:22:19 — SIGNED_BY_AGENT
+Completed `47-user-facing-provider-route-repair`: backed up Iris, Echo, and Tecton profile configs, moved their local default model route to NVIDIA NIM `qwen/qwen3.5-397b-a17b`, restarted their Hermes gateways, proved CLI/API sync/API stream/live Rust NATS turns for all three, added Rust voice-output denoising, and verified `nats_iris_codex`, `nats_echo_codex`, and `nats_tecton_codex` contain user plus assistant rows.
+
 ## 2026-05-31 09:13:10 — SIGNED_BY_AGENT
 Started `47-user-facing-provider-route-repair` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will repair Iris, Echo, and Tecton provider/model routes one at a time using backups and non-secret systemd credential wrappers before promoting them onto the proven Rust API-session path.
 

@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-31 09:22:58 — SIGNED_BY_AGENT
+Decision: Close Task 42 at runtime-scoped Rust route promotion and split phone/browser `auto` cutover into Task 48.
+Reason: The transport/session path is now proven, but changing the default UI route is a separate operator-facing behavior change that needs its own rollback and proof surface.
+
+## 2026-05-31 09:22:19 — SIGNED_BY_AGENT
+Decision: Keep full Hermes assistant messages in session persistence and denoise only the Rust voice stream.
+Reason: Audit/state should preserve the agent's actual response, while phone and voice route consumers need concise spoken chunks without identity signatures, CWD lines, or date tails.
+
 ## 2026-05-31 09:13:10 — SIGNED_BY_AGENT
 Decision: Repair user-facing provider routes incrementally, starting with Iris, Echo, and Tecton.
 Reason: The Rust transport path is proven; remaining failures are profile-specific provider/account/model problems, so single-profile repair with backups and proofs reduces blast radius while moving the original Task 42 dependency set toward promotion.

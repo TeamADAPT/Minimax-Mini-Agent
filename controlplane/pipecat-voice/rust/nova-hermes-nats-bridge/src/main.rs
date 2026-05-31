@@ -759,7 +759,7 @@ async fn invoke_hermes_subprocess(
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     Ok(HermesReply {
-        message: clean_hermes_output(&stdout),
+        message: clean_voice_reply_text(&clean_hermes_output(&stdout)),
         session_id: None,
         delivery: "subprocess",
     })
@@ -847,6 +847,7 @@ async fn invoke_hermes_api_session(
             agent: config.name.clone(),
         });
     }
+    let content = clean_voice_reply_text(&content);
 
     info!(
         agent = %config.name,
@@ -920,6 +921,55 @@ fn clean_hermes_output(output: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+fn clean_voice_reply_text(output: &str) -> String {
+    let trimmed = output.trim();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+
+    let paragraphs = trimmed
+        .split("\n\n")
+        .map(str::trim)
+        .filter(|paragraph| !paragraph.is_empty())
+        .collect::<Vec<_>>();
+
+    if paragraphs.len() > 1 && signature_like(&paragraphs[1..].join(" ")) {
+        return flatten_spoken_text(paragraphs[0]);
+    }
+
+    let filtered = trimmed
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !signature_like(line))
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    flatten_spoken_text(if filtered.is_empty() {
+        trimmed
+    } else {
+        &filtered
+    })
+}
+
+fn signature_like(value: &str) -> bool {
+    let trimmed = value.trim();
+    if trimmed.starts_with('\u{2014}') {
+        return true;
+    }
+
+    let lower = trimmed.to_ascii_lowercase();
+    lower.contains("cwd:")
+        || lower.contains("/adapt/")
+        || lower.contains("/data/")
+        || lower.contains("chief of staff")
+        || lower.contains("gatekeeper")
+        || lower.contains("session_id:")
+}
+
+fn flatten_spoken_text(value: &str) -> String {
+    value.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 async fn publish_reply_words(
@@ -1015,5 +1065,28 @@ fn chrono_now() -> String {
             format!("{days_since_epoch}d-{hours:02}:{minutes:02}:{seconds:02}Z")
         }
         Err(_) => "unknown".to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cleans_signature_paragraph_from_voice_reply() {
+        let raw = "IRIS RUST OK. The gate is open.\n\nIris, Chief of Staff / Gatekeeper\nCWD: /adapt/novas/active/iris";
+
+        let cleaned = clean_voice_reply_text(raw);
+
+        assert_eq!(cleaned, "IRIS RUST OK. The gate is open.");
+    }
+
+    #[test]
+    fn preserves_plain_voice_reply() {
+        let raw = "TECTON RUST OK.\nAll systems are steady.";
+
+        let cleaned = clean_voice_reply_text(raw);
+
+        assert_eq!(cleaned, "TECTON RUST OK. All systems are steady.");
     }
 }

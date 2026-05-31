@@ -1,5 +1,25 @@
 # CommsOps Status
 
+## 2026-05-31 09:22:58 - SIGNED_BY_AGENT
+
+Task 42 is complete. Native NATS-to-Hermes API-session delivery is promoted for
+the runtime-scoped Rust route, with Iris, Echo, Tecton, and `commscanary`
+proven through streamed chunks, route metadata, and persisted Hermes sessions.
+Task 48 now owns phone/browser `auto` route cutover.
+
+## 2026-05-31 09:22:19 - SIGNED_BY_AGENT
+
+Iris, Echo, and Tecton are repaired on the Rust API-session route:
+
+- Local default provider/model moved to NVIDIA NIM
+  `qwen/qwen3.5-397b-a17b`.
+- CLI, API sync, API stream, and live Rust NATS proofs passed for all three.
+- Rust final chunks include route metadata.
+- Rust voice chunks now denoise signature/CWD/date tails before reaching route
+  consumers.
+- Rollback backup: `config.yaml.bak.commsops47.20260531T161406Z` in each
+  affected profile directory.
+
 ## 2026-05-31 09:11:23 - SIGNED_BY_AGENT
 
 Rust runtime route proof promoted for `commscanary`:
