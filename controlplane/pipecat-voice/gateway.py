@@ -89,6 +89,12 @@ GROUP_AGENT_NAMES = [
 ]
 DEFAULT_MODERATOR = os.environ.get("DEFAULT_MODERATOR", "echo").strip().lower()
 DEFAULT_AGENT_RUNTIME = os.environ.get("DEFAULT_AGENT_RUNTIME", "hermes").strip().lower()
+VOICE_PROVIDER_PLAN_BIN = Path(
+    os.environ.get(
+        "VOICE_PROVIDER_PLAN_BIN",
+        str(ROOT / "rust" / "nova-voice-provider-core" / "target" / "release" / "voice_provider_plan"),
+    )
+)
 AGENT_RUNTIME_DEFAULTS_RAW = os.environ.get(
     "AGENT_RUNTIME_DEFAULTS",
     "iris=rust,echo=rust,tecton=rust,vaeris=rust,skipper=rust,stratum=rust,"
@@ -108,6 +114,9 @@ RUNTIME_ALIASES = {
     "fresh": "fresh",
 }
 VALID_AGENT_RUNTIMES = {"auto", "tui", "hermes", "rust", "fresh"}
+VOICE_PROVIDER_RE = re.compile(r"^(deepgram|xai|grok)$")
+VOICE_CAPABILITY_RE = re.compile(r"^(stt|tts|realtime)$")
+VOICE_ROUTE_ID_RE = re.compile(r"^[a-zA-Z0-9_.:-]{1,80}$")
 PROFILE_BLOCKERS = {
     # All previously blocked profiles have been fixed (2026-05-11):
     # - vaeris/synergy/cosmos: provider auth resolved (NVIDIA_API_KEY in .env)
@@ -584,6 +593,79 @@ def _run_readonly(args: list[str], timeout: float = 5.0) -> dict[str, Any]:
         }
     except Exception as exc:
         return {"ok": False, "code": None, "stdout": "", "stderr": str(exc)}
+
+
+def _voice_provider_plan(
+    *,
+    provider: str,
+    route_id: str,
+    capabilities: list[str],
+    allow_experimental: bool,
+    browser_direct: bool,
+) -> dict[str, Any]:
+    clean_provider = provider.strip().lower()
+    if not VOICE_PROVIDER_RE.match(clean_provider):
+        raise HTTPException(400, "invalid voice provider")
+    if not VOICE_ROUTE_ID_RE.match(route_id.strip()):
+        raise HTTPException(400, "invalid route_id")
+
+    clean_capabilities = [capability.strip().lower() for capability in capabilities]
+    if not clean_capabilities:
+        clean_capabilities = ["realtime"]
+    invalid = [capability for capability in clean_capabilities if not VOICE_CAPABILITY_RE.match(capability)]
+    if invalid:
+        raise HTTPException(400, f"invalid voice capability: {invalid[0]}")
+
+    if not VOICE_PROVIDER_PLAN_BIN.exists():
+        raise HTTPException(503, "voice provider planner binary is not built")
+
+    cmd = [
+        str(VOICE_PROVIDER_PLAN_BIN),
+        "--provider",
+        clean_provider,
+        "--route-id",
+        route_id.strip(),
+    ]
+    for capability in clean_capabilities:
+        cmd.extend(["--capability", capability])
+    if allow_experimental:
+        cmd.append("--allow-experimental")
+    if browser_direct:
+        cmd.append("--browser-direct")
+
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+            env=os.environ.copy(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise HTTPException(504, "voice provider planner timed out") from exc
+    except OSError as exc:
+        raise HTTPException(503, f"voice provider planner unavailable: {exc}") from exc
+
+    stdout = (proc.stdout or "").strip()
+    stderr = (proc.stderr or "").strip()
+    if proc.returncode != 0:
+        detail = stderr[-500:] or "voice provider planner failed"
+        status = 400 if "ExperimentalBlocked" in detail or "MissingEnv" in detail else 502
+        raise HTTPException(status, detail)
+    try:
+        plan = json.loads(stdout)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(502, "voice provider planner returned invalid JSON") from exc
+    if not isinstance(plan, dict):
+        raise HTTPException(502, "voice provider planner returned non-object JSON")
+    plan["planner"] = {
+        "runtime": "rust",
+        "binary": str(VOICE_PROVIDER_PLAN_BIN),
+        "allow_experimental": allow_experimental,
+        "browser_direct": browser_direct,
+    }
+    return plan
 
 
 def _nats_monitor_snapshot() -> dict[str, Any]:
@@ -1653,6 +1735,25 @@ async def get_ops_status() -> dict:
         "recent_errors": _recent_errors(),
         "agentops": _agentops_handoff(),
     }
+
+
+@app.get("/api/voice/provider-plan")
+async def get_voice_provider_plan(
+    request: Request,
+    provider: str = "deepgram",
+    route_id: str = "voice.default",
+    allow_experimental: bool = False,
+    browser_direct: bool = True,
+) -> dict:
+    """Return a Rust-planned voice provider route without exposing credentials."""
+    capabilities = request.query_params.getlist("capability") or ["realtime"]
+    return _voice_provider_plan(
+        provider=provider,
+        route_id=route_id,
+        capabilities=capabilities,
+        allow_experimental=allow_experimental,
+        browser_direct=browser_direct,
+    )
 
 
 @app.get("/api/session-state")

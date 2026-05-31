@@ -210,6 +210,39 @@ class TestActivityMetrics:
         assert response.status_code == 200
         assert response.json()["events"] == [{"schema": "comms.turn.v1", "event_id": "turn-1"}]
 
+    def test_voice_provider_plan_endpoint_uses_rust_planner(self, tmp_path: Path, monkeypatch):
+        import gateway
+
+        planner = tmp_path / "voice_provider_plan"
+        planner.write_text(
+            "#!/bin/sh\n"
+            "printf '%s\\n' '{\"provider\":\"deepgram\",\"route_id\":\"iris.direct\","
+            "\"capabilities\":[\"realtime\"]}'\n",
+            encoding="utf-8",
+        )
+        planner.chmod(0o755)
+        monkeypatch.setattr(gateway, "VOICE_PROVIDER_PLAN_BIN", planner)
+        client = TestClient(gateway.app)
+
+        response = client.get(
+            "/api/voice/provider-plan"
+            "?provider=deepgram&route_id=iris.direct&capability=realtime&browser_direct=true"
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["provider"] == "deepgram"
+        assert payload["planner"]["runtime"] == "rust"
+        assert "api_key" not in str(payload).lower()
+
+    def test_voice_provider_plan_rejects_bad_capability(self):
+        import gateway
+
+        client = TestClient(gateway.app)
+        response = client.get("/api/voice/provider-plan?capability=bad")
+
+        assert response.status_code == 400
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

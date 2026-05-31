@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-31 16:55:35 — SIGNED_BY_AGENT
+Installed Rust voice provider binaries to `/usr/local/bin/nova-voice-provider-plan` and `/usr/local/bin/nova-voice-provider-tts-probe`; updated `pipecat-voice.service` to use the stable planner path instead of an ignored Cargo target path.
+
+## 2026-05-31 16:54:47 — SIGNED_BY_AGENT
+Completed `43-rust-voice-provider-abstraction`: wired `/api/voice/provider-plan` to the release Rust planner, built release planner/probe binaries, verified Deepgram route planning, verified xAI planning is blocked by default and allowed only with `allow_experimental=true`, verified the xAI TTS probe guard, and preserved the live Deepgram `/ws/voice` path.
+
 ## 2026-05-31 10:20:47 — SIGNED_BY_AGENT
 Advanced `43-rust-voice-provider-abstraction`: added the `voice_provider_plan` Rust CLI, verified Deepgram and xAI route-plan JSON output, and verified xAI is blocked unless `--allow-experimental` is set.
 

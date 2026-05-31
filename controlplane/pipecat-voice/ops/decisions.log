@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-31 16:55:35 — SIGNED_BY_AGENT
+Decision: Use `/usr/local/bin` for the live Rust voice planner binary and keep Cargo `target/` ignored.
+Reason: The service needs a stable executable path across restarts, while build artifacts should remain out of version control.
+
+## 2026-05-31 16:54:47 — SIGNED_BY_AGENT
+Decision: Close Task 43 at Rust-owned provider planning and guarded xAI testability, without switching the live audio path.
+Reason: The acceptance target is provider control and safe xAI testability; moving `/ws/voice` itself should be a separate promotion task after latency, cost, interruption, and failure-mode proofs.
+
 ## 2026-05-31 10:20:47 — SIGNED_BY_AGENT
 Decision: Expose the Rust voice provider contract first as a CLI planner.
 Reason: A process boundary lets the Python gateway or systemd checks consume route-safe JSON without linking Rust into the live gateway yet, and it keeps credential values out of stdout by construction.

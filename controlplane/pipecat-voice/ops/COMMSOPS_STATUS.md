@@ -1,5 +1,18 @@
 # CommsOps Status
 
+## 2026-05-31 16:54:47 - SIGNED_BY_AGENT
+
+Task 43 is complete as the Rust-owned provider-abstraction milestone:
+
+- Added `rust/nova-voice-provider-core`.
+- Added Rust provider trait/config model for Deepgram and xAI.
+- Added `voice_provider_plan` CLI and `/api/voice/provider-plan` gateway
+  endpoint.
+- Added guarded xAI TTS probe binary.
+- Deepgram route planning is live and default-safe.
+- xAI route planning requires explicit `allow_experimental=true`.
+- The live `/ws/voice` path remains Deepgram; no default audio route was moved.
+
 ## 2026-05-31 10:11:43 - SIGNED_BY_AGENT
 
 Task 44 is complete. Canonical transcript-memory handoff is live:

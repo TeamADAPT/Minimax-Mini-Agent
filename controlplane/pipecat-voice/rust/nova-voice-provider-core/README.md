@@ -34,3 +34,21 @@ XAI_API_KEY=present cargo run --bin voice_provider_plan -- \
 ```
 
 The planner prints route-safe JSON and never prints credential values.
+
+## xAI TTS Probe
+
+The probe performs a real xAI TTS call and writes the audio response to disk
+without printing the provider key:
+
+```bash
+XAI_API_KEY=present cargo run --bin voice_provider_tts_probe -- \
+  --provider xai \
+  --allow-experimental \
+  --voice-id eve \
+  --language en \
+  --text "Hello from CommsOps." \
+  --out logs/runtime_audio/xai-tts-probe.mp3
+```
+
+The command prints safe JSON metrics only: provider, voice id, language, output
+path, byte count, MIME guess, and latency.

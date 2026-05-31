@@ -75,3 +75,42 @@ XAI_API_KEY=dummy cargo run --quiet --bin voice_provider_plan -- \
 
 Guard proof: the same xAI command without `--allow-experimental` exits with
 `ExperimentalBlocked`.
+
+## 2026-05-31 16:54:47 — SIGNED_BY_AGENT
+
+Gateway integration is live.
+
+Endpoint:
+
+```text
+GET /api/voice/provider-plan
+```
+
+Query parameters:
+
+- `provider`: `deepgram` or `xai`
+- `route_id`: route label such as `iris.direct` or `room.main`
+- `capability`: repeatable `stt`, `tts`, or `realtime`; defaults to
+  `realtime`
+- `browser_direct`: whether the browser will connect directly using an
+  ephemeral credential
+- `allow_experimental`: required for xAI
+
+Live proofs:
+
+- Deepgram browser realtime plan returned HTTP 200 with ephemeral-client-secret
+  policy and no credential value.
+- xAI browser realtime plan returned HTTP 400 without `allow_experimental`.
+- xAI browser realtime plan returned HTTP 200 with `allow_experimental=true`.
+- `voice_provider_tts_probe` refuses xAI TTS unless `--allow-experimental` is
+  passed.
+
+The active `/ws/voice` audio path remains Deepgram.
+
+Installed runtime binaries:
+
+- `/usr/local/bin/nova-voice-provider-plan`
+- `/usr/local/bin/nova-voice-provider-tts-probe`
+
+`pipecat-voice.service` sets
+`VOICE_PROVIDER_PLAN_BIN=/usr/local/bin/nova-voice-provider-plan`.

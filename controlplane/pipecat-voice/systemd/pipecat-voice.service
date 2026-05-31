@@ -11,6 +11,7 @@ WorkingDirectory=/adapt/platform/novaops/controlplane/pipecat-voice
 EnvironmentFile=-/adapt/secrets/db.env
 EnvironmentFile=-/adapt/secrets/m2.env
 EnvironmentFile=-/adapt/platform/novaops/controlplane/pipecat-voice/.env
+Environment=VOICE_PROVIDER_PLAN_BIN=/usr/local/bin/nova-voice-provider-plan
 ExecStart=/usr/bin/python3 /adapt/platform/novaops/controlplane/pipecat-voice/gateway.py --host 127.0.0.1 --port 18085
 Restart=on-failure
 RestartSec=3
