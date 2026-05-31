@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 08:47:58 — SIGNED_BY_AGENT
+Started `46-commsops-provider-health-gate` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will establish one low-cost known-good provider lane before Task 42 promotes native Hermes API-session delivery.
+
 ## 2026-05-31 08:44:16 — SIGNED_BY_AGENT
 Created `46-commsops-provider-health-gate` after Task 42 proofs showed transport/API reachability but no promotable assistant persistence because tested providers failed on account, balance, missing model, or timeout conditions. Task 46 isolates provider/model repair from native session-push implementation so CommsOps can establish one known-good canary lane before promotion.
 

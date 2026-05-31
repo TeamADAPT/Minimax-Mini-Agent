@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 08:47:58 — SIGNED_BY_AGENT
+Decision: Probe direct provider APIs before changing more Hermes profile configs.
+Reason: Direct one-token canaries isolate account/model health from Hermes cold-start, memory, tool, and gateway behavior, reducing quota burn and avoiding unnecessary service churn.
+
 ## 2026-05-31 08:44:16 — SIGNED_BY_AGENT
 Decision: Split provider/model repair into `46-commsops-provider-health-gate` instead of continuing Task 42 proof attempts across random agents.
 Reason: Repeated proof attempts were consuming time and provider quota while failing for unrelated account/model reasons; Task 42 should stay focused on transport/session semantics, and provider health needs its own canary acceptance gate.
