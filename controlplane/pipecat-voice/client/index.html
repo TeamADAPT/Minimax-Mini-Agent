@@ -1,117 +1,293 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="nova voice" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="theme-color" content="#06080b" />
-<link rel="manifest" href="/static/manifest.json" />
-<title>pipe.adaptdev.ai &mdash; nova voice link</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/static/styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Blackline Ops" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="/static/manifest-ops.json" />
+  <link rel="icon" href="/static/icons/ops.svg" type="image/svg+xml" />
+  <title>Nova Blackline Ops</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/blackline.css?v=compactroster1" />
 </head>
 <body>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <span class="logo">●</span>
-        <div>
-          <div class="brand-name">pipe</div>
-          <div class="brand-host">adaptdev.ai</div>
+  <div class="pwa-shell">
+    <aside class="pwa-rail">
+      <section class="panel">
+        <div class="panel-inner stack">
+          <div class="brand-block">
+            <div class="brand-lockup">
+              <div class="brand-mark">NB</div>
+              <div class="title-block">
+                <div class="eyebrow">Voice Control</div>
+                <h1 style="font-size:1.6rem;">Blackline Ops</h1>
+                <p>Voice routing, room orchestration, and live fleet control.</p>
+              </div>
+            </div>
+          </div>
+          <div class="pill-row">
+            <span class="status-pill is-accent"><span class="dot warn"></span> Pure black mobile shell</span>
+            <span class="status-pill"><span class="dot good"></span> PWA route: /</span>
+          </div>
         </div>
-      </div>
-
-      <section class="stage">
-        <div class="orb" id="orb" data-state="offline" aria-live="polite">
-          <div class="orb-core"></div>
-          <div class="orb-ring r1"></div>
-          <div class="orb-ring r2"></div>
-          <div class="orb-ring r3"></div>
-        </div>
-        <p class="status-line" id="statusText">offline</p>
-        <p class="route-line"><span id="routeLabel">—</span></p>
       </section>
 
-      <div class="controls">
-        <button id="toggle" type="button" class="primary">connect</button>
-        <button id="mute" type="button" class="ghost" disabled>mute</button>
-      </div>
+      <section class="panel voice-stage">
+        <div class="orb-wrap">
+          <div class="orb" id="orb" data-state="offline" aria-live="polite">
+            <div class="orb-core"></div>
+            <div class="orb-ring r1"></div>
+            <div class="orb-ring r2"></div>
+            <div class="orb-ring r3"></div>
+          </div>
+        </div>
+        <div class="status-line" id="statusText">OFFLINE</div>
+        <div class="route-line" id="routeLabel">-</div>
+      </section>
 
-      <div class="cmdbar">
-        <input id="cmdInput" type="text" placeholder='ask switch — "go get echo"' autocomplete="off" />
-        <button id="cmdSend" type="button" class="ghost" disabled>send</button>
-      </div>
-
-      <footer class="legend">
-        <span><i class="dot dot-green"></i>online</span>
-        <span><i class="dot dot-red"></i>offline</span>
-        <span><i class="dot dot-cyan"></i>active</span>
-      </footer>
+      <section class="panel">
+        <div class="panel-inner stack">
+          <div class="controls">
+            <button id="toggle" type="button" class="button-solid">Connect</button>
+            <button id="mute" type="button" class="button-muted" disabled>Mute</button>
+          </div>
+          <div class="room-targets" id="roomTargets" aria-label="Room address target"></div>
+          <div class="quick-view">
+            <button id="openCodex" type="button" class="button-muted">Codex</button>
+            <button id="openTui" type="button" class="button-muted">TUI Mirror</button>
+            <button id="nativeVoiceBtn" type="button" class="button-muted" style="border-color:#ff5f05;color:#ff5f05">Native Voice</button>
+          </div>
+          <div class="cmdbar">
+            <input id="cmdInput" type="text" placeholder="text command: ask iris or route all except echo" autocomplete="off" />
+            <button id="cmdSend" type="button">Send</button>
+          </div>
+          <div class="modebar" role="group" aria-label="routing mode">
+            <button type="button" data-mode="solo">Solo</button>
+            <button type="button" data-mode="pair">Pair</button>
+            <button type="button" data-mode="room">Room</button>
+            <button type="button" data-mode="moderated">Mod</button>
+          </div>
+          <div class="runtimebar" role="group" aria-label="agent runtime">
+            <button type="button" data-runtime="auto">Auto</button>
+            <button type="button" data-runtime="tui">Live CLI</button>
+            <button type="button" data-runtime="hermes">Daemon</button>
+            <button type="button" data-runtime="rust">Rust</button>
+            <button type="button" data-runtime="fresh">Fresh</button>
+          </div>
+          <div class="legend">
+            <span class="status-pill"><span class="dot good"></span> Online</span>
+            <span class="status-pill"><span class="dot danger"></span> Offline</span>
+            <span class="status-pill"><span class="dot warn"></span> Active</span>
+          </div>
+          <div class="voice-settings">
+            <button id="voiceToggle" type="button" class="button-muted" style="font-size:0.72rem;padding:0.3rem 0.6rem;">Voice Settings</button>
+            <div id="voicePickerPanel" class="voice-panel hidden"></div>
+          </div>
+        </div>
+      </section>
     </aside>
 
-    <main class="main">
+    <main class="pwa-content">
       <header class="topbar">
-        <h1>Nova Roster</h1>
-        <div class="topbar-actions">
-          <button id="newRoom" class="ghost">+ room</button>
-          <button id="addAgent" class="ghost">+ agent</button>
+        <div class="page-head">
+          <div class="eyebrow">App One</div>
+          <h1 id="pageTitle">Room</h1>
+          <p>Run the voice mesh, switch routing modes, and open moderated rooms from one shell.</p>
         </div>
+        <nav class="topbar-links" aria-label="Primary">
+          <a class="is-active" href="/">Ops</a>
+          <a href="/dashboard">Observatory</a>
+          <a href="/activity">Activity</a>
+          <a href="/canvas">Studio</a>
+        </nav>
       </header>
 
-      <section class="grid" id="agentGrid"></section>
+      <section class="hero-grid">
+        <article class="panel hero-card">
+          <div class="hero-copy">
+            <div class="eyebrow">Fleet Interface</div>
+            <h1>Voice-first control plane with mobile-grade installability.</h1>
+            <p>
+              The command surface now centers the repo's real capabilities: live roster,
+              route selection, fleet health, room history, and direct operator commands.
+            </p>
+            <div class="hero-actions">
+              <button type="button" class="button-primary" id="newRoom">Open Room</button>
+              <button type="button" class="button-muted" id="addAgent">Add Agent</button>
+            </div>
+          </div>
+        </article>
 
-      <section class="room-panel hidden" id="roomPanel">
-        <header>
-          <h2>Active room <span class="rid" id="roomId"></span></h2>
-          <button class="ghost" id="leaveRoom">leave</button>
-        </header>
+        <article class="panel panel-soft">
+          <div class="panel-inner stack">
+            <div class="section-head">
+              <h2>Live posture</h2>
+              <span class="mono">nats + deepgram + roster</span>
+            </div>
+            <div class="metric-grid">
+              <div class="metric-card">
+                <div class="metric-value" id="metricAgents">-</div>
+                <div class="metric-label">Agents in roster</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value" id="metricOnline">-</div>
+                <div class="metric-label">Currently online</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-value" id="metricGroup">-</div>
+                <div class="metric-label">Group participants</div>
+              </div>
+            </div>
+            <div class="status-pill-row">
+              <span class="status-pill is-accent">No light mode</span>
+              <span class="status-pill">No purple / teal / magenta</span>
+              <span class="status-pill">PWA install ready</span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <nav class="page-tabs" id="pageTabs" aria-label="Pipe pages">
+        <button type="button" data-page="command">Command</button>
+        <button type="button" data-page="health">Health</button>
+        <button type="button" data-page="tui">TUI</button>
+        <button type="button" data-page="room">Room</button>
+        <button type="button" data-page="history">History</button>
+      </nav>
+
+      <section class="ops-panel" id="opsPanel" data-page-section="command">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Command Deck</div>
+            <h2>Operator bundles</h2>
+          </div>
+          <div class="row">
+            <button type="button" data-ops-action="health">Health</button>
+            <button type="button" data-ops-action="services">Services</button>
+            <button type="button" data-ops-action="nats">NATS</button>
+            <button type="button" data-ops-action="errors">Errors</button>
+            <button type="button" data-ops-action="iris-risk">Iris Risk</button>
+            <button type="button" data-ops-action="moderate">Moderate</button>
+          </div>
+        </div>
+        <div class="ops-grid" id="opsGrid"></div>
+      </section>
+
+      <section class="health-panel" id="healthPanel" data-page-section="health"></section>
+
+      <section class="tui-panel" id="tuiPanel" data-page-section="tui">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Read-Only Mirror</div>
+            <h2>Iris visible session</h2>
+          </div>
+          <button type="button" class="button-muted" id="refreshTui">Refresh</button>
+        </div>
+        <div class="tui-grid" id="tuiGrid"></div>
+      </section>
+
+      <section class="room-panel hidden" id="roomPanel" data-page-section="room">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Room Routing</div>
+            <h2>Active room <span class="rid" id="roomId"></span></h2>
+          </div>
+          <button class="button-muted" id="leaveRoom" type="button">Leave</button>
+        </div>
         <div class="room-members" id="roomMembers"></div>
       </section>
+
+      <section class="transcript-panel" id="transcriptPanel" data-page-section="history">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Room History</div>
+            <h2>Transcript stream</h2>
+          </div>
+          <button type="button" class="button-muted" id="refreshTranscript">Refresh</button>
+        </div>
+        <div class="transcript-list" id="transcriptList"></div>
+      </section>
+
+      <p class="footer-note">
+        Blackline Ops is the first of three installable surfaces in this repo:
+        Ops, Observatory, and Studio.
+      </p>
     </main>
   </div>
 
   <dialog id="addAgentDialog">
     <form method="dialog">
-      <h3>Add agent</h3>
-      <label>name <small>(lowercase, used in subject)</small>
-        <input id="newName" type="text" required pattern="[a-z][a-z0-9_-]{1,30}" />
+      <h3 style="margin:0;font-family:var(--font-display);">Add agent</h3>
+      <label>
+        Name
+        <input id="newName" class="field" type="text" required pattern="[a-z][a-z0-9_-]{1,30}" />
       </label>
-      <label>label
-        <input id="newLabel" type="text" />
+      <label>
+        Label
+        <input id="newLabel" class="field" type="text" />
       </label>
-      <label>tier
-        <select id="newTier">
+      <label>
+        Tier
+        <select id="newTier" class="field">
           <option value="core">core</option>
           <option value="custom" selected>custom</option>
           <option value="router">router</option>
         </select>
       </label>
       <menu>
-        <button value="cancel" class="ghost">cancel</button>
-        <button id="newSubmit" value="ok" class="primary">add</button>
+        <button id="addCancel" type="button" class="button-muted">Cancel</button>
+        <button id="newSubmit" type="button" class="button-primary">Add</button>
       </menu>
     </form>
   </dialog>
 
   <dialog id="newRoomDialog">
     <form method="dialog">
-      <h3>Open room</h3>
-      <p class="muted">Pick agents to invite. Switch will notify each on their direct channel.</p>
-      <div class="checklist" id="roomChecklist"></div>
-      <label>moderator
-        <select id="roomModerator"></select>
+      <h3 style="margin:0;font-family:var(--font-display);">Open room</h3>
+      <p class="muted">Choose the invite set and moderator for the next room broadcast.</p>
+      <div class="stack" id="roomChecklist"></div>
+      <label>
+        Moderator
+        <select id="roomModerator" class="field"></select>
       </label>
       <menu>
-        <button value="cancel" class="ghost">cancel</button>
-        <button id="roomSubmit" value="ok" class="primary">open room</button>
+        <button id="roomCancel" type="button" class="button-muted">Cancel</button>
+        <button id="roomSubmit" type="button" class="button-primary">Open room</button>
       </menu>
     </form>
   </dialog>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/pwa.js?v=orange7"></script>
+  <script src="/static/app.js?v=vaeris-voice1"></script>
+  <script>
+    function updateHeroMetrics() {
+      const agents = Array.isArray(state?.roster?.agents) ? state.roster.agents : [];
+      const presence = state?.presence || {};
+      const online = agents.filter((agent) => presence[agent.name]?.online).length;
+      const groupAgents = Array.isArray(state?.profileHealth?.group_agents)
+        ? state.profileHealth.group_agents.length
+        : 0;
+      document.getElementById("metricAgents").textContent = String(agents.length);
+      document.getElementById("metricOnline").textContent = String(online);
+      document.getElementById("metricGroup").textContent = String(groupAgents);
+    }
+
+    const originalRenderRoster = renderRoster;
+    renderRoster = function renderRosterWithMetrics() {
+      originalRenderRoster();
+      updateHeroMetrics();
+    };
+
+    const originalRenderHealth = renderHealth;
+    renderHealth = function renderHealthWithMetrics() {
+      originalRenderHealth();
+      updateHeroMetrics();
+    };
+  </script>
 </body>
 </html>

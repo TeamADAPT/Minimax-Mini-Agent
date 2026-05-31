@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 09:35:13 — SIGNED_BY_AGENT
+Decision: Route repaired Iris, Echo, and Tecton `auto` phone/browser turns to the Rust runtime by default.
+Reason: Task 42 and Task 47 proved the Rust API-session path, provider health, streamed chunks, route metadata, and session persistence for these agents; keeping auto on older routes would preserve avoidable TUI/daemon fragility.
+
 ## 2026-05-31 09:24:30 — SIGNED_BY_AGENT
 Decision: Start phone/browser route cutover after transport proof, not before.
 Reason: The UI should change only after the Rust route has proof IDs, route metadata, denoised chunks, and rollback instructions; this keeps operator-facing behavior tied to verified runtime health.

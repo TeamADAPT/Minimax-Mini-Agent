@@ -1,5 +1,15 @@
 # CommsOps Status
 
+## 2026-05-31 09:35:13 - SIGNED_BY_AGENT
+
+Phone/browser `auto` route cutover is complete for Iris, Echo, and Tecton:
+
+- Auto direct sends route to `nova.<agent>.rust.direct`.
+- `/v1/chat/completions` proofs passed for all three.
+- Activity history records route metadata and Hermes session ids.
+- Voice chunks are denoised before reaching callers.
+- `pipecat-voice.service` is active on `127.0.0.1:18085`.
+
 ## 2026-05-31 09:22:58 - SIGNED_BY_AGENT
 
 Task 42 is complete. Native NATS-to-Hermes API-session delivery is promoted for

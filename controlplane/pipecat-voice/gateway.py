@@ -52,6 +52,7 @@ from canvas import handle_canvas_ws, canvas_state
 from direct_nats_session_hook import build_direct_nats_session_hook, build_dry_run_envelope
 from kanban import kanban_board
 from session_state_api import build_session_state
+from veyra_extensions import read_agent_logs, read_session_activity, dg_key
 
 ROOT = Path(__file__).parent
 ROSTER_PATH = ROOT / "roster.json"
@@ -78,6 +79,26 @@ GROUP_AGENT_NAMES = [
     if n.strip()
 ]
 DEFAULT_MODERATOR = os.environ.get("DEFAULT_MODERATOR", "echo").strip().lower()
+DEFAULT_AGENT_RUNTIME = os.environ.get("DEFAULT_AGENT_RUNTIME", "hermes").strip().lower()
+AGENT_RUNTIME_DEFAULTS_RAW = os.environ.get(
+    "AGENT_RUNTIME_DEFAULTS",
+    "iris=rust,echo=rust,tecton=rust,vaeris=rust,skipper=rust,stratum=rust,"
+    "veyra=tui,testova=tui",
+)
+RUNTIME_ALIASES = {
+    "": "auto",
+    "auto": "auto",
+    "default": "auto",
+    "live": "tui",
+    "live-cli": "tui",
+    "cli": "tui",
+    "tui": "tui",
+    "daemon": "hermes",
+    "hermes": "hermes",
+    "rust": "rust",
+    "fresh": "fresh",
+}
+VALID_AGENT_RUNTIMES = {"auto", "tui", "hermes", "rust", "fresh"}
 PROFILE_BLOCKERS = {
     # All previously blocked profiles have been fixed (2026-05-11):
     # - vaeris/synergy/cosmos: provider auth resolved (NVIDIA_API_KEY in .env)
@@ -85,6 +106,48 @@ PROFILE_BLOCKERS = {
     # - vox: real Hermes profile now exists
     # Add entries here only if a profile needs manual remediation.
 }
+
+
+def _parse_runtime_defaults(raw: str) -> dict[str, str]:
+    defaults: dict[str, str] = {}
+    for item in re.split(r"[, ]+", raw):
+        if not item or "=" not in item:
+            continue
+        name, runtime = item.split("=", 1)
+        clean_name = name.strip().lower()
+        clean_runtime = RUNTIME_ALIASES.get(runtime.strip().lower(), "")
+        if clean_name and clean_runtime in VALID_AGENT_RUNTIMES - {"auto"}:
+            defaults[clean_name] = clean_runtime
+    return defaults
+
+
+AGENT_RUNTIME_DEFAULTS = _parse_runtime_defaults(AGENT_RUNTIME_DEFAULTS_RAW)
+
+
+def _normalize_runtime(runtime: str | None) -> str:
+    clean = (runtime or "auto").strip().lower()
+    return RUNTIME_ALIASES.get(clean, "auto")
+
+
+def _runtime_for_agent(agent: str, requested: str | None = "auto") -> str:
+    clean = _normalize_runtime(requested)
+    if clean != "auto":
+        return clean
+    default_runtime = RUNTIME_ALIASES.get(DEFAULT_AGENT_RUNTIME, DEFAULT_AGENT_RUNTIME)
+    return AGENT_RUNTIME_DEFAULTS.get(agent.strip().lower(), default_runtime or "hermes")
+
+
+def _runtime_subject(agent: str, channel: str, runtime: str) -> str:
+    return f"{SUBJECT_NS}.{agent}.{runtime}.{channel}"
+
+
+def _runtime_label(runtime: str) -> str:
+    return {
+        "tui": "Live CLI",
+        "hermes": "Daemon",
+        "rust": "Rust",
+        "fresh": "Fresh",
+    }.get(runtime, runtime)
 
 
 def _profile_path(name: str) -> Path:
@@ -366,11 +429,16 @@ class PresenceTracker:
                 now = time.time()
                 changes: dict[str, bool] = {}
                 for n in names:
-                    online = f"{self._ns}.{n}.direct" in subjects
+                    default_runtime = _runtime_for_agent(n, "auto")
+                    runtime_subject = f"{self._ns}.{n}.{default_runtime}.direct"
+                    legacy_subject = f"{self._ns}.{n}.direct"
+                    online = runtime_subject in subjects or legacy_subject in subjects
                     if self._state.get(n, {}).get("online") != online:
                         changes[n] = online
                     self._state[n] = {
                         "online": online,
+                        "runtime": default_runtime,
+                        "subject": runtime_subject if runtime_subject in subjects else legacy_subject,
                         "last_seen": now if online else self._state.get(n, {}).get("last_seen", 0),
                     }
                 payload: dict[str, Any] = {"type": "presence", "snapshot": self._state}
@@ -479,6 +547,9 @@ def _profile_health() -> dict:
                 "cli_processes": cli_processes.get(name, []),
                 "latest_session": _latest_profile_session(name),
                 "group_enabled": name in configured,
+                "runtime": online.get(name, {}).get("runtime") or _runtime_for_agent(name, "auto"),
+                "route_subject": online.get(name, {}).get("subject")
+                or _runtime_subject(name, "direct", _runtime_for_agent(name, "auto")),
                 "status": status,
                 "reason": reason,
                 "last_seen": online.get(name, {}).get("last_seen", 0),
@@ -567,9 +638,9 @@ def _agentops_handoff() -> dict[str, Any]:
     blocked = [a for a in health["agents"] if a["name"] in {"vaeris", "pathfinder", "synergy", "cosmos"}]
     checks = [
         "Hermes profile chat succeeds with a short bounded prompt.",
-        "nova.<agent>.ping returns pong:<agent>:hermes.",
-        "nova.<agent>.direct returns within timeout.",
-        "nova.<agent>.meet returns within timeout.",
+        "nova.<agent>.<runtime>.ping returns pong:<agent>:<runtime>.",
+        "nova.<agent>.<runtime>.direct returns within timeout.",
+        "nova.<agent>.<runtime>.meet returns within timeout.",
         "Profile is added to GROUP_AGENT_NAMES only after Iris marks it ready.",
     ]
     return {"blocked": blocked, "acceptance_checks": checks}
@@ -605,10 +676,10 @@ def _validate_startup() -> dict[str, Any]:
     warnings: list[str] = []
     
     # Required env vars (loaded from secrets)
-    dg_key = os.environ.get("DEEPGRAM_API_KEY", "")
+    dg_key_result = dg_key()
     nats_url = os.environ.get("NATS_URL", "")
     
-    if not dg_key:
+    if not dg_key_result:
         errors.append("DEEPGRAM_API_KEY not configured (check /adapt/secrets/m2.env)")
     
     if not nats_url:
@@ -705,15 +776,15 @@ async def healthz() -> dict:
 @app.get("/token")
 async def get_token() -> dict:
     """Fetch a 30-second Deepgram API key scoped for the Voice Agent WS."""
-    dg_key = os.environ.get("DEEPGRAM_API_KEY", "")
-    if not dg_key:
+    dg_key_result = dg_key()
+    if not dg_key_result:
         raise HTTPException(500, "DEEPGRAM_API_KEY not configured")
     loop = asyncio.get_running_loop()
 
     def _fetch() -> dict:
         req = urllib.request.Request(
             "https://api.deepgram.com/v1/auth/grant",
-            headers={"Authorization": f"Token {dg_key}", "Content-Type": "application/json"},
+            headers={"Authorization": f"Token {dg_key_result}", "Content-Type": "application/json"},
             data=b"{}",
             method="POST",
         )
@@ -743,12 +814,15 @@ async def chat_completions(
     agents: str = "",
     mode: str = "parallel",
     moderator: str = "",
+    addressed_to: str = "all",
+    runtime: str = "auto",
 ) -> StreamingResponse:
     """OpenAI-compatible SSE endpoint called by Deepgram's think step.
 
     All peers publish to NATS and stream the real nova agent's reply. The
     warm per-nova Hermes gateway (NATS platform plugin) answers on
-    nova.<peer>.direct; group peers fan out on nova.<agent>.meet.
+    nova.<peer>.<runtime>.direct; group peers fan out on
+    nova.<agent>.<runtime>.meet.
     """
     body = await request.json()
     raw_messages: list[dict] = body.get("messages", [])
@@ -807,6 +881,8 @@ async def chat_completions(
                 return
 
             mode_clean = (mode or "parallel").strip().lower()
+            runtime_clean = _normalize_runtime(runtime)
+            addressed_name = (addressed_to or "all").strip().lower()
             moderator_name = (moderator or DEFAULT_MODERATOR).strip().lower()
             if not _NAME_RE.match(moderator_name):
                 moderator_name = DEFAULT_MODERATOR
@@ -818,11 +894,14 @@ async def chat_completions(
                     "mode": mode_clean,
                     "targets": targets,
                     "moderator": moderator_name,
+                    "addressed_to": addressed_name,
+                    "runtime": runtime_clean,
                     "message": text,
                 }
             )
 
             async def _request_agent(agent: str, message: str, group: str | None = None) -> str:
+                agent_runtime = _runtime_for_agent(agent, runtime_clean)
                 reply_to = nc.new_inbox()
                 q: asyncio.Queue[str | None] = asyncio.Queue()
 
@@ -846,11 +925,15 @@ async def chat_completions(
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "reply_to": reply_to,
                     "to": agent,
+                    "runtime": agent_runtime,
                 }
                 if group:
                     envelope["group"] = group
-                subject = f"{SUBJECT_NS}.{agent}.{GROUP_CHANNEL}"
-                logger.info(f"NATS group publish -> {subject} | {message[:80]!r}")
+                subject = _runtime_subject(agent, GROUP_CHANNEL, agent_runtime)
+                logger.info(
+                    f"NATS group publish -> {subject} ({_runtime_label(agent_runtime)}) | "
+                    f"{message[:80]!r}"
+                )
                 await nc.publish(subject, json.dumps(envelope).encode())
                 await nc.flush()
 
@@ -877,7 +960,13 @@ async def chat_completions(
                 fanout_targets = [agent for agent in fanout_targets if agent != moderator_name] or fanout_targets
 
             async def _fanout_one(agent: str) -> tuple[str, str]:
-                reply = await _request_agent(agent, text, peer.lower())
+                prompt_text = text
+                if addressed_name not in {"", "all", "everyone"}:
+                    prompt_text = (
+                        f"Chase is addressing {addressed_name}. All room members can hear this. "
+                        f"Reply only if you are {addressed_name} or have essential context.\n\n{text}"
+                    )
+                reply = await _request_agent(agent, prompt_text, peer.lower())
                 return agent, reply
 
             try:
@@ -951,6 +1040,7 @@ async def chat_completions(
         )
 
     async def _stream_nats():
+        runtime_clean = _runtime_for_agent(peer, runtime)
         try:
             nc = await _get_nats()
         except Exception as exc:
@@ -960,7 +1050,7 @@ async def chat_completions(
             return
 
         reply_to = nc.new_inbox()
-        q: asyncio.Queue[str | None] = asyncio.Queue()
+        q: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
 
         async def _on_chunk(msg: Any) -> None:
             try:
@@ -970,9 +1060,9 @@ async def chat_completions(
             chunk = payload.get("chunk", "")
             final = bool(payload.get("final", False))
             if chunk:
-                q.put_nowait(chunk)
+                q.put_nowait({"chunk": chunk})
             if final:
-                q.put_nowait(None)
+                q.put_nowait({"final": True, "route": payload.get("route")})
 
         sub = await nc.subscribe(reply_to, cb=_on_chunk)
         envelope = {
@@ -982,23 +1072,47 @@ async def chat_completions(
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "reply_to": reply_to,
             "to": peer,
+            "runtime": runtime_clean,
         }
-        subject = f"{SUBJECT_NS}.{peer}.{channel}"
-        logger.info(f"NATS publish -> {subject} | {text[:80]!r}")
+        subject = _runtime_subject(peer, channel, runtime_clean)
+        logger.info(
+            f"NATS publish -> {subject} ({_runtime_label(runtime_clean)}) | {text[:80]!r}"
+        )
         await nc.publish(subject, json.dumps(envelope).encode())
         await nc.flush()
 
+        chunks: list[str] = []
+        route_meta: dict[str, Any] | None = None
         try:
             while True:
                 try:
-                    chunk = await asyncio.wait_for(q.get(), timeout=NATS_REPLY_TIMEOUT)
+                    item = await asyncio.wait_for(q.get(), timeout=NATS_REPLY_TIMEOUT)
                 except asyncio.TimeoutError:
-                    logger.warning(f"NATS reply timeout waiting on {peer}")
+                    logger.warning(f"NATS reply timeout waiting on {peer} via {runtime_clean}")
                     break
-                if chunk is None:
+                if item.get("final"):
+                    route = item.get("route")
+                    if isinstance(route, dict):
+                        route_meta = route
                     break
+                chunk = str(item.get("chunk") or "")
+                if not chunk:
+                    continue
+                chunks.append(chunk)
                 yield _sse(chunk)
         finally:
+            _append_room_event(
+                {
+                    "turn_id": f"direct-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}",
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "kind": "direct",
+                    "agent": peer,
+                    "runtime": runtime_clean,
+                    "subject": subject,
+                    "route": route_meta,
+                    "message": "".join(chunks).strip(),
+                }
+            )
             try:
                 await sub.unsubscribe()
             except Exception:
@@ -1149,6 +1263,19 @@ async def kanban_page() -> Any:
     return Response(content=html, media_type="text/html")
 
 
+
+@app.get("/api/agents/{name}/logs")
+async def get_agent_logs(name: str, lines: int = 50):
+    """Return the last N log lines for any agent."""
+    return read_agent_logs(name, lines=min(lines, 200))
+
+
+@app.get("/api/sessions/activity")
+async def get_session_activity(lines: int = 200):
+    """Return the last N lines from the session events JSONL file."""
+    return read_session_activity(lines=lines)
+
+
 @app.get("/dashboard", include_in_schema=False)
 async def dashboard_page() -> Any:
     """Serve the Iris dashboard page."""
@@ -1195,6 +1322,8 @@ async def set_route(body: dict) -> dict:
         "mode": (body.get("mode") or "solo").strip().lower(),
         "agents": _valid_agent_names(body.get("agents") or []),
         "moderator": (body.get("moderator") or DEFAULT_MODERATOR).strip().lower(),
+        "addressed_to": (body.get("addressed_to") or "all").strip().lower(),
+        "runtime": _normalize_runtime(body.get("runtime") or "auto"),
     }
     await bus.publish(route)
     return {k: v for k, v in route.items() if k != "type"}
@@ -1211,8 +1340,8 @@ async def ws_voice_proxy(browser: WebSocket) -> None:
     Relays binary PCM (browser→DG) and binary TTS + JSON events (DG→browser).
     Includes reconnection logic for upstream resilience.
     """
-    dg_key = os.environ.get("DEEPGRAM_API_KEY", "")
-    if not dg_key:
+    dg_key_result = dg_key()
+    if not dg_key_result:
         logger.error("DG proxy: DEEPGRAM_API_KEY not configured")
         await browser.accept()
         await browser.close(code=1011, reason="Server configuration error")
@@ -1229,7 +1358,7 @@ async def ws_voice_proxy(browser: WebSocket) -> None:
         try:
             async with _ws_lib.connect(
                 "wss://agent.deepgram.com/v1/agent/converse",
-                additional_headers={"Authorization": f"Token {dg_key}"},
+                additional_headers={"Authorization": f"Token {dg_key_result}"},
                 ping_interval=20,  # Keep-alive ping
                 compression=None,
                 close_timeout=10,

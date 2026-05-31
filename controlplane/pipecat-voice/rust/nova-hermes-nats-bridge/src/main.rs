@@ -228,7 +228,7 @@ struct NatsEnvelope {
     message: Option<String>,
     reply_to: Option<String>,
     #[serde(rename = "timestamp")]
-    _timestamp: Option<f64>,
+    _timestamp: Option<serde_json::Value>,
     /// Set by this bridge on outbound payloads to prevent ping-pong loops.
     #[serde(rename = "_via")]
     via: Option<String>,
@@ -969,7 +969,11 @@ fn signature_like(value: &str) -> bool {
 }
 
 fn flatten_spoken_text(value: &str) -> String {
-    value.split_whitespace().collect::<Vec<_>>().join(" ")
+    let ascii = value
+        .chars()
+        .map(|ch| if ch.is_ascii() { ch } else { ' ' })
+        .collect::<String>();
+    ascii.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 async fn publish_reply_words(
@@ -1088,5 +1092,14 @@ mod tests {
         let cleaned = clean_voice_reply_text(raw);
 
         assert_eq!(cleaned, "TECTON RUST OK. All systems are steady.");
+    }
+
+    #[test]
+    fn strips_visual_unicode_noise_from_voice_reply() {
+        let raw = "PHONE AUTO RUST OK. \u{1f308}";
+
+        let cleaned = clean_voice_reply_text(raw);
+
+        assert_eq!(cleaned, "PHONE AUTO RUST OK.");
     }
 }

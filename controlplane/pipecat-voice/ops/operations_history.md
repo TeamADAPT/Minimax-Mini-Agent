@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 09:35:13 — SIGNED_BY_AGENT
+Completed `48-phone-auto-route-rust-cutover`: phone/browser `runtime=auto` now routes Iris, Echo, and Tecton direct turns to `nova.<agent>.rust.direct`; activity history records route metadata and Hermes session ids; the UI exposes an explicit Rust runtime button; and `/v1/chat/completions` proofs passed for Iris, Echo, and Tecton.
+
 ## 2026-05-31 09:24:30 — SIGNED_BY_AGENT
 Started `48-phone-auto-route-rust-cutover` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will inspect phone/browser route selection and cut repaired agents over to the proven Rust runtime path with explicit rollback.
 
