@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 10:17:03 — SIGNED_BY_AGENT
+Advanced `43-rust-voice-provider-abstraction`: added `rust/nova-voice-provider-core` with Deepgram and guarded xAI provider configs, capability planning, browser credential policy, endpoint validation, experimental gating, and Rust unit coverage. Verification passed with cargo fmt/check/test/clippy.
+
 ## 2026-05-31 10:13:14 — SIGNED_BY_AGENT
 Started `43-rust-voice-provider-abstraction` by moving it from `ops/to_do/` into `ops/in_progress/`. The first implementation slice will define the Rust-owned provider contract and guarded configuration surface while preserving the current Deepgram gateway path.
 

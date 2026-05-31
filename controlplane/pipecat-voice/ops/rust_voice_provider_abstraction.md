@@ -1,0 +1,61 @@
+# Rust Voice Provider Abstraction
+
+## 2026-05-31 10:17:03 — SIGNED_BY_AGENT
+
+Task 43 first slice creates a Rust-owned provider contract without changing the
+live Deepgram voice path.
+
+## Current Voice Surfaces
+
+- Browser realtime path: `/ws/voice` proxies browser audio to
+  `wss://agent.deepgram.com/v1/agent/converse` with the long-lived Deepgram key
+  kept server-side.
+- Browser token path: `/token` mints a short-lived Deepgram auth grant through
+  `https://api.deepgram.com/v1/auth/grant`.
+- Think path: Deepgram calls `/v1/chat/completions`, which routes through NATS
+  to the selected nova runtime.
+- Legacy Pipecat path: `bot.py` still defines Deepgram STT/TTS with Groq and
+  ElevenLabs fallbacks, but the active browser gateway is `gateway.py`.
+
+## Rust Contract
+
+Crate:
+
+```text
+rust/nova-voice-provider-core
+```
+
+The crate defines:
+
+- `ProviderKind`: `deepgram`, `xai`
+- `VoiceCapability`: `stt`, `tts`, `realtime`
+- `BrowserCredentialPolicy`: server proxy only or ephemeral client secret
+- `ProviderConfig`: enabled/experimental gates, required env names, endpoints,
+  capability set, default realtime model
+- `VoiceProvider` trait and route planning
+- Deepgram default config
+- Guarded xAI default config
+
+## xAI Guardrail
+
+Official xAI voice docs currently expose:
+
+- Realtime: `wss://api.x.ai/v1/realtime`
+- Browser ephemeral secret mint: `/v1/realtime/client_secrets`
+- TTS: `/v1/tts`
+- STT: `/v1/stt`
+- Default realtime model: `grok-voice-latest`
+
+The xAI provider is marked experimental and cannot plan a route unless the
+caller sets `allow_experimental=true`.
+
+## Verification
+
+```bash
+cargo fmt --check
+cargo check
+cargo test
+cargo clippy -- -D warnings
+```
+
+All passed for `rust/nova-voice-provider-core`.

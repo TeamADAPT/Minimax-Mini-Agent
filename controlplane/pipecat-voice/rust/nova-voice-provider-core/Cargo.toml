@@ -1,0 +1,11 @@
+[package]
+name = "nova-voice-provider-core"
+version = "0.1.0"
+edition = "2021"
+description = "Rust voice provider contract for Nova CommsOps"
+license = "MIT"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+thiserror = "1"
+url = "2"

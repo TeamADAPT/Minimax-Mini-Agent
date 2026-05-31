@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 10:17:03 — SIGNED_BY_AGENT
+Decision: Keep xAI voice behind an explicit experimental route-planning gate in the Rust provider contract.
+Reason: xAI's realtime and TTS/STT surfaces are now concrete enough to model, but they have not been latency, billing, interruption, or failure-tested inside CX Pipe; Deepgram remains the default until those route proofs pass.
+
 ## 2026-05-31 10:13:14 — SIGNED_BY_AGENT
 Decision: Start the Rust voice provider abstraction as a contract/config slice before replacing the live Deepgram path.
 Reason: The current gateway path is working and already protects long-lived Deepgram keys; Rust ownership should first harden provider selection, redaction, and experimental xAI gating without destabilizing the browser voice loop.
