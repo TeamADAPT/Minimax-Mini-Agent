@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 10:01:52 — SIGNED_BY_AGENT
+Decision: Start transcript-memory work immediately after observability and make canonical event emission the next promotion surface.
+Reason: The activity page now exposes derived session and room metrics, but memory and analytics should consume normalized turn events instead of scraping UI text, room-history rows, or Hermes session tables directly.
+
 ## 2026-05-31 09:59:24 — SIGNED_BY_AGENT
 Decision: Ignore browser verification screenshots, local Playwright state, and gateway runtime logs instead of committing them.
 Reason: They are generated operational artifacts and do not belong in version control; the task completion report records their verification role.

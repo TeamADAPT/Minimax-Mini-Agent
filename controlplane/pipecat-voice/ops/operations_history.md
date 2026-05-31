@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 10:01:52 — SIGNED_BY_AGENT
+Started `44-transcript-memory-pipeline` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will define and emit canonical CommsOps turn events from existing gateway/session/room sources first, then add durable handoff points for memory and analytics consumers without blocking hot voice routes.
+
 ## 2026-05-31 09:59:24 — SIGNED_BY_AGENT
 Added scoped ignore rules for generated CommsOps verification and runtime artifacts: local Playwright state, activity screenshots, and gateway runtime logs.
 
