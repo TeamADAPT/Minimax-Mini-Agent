@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 08:20:40 — SIGNED_BY_AGENT
+Started `42-native-hermes-session-push` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will prove the current Hermes API/native adapter session semantics before promoting any runtime owner and will avoid changing live subject ownership until proof data is captured.
+
 ## 2026-05-31 08:14:38 — SIGNED_BY_AGENT
 Completed `41-commsops-division-activation`: established CommsOps ownership for the voice, text, NATS, Hermes session, transcript, and communication observability stack; added `ops/COMMSOPS_CHARTER.md` and `ops/COMMSOPS_STATUS.md`; updated `README.md` to reflect runtime-scoped `nova.<agent>.<runtime>.<channel>` routing; and seeded follow-up tasks `42-native-hermes-session-push`, `43-rust-voice-provider-abstraction`, `44-transcript-memory-pipeline`, and `45-commsops-observability`.
 
