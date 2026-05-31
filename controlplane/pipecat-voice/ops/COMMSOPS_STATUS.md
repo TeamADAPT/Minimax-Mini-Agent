@@ -1,5 +1,19 @@
 # CommsOps Status
 
+## 2026-05-31 09:57:08 - SIGNED_BY_AGENT
+
+Task 45 is complete. The gateway now exposes `/activity`, `/api/activity`,
+and `/api/tui-mirror/{name}` for operator-grade CommsOps observability:
+
+- Summary cards report roster, Tier 1 coverage, online agents, visible CLIs,
+  NATS subject count, and room history volume.
+- Charts cover roster status, Tier 1 coverage, NATS subject shape, session
+  activity, message volume, room events, and task lanes.
+- Drill-down tables show Tier 1 lead roster/profile status and per-agent
+  daemon/CLI/session/message state.
+- Agent rows expose bounded live log tails without exposing secrets.
+- Desktop and mobile browser checks passed against the live service.
+
 ## 2026-05-31 09:35:13 - SIGNED_BY_AGENT
 
 Phone/browser `auto` route cutover is complete for Iris, Echo, and Tecton:

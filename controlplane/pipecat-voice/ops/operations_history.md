@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-31 09:59:24 — SIGNED_BY_AGENT
+Added scoped ignore rules for generated CommsOps verification and runtime artifacts: local Playwright state, activity screenshots, and gateway runtime logs.
+
+## 2026-05-31 09:57:08 — SIGNED_BY_AGENT
+Completed `45-commsops-observability`: added `/api/activity`, `/activity`, and `/api/tui-mirror/{name}`; wired live roster, profile, NATS, room-history, session, and task-lane metrics into a mobile-safe activity page; added bounded read-only log drilldowns; verified focused tests plus desktop and mobile browser rendering; and preserved secret redaction.
+
 ## 2026-05-31 09:51:11 — SIGNED_BY_AGENT
 Started `45-commsops-observability` by moving it from `ops/to_do/` into `ops/in_progress/`. The implementation will wire the existing activity page to live route, NATS, profile, task, and transcript-derived data without exposing secrets.
 

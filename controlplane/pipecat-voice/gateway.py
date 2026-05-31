@@ -28,10 +28,12 @@ import asyncio
 import json
 import os
 import re
+import sqlite3
 import subprocess
 import time
 import urllib.request
 import uuid
+from collections import Counter
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -52,6 +54,7 @@ from canvas import handle_canvas_ws, canvas_state
 from direct_nats_session_hook import build_direct_nats_session_hook, build_dry_run_envelope
 from kanban import kanban_board
 from session_state_api import build_session_state
+from tui_mirror import build_tui_mirror
 from veyra_extensions import read_agent_logs, read_session_activity, dg_key
 
 ROOT = Path(__file__).parent
@@ -666,6 +669,263 @@ def _room_history(limit: int = 40) -> list[dict[str, Any]]:
         return []
 
 
+def _slug_name(value: str) -> str:
+    return re.sub(r"[^a-z0-9_-]+", "-", value.strip().lower()).strip("-")
+
+
+def _parse_tier1_tree(path: Path) -> list[dict[str, str]]:
+    """Parse `/adapt/platform/TIER1_TREE_with_leads.md` lead rows.
+
+    The tree file is maintained for people, not machines, so this parser keeps
+    the contract intentionally small: any cleaned tree line containing
+    `domain - Lead` becomes one row.
+    """
+    if not path.exists():
+        for fallback in (
+            Path("/adapt/platform/tier1-registry/domains.md"),
+            Path("/adapt/platform/TIER1_TREE.md"),
+        ):
+            if fallback.exists():
+                path = fallback
+                break
+        else:
+            return []
+    rows: list[dict[str, str]] = []
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return rows
+    for raw in text.splitlines():
+        if raw.lstrip().startswith("|"):
+            cells = [cell.strip().strip("*`") for cell in raw.strip().strip("|").split("|")]
+            if len(cells) >= 3 and cells[0].lower() not in {"domain", "-------------"}:
+                if set(cells[0]) <= {"-"}:
+                    continue
+                domain = cells[0].strip().replace("/", "").lower()
+                label = cells[2].strip()
+                if not domain or not label:
+                    continue
+                name = _slug_name(label) if label.lower() not in {"tbd", "none"} else _slug_name(domain)
+                rows.append({"domain": domain, "name": name, "label": label})
+            continue
+        line = re.sub(r"^[\s│├└─]+", "", raw).strip()
+        if "-" not in line:
+            continue
+        domain, label = line.split("-", 1)
+        domain = domain.strip().strip("/").lower()
+        label = label.strip()
+        if not domain or not label:
+            continue
+        rows.append({"domain": domain, "name": _slug_name(label), "label": label})
+    return rows
+
+
+def _profile_session_stats(name: str) -> dict[str, Any]:
+    profile = _profile_path(name)
+    stats: dict[str, Any] = {
+        "session_count": 0,
+        "message_count": 0,
+        "latest_updated_at": None,
+    }
+    db_path = profile / "state.db"
+    if db_path.exists():
+        try:
+            with sqlite3.connect(str(db_path), timeout=1) as conn:
+                session_count = conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
+                message_count = conn.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
+                latest = conn.execute(
+                    "SELECT MAX(timestamp) FROM messages WHERE timestamp IS NOT NULL"
+                ).fetchone()[0]
+            stats["session_count"] = int(session_count or 0)
+            stats["message_count"] = int(message_count or 0)
+            if latest:
+                stats["latest_updated_at"] = datetime.fromtimestamp(
+                    float(latest), tz=timezone.utc
+                ).isoformat()
+            return stats
+        except sqlite3.Error as exc:
+            logger.debug(f"session db stats failed for {name}: {exc}")
+
+    sessions_dir = profile / "sessions"
+    if not sessions_dir.exists():
+        return stats
+    try:
+        files = [
+            path
+            for path in sessions_dir.iterdir()
+            if path.is_file() and path.name.startswith("session_") and path.suffix == ".json"
+        ]
+        stats["session_count"] = len(files)
+        if files:
+            latest = max(files, key=lambda path: path.stat().st_mtime)
+            stats["latest_updated_at"] = datetime.fromtimestamp(
+                latest.stat().st_mtime, tz=timezone.utc
+            ).isoformat()
+        message_count = 0
+        for path in files[-50:]:
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            messages = payload.get("messages")
+            if isinstance(messages, list):
+                message_count += len(messages)
+        stats["message_count"] = message_count
+    except OSError as exc:
+        logger.debug(f"session json stats failed for {name}: {exc}")
+    return stats
+
+
+def _kanban_counts() -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for lane in ("to_do", "in_progress", "completed"):
+        lane_path = ROOT / "ops" / lane
+        try:
+            counts[lane] = sum(1 for child in lane_path.iterdir() if child.is_dir())
+        except OSError:
+            counts[lane] = 0
+    return counts
+
+
+def _room_kind_counts(events: list[dict[str, Any]]) -> dict[str, int]:
+    return dict(Counter(str(event.get("kind") or "unknown") for event in events))
+
+
+def _subject_counts(subjects: list[str]) -> dict[str, int]:
+    counts: Counter[str] = Counter()
+    for subject in subjects:
+        parts = subject.split(".")
+        if len(parts) >= 4 and parts[0] == SUBJECT_NS:
+            counts[f"{parts[2]}.{parts[3]}"] += 1
+        elif len(parts) >= 3 and parts[0] == SUBJECT_NS:
+            counts[f"legacy.{parts[2]}"] += 1
+    return dict(counts)
+
+
+def _activity_snapshot() -> dict[str, Any]:
+    roster = load_roster()
+    health = _profile_health()
+    monitor = _nats_monitor_snapshot()
+    room_events = _room_history(200)
+    session_events = read_session_activity(lines=500).get("events", [])
+
+    health_by_name = {row["name"]: row for row in health.get("agents", [])}
+    roster_agents = [
+        agent
+        for agent in roster.get("agents", [])
+        if isinstance(agent, dict) and agent.get("name")
+    ]
+    stats_by_name = {
+        str(agent["name"]).strip().lower(): _profile_session_stats(
+            str(agent["name"]).strip().lower()
+        )
+        for agent in roster_agents
+    }
+
+    agents: list[dict[str, Any]] = []
+    for agent in roster_agents:
+        name = str(agent.get("name") or "").strip().lower()
+        if not name:
+            continue
+        health_row = health_by_name.get(name, {})
+        stats = stats_by_name.get(name, {})
+        agents.append(
+            {
+                "name": name,
+                "label": agent.get("label") or name.capitalize(),
+                "tier": agent.get("tier") or "core",
+                "domain": agent.get("domain") or "",
+                "status": health_row.get("status") or "unknown",
+                "online": bool(health_row.get("online")),
+                "cli_open": bool(health_row.get("cli_open")),
+                "runtime": health_row.get("runtime") or _runtime_for_agent(name, "auto"),
+                "route_subject": health_row.get("route_subject")
+                or _runtime_subject(name, "direct", _runtime_for_agent(name, "auto")),
+                "profile_exists": bool(health_row.get("profile_exists")),
+                "session_count": int(stats.get("session_count") or 0),
+                "message_count": int(stats.get("message_count") or 0),
+                "latest_updated_at": stats.get("latest_updated_at"),
+            }
+        )
+
+    tier_tree = _parse_tier1_tree(Path("/adapt/platform/TIER1_TREE_with_leads.md"))
+    roster_names = {row["name"] for row in agents}
+    tier_rows: list[dict[str, Any]] = []
+    for row in tier_tree:
+        name = row["name"]
+        stats = stats_by_name.get(name) or _profile_session_stats(name)
+        profile_exists = _profile_path(name).exists()
+        active_path = Path("/adapt/novas/active") / name
+        if name in roster_names and profile_exists:
+            status = "live" if bool(health_by_name.get(name, {}).get("online")) else "available"
+        elif name in roster_names:
+            status = "rostered"
+        elif profile_exists:
+            status = "profile-only"
+        else:
+            status = "missing"
+        tier_rows.append(
+            {
+                **row,
+                "status": status,
+                "in_roster": name in roster_names,
+                "profile_exists": profile_exists,
+                "active_path": str(active_path) if active_path.exists() else "",
+                "session_count": int(stats.get("session_count") or 0),
+                "message_count": int(stats.get("message_count") or 0),
+                "latest_updated_at": stats.get("latest_updated_at"),
+            }
+        )
+
+    status_counts = dict(Counter(row["status"] for row in agents))
+    tier_counts = {
+        "rostered": sum(1 for row in tier_rows if row["in_roster"]),
+        "profile": sum(1 for row in tier_rows if row["profile_exists"]),
+        "missing": sum(1 for row in tier_rows if row["status"] == "missing"),
+    }
+    session_counts = {
+        row["name"]: row["session_count"]
+        for row in sorted(agents, key=lambda item: item["session_count"], reverse=True)[:20]
+        if row["session_count"]
+    }
+    message_counts = {
+        row["name"]: row["message_count"]
+        for row in sorted(agents, key=lambda item: item["message_count"], reverse=True)[:20]
+        if row["message_count"]
+    }
+
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "summary": {
+            "roster_agents": len(agents),
+            "tier1_leads": len(tier_rows),
+            "tier1_rostered": sum(1 for row in tier_rows if row["in_roster"]),
+            "online_agents": sum(1 for row in agents if row["online"]),
+            "cli_open": sum(1 for row in agents if row["cli_open"]),
+            "nats_subjects": monitor.get("count", 0),
+            "room_events": len(room_events),
+            "session_events": len(session_events),
+        },
+        "charts": {
+            "status_counts": status_counts,
+            "tier_counts": tier_counts,
+            "subject_counts": _subject_counts(monitor.get("nova_subjects", [])),
+            "session_counts": session_counts,
+            "message_counts": message_counts,
+            "room_kind_counts": _room_kind_counts(room_events),
+            "kanban_counts": _kanban_counts(),
+        },
+        "agents": agents,
+        "tier1": tier_rows,
+        "nats": monitor,
+        "recent_route_events": [
+            event
+            for event in room_events[-40:]
+            if isinstance(event, dict) and event.get("route")
+        ],
+    }
+
+
 def _validate_startup() -> dict[str, Any]:
     """Validate required configuration and dependencies at startup.
     
@@ -1195,6 +1455,21 @@ async def get_session_state() -> dict:
     return build_session_state(ROOT)
 
 
+@app.get("/api/activity")
+async def get_activity() -> dict:
+    """Return high-level and drill-down CommsOps activity metrics."""
+    return _activity_snapshot()
+
+
+@app.get("/api/tui-mirror/{name}")
+async def get_tui_mirror(name: str) -> dict:
+    """Return read-only Hermes TUI/session mirror data for one agent."""
+    try:
+        return build_tui_mirror(ROOT, name)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
 @app.get("/api/direct-nats-session-hook")
 async def get_direct_nats_session_hook() -> dict:
     """Return guarded direct NATS session targets without changing voice routing."""
@@ -1280,6 +1555,13 @@ async def get_session_activity(lines: int = 200):
 async def dashboard_page() -> Any:
     """Serve the Iris dashboard page."""
     html = (CLIENT_DIR / "dashboard.html").read_text()
+    return Response(content=html, media_type="text/html")
+
+
+@app.get("/activity", include_in_schema=False)
+async def activity_page() -> Any:
+    """Serve the CommsOps activity metrics page."""
+    html = (CLIENT_DIR / "activity.html").read_text()
     return Response(content=html, media_type="text/html")
 
 

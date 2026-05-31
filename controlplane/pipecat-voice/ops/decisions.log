@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-31 09:59:24 — SIGNED_BY_AGENT
+Decision: Ignore browser verification screenshots, local Playwright state, and gateway runtime logs instead of committing them.
+Reason: They are generated operational artifacts and do not belong in version control; the task completion report records their verification role.
+
+## 2026-05-31 09:57:08 — SIGNED_BY_AGENT
+Decision: Complete Task 45 with derived live observability instead of adding a new metrics database.
+Reason: Existing route state, NATS monitor snapshots, Hermes profile `state.db` files, room history, session events, and ops task directories already answer the operator's first-order health questions; Task 44 should own the canonical transcript-memory persistence path before analytics storage is expanded.
+
 ## 2026-05-31 09:51:11 — SIGNED_BY_AGENT
 Decision: Implement CommsOps observability from existing live surfaces before adding new storage.
 Reason: NATS monitor state, route metadata in room history, profile `state.db` files, systemd health, and task directories already provide enough high-value reporting; using them first gives immediate operator visibility while Task 44 defines canonical transcript ingestion.

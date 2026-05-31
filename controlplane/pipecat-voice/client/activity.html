@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Activity" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" href="/static/icons/ops.svg" type="image/svg+xml" />
+  <title>Nova Activity</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/blackline.css?v=orange7" />
+  <style>
+    .activity-shell { max-width: 1680px; margin: 0 auto; padding: 1rem; }
+    .activity-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+    .activity-metric, .activity-card, .activity-table, .log-panel {
+      border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;
+      background: rgba(16, 16, 15, 0.84); padding: 0.9rem;
+    }
+    .activity-metric { min-height: 92px; display: grid; align-content: space-between; gap: 0.45rem; }
+    .metric-kicker, .table-kicker { color: #a3a39b; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; text-transform: uppercase; }
+    .activity-value { color: #f7f7f2; font-size: clamp(1.5rem, 3vw, 2.45rem); font-weight: 800; line-height: 1; }
+    .activity-note { color: #a3a39b; font-size: 0.78rem; overflow-wrap: anywhere; }
+    .activity-card canvas { width: 100%; height: 290px; }
+    .activity-table { overflow: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 820px; }
+    th, td { border-bottom: 1px solid rgba(255, 255, 255, 0.08); color: #d6d4ca; font-size: 0.86rem; padding: 0.65rem 0.55rem; text-align: left; vertical-align: top; }
+    th { color: #a3a39b; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; text-transform: uppercase; }
+    td strong { color: #f7f7f2; }
+    .status-chip { border: 1px solid rgba(255,255,255,0.11); border-radius: 999px; color: #f7f7f2; display: inline-flex; font-size: 0.76rem; gap: 0.35rem; padding: 0.22rem 0.5rem; white-space: nowrap; }
+    .section-stack { display: grid; gap: 1rem; }
+    .agent-row { cursor: pointer; transition: background 0.15s; }
+    .agent-row:hover { background: rgba(255, 95, 5, 0.08); }
+    .agent-row.selected { background: rgba(255, 95, 5, 0.15); border-left: 3px solid #ff5f05; }
+    .log-panel { display: none; margin-top: 0.5rem; position: relative; }
+    .log-panel.visible { display: block; }
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem; }
+    .log-tabs { display: flex; gap: 0.3rem; }
+    .log-tab { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #a3a39b; cursor: pointer; font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; padding: 0.3rem 0.7rem; }
+    .log-tab.active { background: rgba(255,95,5,0.15); border-color: #ff5f05; color: #f7f7f2; }
+    .log-body { background: rgba(0,0,0,0.4); border-radius: 4px; font-family: "IBM Plex Mono", monospace; font-size: 0.74rem; line-height: 1.5; max-height: 500px; overflow-y: auto; padding: 0.6rem; white-space: pre-wrap; word-break: break-all; }
+    .log-line { padding: 0.1rem 0; }
+    .log-line.info { color: #d6d4ca; }
+    .log-line.warning { color: #ffa000; }
+    .log-line.error { color: #cf7463; }
+    .log-line.debug { color: #5f5f59; }
+    .log-panel-toolbar { display: flex; gap: 0.5rem; align-items: center; }
+    @media (max-width: 1180px) { .activity-strip { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (max-width: 760px) {
+      .activity-shell { padding: 0.75rem; }
+      .activity-strip, .chart-grid { grid-template-columns: 1fr; }
+      .span-4, .span-6, .span-8, .span-12 { grid-column: 1 / -1; }
+      .activity-card canvas { height: 240px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="activity-shell">
+    <header class="topbar">
+      <div class="page-head">
+        <div class="eyebrow">Activity</div>
+        <h1>Fleet activity metrics</h1>
+        <p>Route health, Tier 1 coverage, session volume, task lanes, and live log tails.</p>
+      </div>
+      <div class="row">
+        <span class="status-pill"><span class="dot" id="refreshDot"></span><span id="refreshStamp">loading</span></span>
+        <button type="button" class="button-muted" id="refreshButton">Refresh</button>
+      </div>
+    </header>
+
+    <nav class="topbar-links" aria-label="Primary" style="margin-bottom:1rem">
+      <a href="/">Ops</a>
+      <a href="/dashboard">Observatory</a>
+      <a class="is-active" href="/activity">Activity</a>
+      <a href="/canvas">Studio</a>
+    </nav>
+
+    <section class="activity-strip" id="summaryStrip" aria-label="Fleet summary"></section>
+
+    <section class="chart-grid">
+      <article class="activity-card span-4"><div class="section-head"><h2>Roster status</h2><span class="mono">live profile health</span></div><canvas id="statusChart"></canvas></article>
+      <article class="activity-card span-4"><div class="section-head"><h2>Tier 1 coverage</h2><span class="mono">tree vs runtime</span></div><canvas id="tierChart"></canvas></article>
+      <article class="activity-card span-4"><div class="section-head"><h2>NATS subjects</h2><span class="mono">subscription shape</span></div><canvas id="subjectChart"></canvas></article>
+      <article class="activity-card span-6"><div class="section-head"><h2>Session activity</h2><span class="mono">top 20 profiles</span></div><canvas id="sessionChart"></canvas></article>
+      <article class="activity-card span-6"><div class="section-head"><h2>Message volume</h2><span class="mono">sampled session files</span></div><canvas id="messageChart"></canvas></article>
+      <article class="activity-card span-6"><div class="section-head"><h2>Room events</h2><span class="mono">history kinds</span></div><canvas id="roomChart"></canvas></article>
+      <article class="activity-card span-6"><div class="section-head"><h2>Task lanes</h2><span class="mono">kanban counts</span></div><canvas id="kanbanChart"></canvas></article>
+    </section>
+
+    <div id="logPanel" class="log-panel">
+      <div class="log-header">
+        <div class="log-tabs" id="logTabs"></div>
+        <div class="log-panel-toolbar">
+          <span class="status-pill" id="logLineCount"></span>
+          <button type="button" class="button-muted" id="logRefresh">Tail Refresh</button>
+          <button type="button" class="button-muted" id="logClose">Close</button>
+        </div>
+      </div>
+      <div class="log-body" id="logBody"></div>
+    </div>
+
+    <section class="section-stack" style="margin-top:1rem">
+      <article class="activity-table">
+        <div class="section-head">
+          <div><div class="table-kicker">Granular</div><h2>Tier 1 leads</h2></div>
+          <span class="mono">/adapt/platform/TIER1_TREE_with_leads.md</span>
+        </div>
+        <table><thead><tr><th>Domain</th><th>Lead</th><th>Status</th><th>Roster</th><th>Profile</th><th>Active dir</th><th>Sessions</th><th>Latest</th></tr></thead>
+        <tbody id="tierRows"></tbody></table>
+      </article>
+
+      <article class="activity-table">
+        <div class="section-head">
+          <div><div class="table-kicker">Granular</div><h2>All agents</h2></div>
+          <span class="mono">live log tail</span>
+        </div>
+        <table><thead><tr><th>Agent</th><th>Tier</th><th>Domain</th><th>Mode</th><th>Status</th><th>Online</th><th>Sessions</th><th>Messages</th></tr></thead>
+        <tbody id="agentRows"></tbody></table>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const charts = {};
+    let currentLogAgent = null;
+    let currentLogType = "agent_log";
+
+    function textColor() { return "#a3a39b"; }
+    function gridColor() { return "rgba(255,255,255,0.08)"; }
+
+    function dotClass(value) {
+      if (value === true || value === "live" || value === "available" || value === "ok") return "good";
+      if (value === false || value === "blocked" || value === "missing") return "danger";
+      return "warn";
+    }
+
+    function escapeHtml(value) {
+      const node = document.createElement("div");
+      node.textContent = value == null ? "" : String(value);
+      return node.innerHTML;
+    }
+
+    function formatTime(value) {
+      if (!value) return "none";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString();
+    }
+
+    function chartDataFromObject(source) {
+      const entries = Object.entries(source || {});
+      return { labels: entries.map(([k]) => k), values: entries.map(([,v]) => v) };
+    }
+
+    function makeChart(id, type, label, color) {
+      const commonScales = {
+        x: { grid: { color: "transparent" }, ticks: { color: textColor() } },
+        y: { beginAtZero: true, grid: { color: gridColor() }, ticks: { color: textColor() } },
+      };
+      charts[id] = new Chart(document.getElementById(id), {
+        type, data: { labels: [], datasets: [{ label, data: [], backgroundColor: color, borderColor: color, borderRadius: 8 }] },
+        options: { responsive: true, indexAxis: type === "bar" && (id === "sessionChart" || id === "messageChart") ? "y" : "x",
+          scales: type === "doughnut" ? undefined : commonScales,
+          plugins: { legend: { display: type === "doughnut", labels: { color: textColor() } } } },
+      });
+    }
+
+    function buildCharts() {
+      makeChart("statusChart", "doughnut", "Agents", ["#79c77c", "#ffa000", "#cf7463", "#5f5f59", "#d9e0de"]);
+      makeChart("tierChart", "bar", "Tier 1", "#ff5f05");
+      makeChart("subjectChart", "bar", "Subjects", "#ffa000");
+      makeChart("sessionChart", "bar", "Sessions", "#79c77c");
+      makeChart("messageChart", "bar", "Messages", "#d9e0de");
+      makeChart("roomChart", "bar", "Room events", "#cf7463");
+      makeChart("kanbanChart", "bar", "Tasks", "#ff5f05");
+    }
+
+    function updateChart(id, source) {
+      const { labels, values } = chartDataFromObject(source);
+      charts[id].data.labels = labels;
+      charts[id].data.datasets[0].data = values;
+      charts[id].update();
+    }
+
+    function logLevel(line) {
+      const l = line.toLowerCase();
+      if (l.includes("error") || l.includes("traceback") || l.includes("critical")) return "error";
+      if (l.includes("warning") || l.includes("warn ")) return "warning";
+      if (l.includes("debug")) return "debug";
+      return "info";
+    }
+
+    async function fetchLogs(name) {
+      const resp = await fetch(`/api/agents/${name}/logs?lines=50`);
+      if (!resp.ok) throw new Error(`logs ${resp.status}`);
+      return resp.json();
+    }
+
+    function renderLogPanel(data) {
+      const panel = document.getElementById("logPanel");
+      const tabs = document.getElementById("logTabs");
+      const body = document.getElementById("logBody");
+      const count = document.getElementById("logLineCount");
+      const lines = data[currentLogType] || [];
+      const totalLines = data[`${currentLogType}_lines`] || lines.length;
+
+      let linesHtml = "";
+      if (lines.length === 0) {
+        linesHtml = '<div class="log-line info">No log entries found for ' + escapeHtml(currentLogType) + '</div>';
+      } else {
+        linesHtml = lines.map((l) => {
+          const level = logLevel(l);
+          return '<div class="log-line ' + level + '">' + escapeHtml(l) + '</div>';
+        }).join("\n");
+      }
+
+      tabs.innerHTML = "";
+      ["agent_log", "error_log"].forEach((type) => {
+        const isActive = type === currentLogType;
+        const tab = document.createElement("span");
+        tab.className = "log-tab" + (isActive ? " active" : "");
+        tab.textContent = type === "agent_log" ? "agent.log" : "errors.log";
+        tab.addEventListener("click", () => {
+          currentLogType = type;
+          fetchAndRenderLogs(currentLogAgent);
+        });
+        tabs.appendChild(tab);
+      });
+
+      count.innerHTML = '<span class="dot good"></span> ' + lines.length + ' / ' + totalLines + ' lines';
+      body.innerHTML = linesHtml;
+      panel.classList.add("visible");
+      body.scrollTop = body.scrollHeight;
+    }
+
+    async function fetchAndRenderLogs(name) {
+      try {
+        const data = await fetchLogs(name);
+        renderLogPanel(data);
+      } catch (err) {
+        console.error(err);
+        document.getElementById("logBody").innerHTML = '<div class="log-line error">Failed to load logs: ' + escapeHtml(err.message) + '</div>';
+        document.getElementById("logPanel").classList.add("visible");
+      }
+    }
+
+    function selectAgent(name) {
+      currentLogAgent = name;
+      currentLogType = "agent_log";
+      document.querySelectorAll(".agent-row").forEach((row) => {
+        row.classList.toggle("selected", row.dataset.agent === name);
+      });
+      fetchAndRenderLogs(name);
+    }
+
+    function renderSummary(summary) {
+      const items = [
+        ["Roster", summary.roster_agents, "agents tracked"],
+        ["Tier 1", `${summary.tier1_rostered}/${summary.tier1_leads}`, "leads rostered"],
+        ["Online", summary.online_agents, "NATS visible"],
+        ["CLI", summary.cli_open, "visible sessions"],
+        ["NATS", summary.nats_subjects, "nova subscriptions"],
+        ["Room", summary.room_events, "history events"],
+      ];
+      document.getElementById("summaryStrip").innerHTML = items.map(([label,value,note]) => `
+        <article class="activity-metric">
+          <div class="metric-kicker">${escapeHtml(label)}</div>
+          <div class="activity-value">${escapeHtml(value)}</div>
+          <div class="activity-note">${escapeHtml(note)}</div>
+        </article>`).join("");
+    }
+
+    function renderTierRows(rows) {
+      document.getElementById("tierRows").innerHTML = rows.map((row) => `
+        <tr>
+          <td>${escapeHtml(row.domain)}</td>
+          <td><strong>${escapeHtml(row.label)}</strong><br><span class="mono">${escapeHtml(row.name)}</span></td>
+          <td><span class="status-chip"><span class="dot ${dotClass(row.status)}"></span>${escapeHtml(row.status)}</span></td>
+          <td>${row.in_roster ? "yes" : "no"}</td>
+          <td>${row.profile_exists ? "yes" : "no"}</td>
+          <td>${escapeHtml(row.active_path || "missing")}</td>
+          <td>${escapeHtml(row.session_count)}</td>
+          <td>${escapeHtml(formatTime(row.latest_updated_at))}</td>
+        </tr>`).join("");
+    }
+
+    function modeLabel(row) {
+      if (row.cli_open && row.online) return '<span class="status-pill is-accent" style="font-size:0.7rem"><span class="dot good"></span>CLI+daemon</span>';
+      if (row.cli_open) return '<span class="status-pill" style="font-size:0.7rem"><span class="dot good"></span>CLI</span>';
+      if (row.online) return '<span class="status-pill" style="font-size:0.7rem"><span class="dot good"></span>daemon</span>';
+      return '<span class="status-pill" style="font-size:0.7rem"><span class="dot danger"></span>offline</span>';
+    }
+
+    function renderAgentRows(rows) {
+      document.getElementById("agentRows").innerHTML = rows.map((row) => `
+        <tr class="agent-row" data-agent="${escapeHtml(row.name)}">
+          <td><strong>${escapeHtml(row.label)}</strong><br><span class="mono">${escapeHtml(row.name)}</span></td>
+          <td>${escapeHtml(row.tier)}</td>
+          <td>${escapeHtml(row.domain || "")}</td>
+          <td>${modeLabel(row)}</td>
+          <td><span class="status-chip"><span class="dot ${dotClass(row.status)}"></span>${escapeHtml(row.status)}</span></td>
+          <td>${row.online ? "yes" : "no"}</td>
+          <td>${escapeHtml(row.session_count)}</td>
+          <td>${escapeHtml(row.message_count)}</td>
+        </tr>`).join("");
+      document.querySelectorAll(".agent-row").forEach((row) => {
+        row.addEventListener("click", () => {
+          if (row.dataset.agent) selectAgent(row.dataset.agent);
+        });
+      });
+    }
+
+    async function loadActivity() {
+      document.getElementById("refreshDot").className = "dot warn";
+      const response = await fetch("/api/activity");
+      if (!response.ok) throw new Error(`activity ${response.status}`);
+      const data = await response.json();
+      renderSummary(data.summary || {});
+      updateChart("statusChart", data.charts?.status_counts || {});
+      updateChart("tierChart", data.charts?.tier_counts || {});
+      updateChart("subjectChart", data.charts?.subject_counts || {});
+      updateChart("sessionChart", data.charts?.session_counts || {});
+      updateChart("messageChart", data.charts?.message_counts || {});
+      updateChart("roomChart", data.charts?.room_kind_counts || {});
+      updateChart("kanbanChart", data.charts?.kanban_counts || {});
+      renderTierRows(data.tier1 || []);
+      renderAgentRows(data.agents || []);
+      document.getElementById("refreshDot").className = "dot good";
+      document.getElementById("refreshStamp").textContent = formatTime(data.generated_at);
+    }
+
+    document.getElementById("refreshButton").addEventListener("click", () =>
+      loadActivity().catch((err) => {
+        console.error(err);
+        document.getElementById("refreshDot").className = "dot danger";
+        document.getElementById("refreshStamp").textContent = "error";
+      })
+    );
+
+    document.getElementById("logRefresh").addEventListener("click", () => {
+      if (currentLogAgent) fetchAndRenderLogs(currentLogAgent);
+    });
+
+    document.getElementById("logClose").addEventListener("click", () => {
+      document.getElementById("logPanel").classList.remove("visible");
+      currentLogAgent = null;
+      document.querySelectorAll(".agent-row").forEach((r) => r.classList.remove("selected"));
+    });
+
+    buildCharts();
+    loadActivity().catch((err) => {
+      console.error(err);
+      document.getElementById("refreshDot").className = "dot danger";
+      document.getElementById("refreshStamp").textContent = "error";
+    });
+    setInterval(() => loadActivity().catch(console.error), 30000);
+  </script>
+</body>
+</html>
