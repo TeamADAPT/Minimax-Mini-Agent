@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 10:13:14 — SIGNED_BY_AGENT
+Decision: Start the Rust voice provider abstraction as a contract/config slice before replacing the live Deepgram path.
+Reason: The current gateway path is working and already protects long-lived Deepgram keys; Rust ownership should first harden provider selection, redaction, and experimental xAI gating without destabilizing the browser voice loop.
+
 ## 2026-05-31 10:11:43 — SIGNED_BY_AGENT
 Decision: Complete Task 44 with local canonical JSONL plus API handoff, leaving Temporal and RedPanda as downstream consumers rather than blocking the gateway on them.
 Reason: The gateway must not block hot voice turns on workflow or streaming infrastructure; a scoped append-only file gives memory and analytics an immediate durable contract while Temporal/RedPanda can tail, replay, and enrich `comms.turn.v1` events independently.
