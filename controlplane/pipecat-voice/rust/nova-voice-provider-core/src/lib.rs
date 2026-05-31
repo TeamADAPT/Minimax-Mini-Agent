@@ -5,6 +5,7 @@
 //! xAI gating.
 
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use thiserror::Error;
 use url::Url;
 
@@ -47,6 +48,20 @@ impl ProviderKind {
     }
 }
 
+impl FromStr for ProviderKind {
+    type Err = VoiceProviderError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "deepgram" => Ok(Self::Deepgram),
+            "xai" | "grok" => Ok(Self::Xai),
+            other => Err(VoiceProviderError::UnknownProvider {
+                provider: other.to_string(),
+            }),
+        }
+    }
+}
+
 /// Voice capabilities a provider can expose.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -57,6 +72,21 @@ pub enum VoiceCapability {
     Tts,
     /// Bidirectional realtime speech session.
     Realtime,
+}
+
+impl FromStr for VoiceCapability {
+    type Err = VoiceProviderError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "stt" => Ok(Self::Stt),
+            "tts" => Ok(Self::Tts),
+            "realtime" => Ok(Self::Realtime),
+            other => Err(VoiceProviderError::UnknownCapability {
+                capability: other.to_string(),
+            }),
+        }
+    }
 }
 
 /// Browser credential exposure policy.
@@ -181,6 +211,18 @@ pub struct VoiceRoutePlan {
 /// Voice provider planning failures.
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum VoiceProviderError {
+    /// Provider id is not recognized.
+    #[error("unknown provider {provider}")]
+    UnknownProvider {
+        /// Provider id.
+        provider: String,
+    },
+    /// Capability id is not recognized.
+    #[error("unknown voice capability {capability}")]
+    UnknownCapability {
+        /// Capability id.
+        capability: String,
+    },
     /// Provider is disabled in config.
     #[error("provider {provider} is disabled")]
     Disabled {
@@ -225,6 +267,15 @@ pub enum VoiceProviderError {
         /// Provider id.
         provider: String,
     },
+}
+
+/// Build a default provider by kind.
+#[must_use]
+pub fn default_provider_config(kind: ProviderKind) -> ProviderConfig {
+    match kind {
+        ProviderKind::Deepgram => default_deepgram_config(),
+        ProviderKind::Xai => default_xai_config(),
+    }
 }
 
 /// Common provider planning behavior.

@@ -21,3 +21,16 @@ cargo fmt --check
 cargo test
 cargo clippy -- -D warnings
 ```
+
+## CLI Planner
+
+```bash
+DEEPGRAM_API_KEY=present cargo run --bin voice_provider_plan -- \
+  --provider deepgram --route-id iris.direct --capability realtime --browser-direct
+
+XAI_API_KEY=present cargo run --bin voice_provider_plan -- \
+  --provider xai --route-id room.main --capability realtime --browser-direct \
+  --allow-experimental
+```
+
+The planner prints route-safe JSON and never prints credential values.

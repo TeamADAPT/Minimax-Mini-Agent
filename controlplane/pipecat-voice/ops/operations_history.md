@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 10:20:47 — SIGNED_BY_AGENT
+Advanced `43-rust-voice-provider-abstraction`: added the `voice_provider_plan` Rust CLI, verified Deepgram and xAI route-plan JSON output, and verified xAI is blocked unless `--allow-experimental` is set.
+
 ## 2026-05-31 10:17:03 — SIGNED_BY_AGENT
 Advanced `43-rust-voice-provider-abstraction`: added `rust/nova-voice-provider-core` with Deepgram and guarded xAI provider configs, capability planning, browser credential policy, endpoint validation, experimental gating, and Rust unit coverage. Verification passed with cargo fmt/check/test/clippy.
 

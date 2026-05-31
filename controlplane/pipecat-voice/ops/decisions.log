@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 10:20:47 — SIGNED_BY_AGENT
+Decision: Expose the Rust voice provider contract first as a CLI planner.
+Reason: A process boundary lets the Python gateway or systemd checks consume route-safe JSON without linking Rust into the live gateway yet, and it keeps credential values out of stdout by construction.
+
 ## 2026-05-31 10:17:03 — SIGNED_BY_AGENT
 Decision: Keep xAI voice behind an explicit experimental route-planning gate in the Rust provider contract.
 Reason: xAI's realtime and TTS/STT surfaces are now concrete enough to model, but they have not been latency, billing, interruption, or failure-tested inside CX Pipe; Deepgram remains the default until those route proofs pass.

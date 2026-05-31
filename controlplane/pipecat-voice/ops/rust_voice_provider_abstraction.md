@@ -35,6 +35,8 @@ The crate defines:
 - `VoiceProvider` trait and route planning
 - Deepgram default config
 - Guarded xAI default config
+- `voice_provider_plan` CLI for route-safe JSON planning without printing
+  credential values
 
 ## xAI Guardrail
 
@@ -59,3 +61,17 @@ cargo clippy -- -D warnings
 ```
 
 All passed for `rust/nova-voice-provider-core`.
+
+CLI proof:
+
+```bash
+DEEPGRAM_API_KEY=dummy cargo run --quiet --bin voice_provider_plan -- \
+  --provider deepgram --route-id iris.direct --capability realtime --browser-direct
+
+XAI_API_KEY=dummy cargo run --quiet --bin voice_provider_plan -- \
+  --provider xai --route-id room.main --capability realtime --browser-direct \
+  --allow-experimental
+```
+
+Guard proof: the same xAI command without `--allow-experimental` exits with
+`ExperimentalBlocked`.
