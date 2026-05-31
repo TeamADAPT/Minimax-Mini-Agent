@@ -1,5 +1,22 @@
 # CommsOps Status
 
+## 2026-05-31 09:01:31 - SIGNED_BY_AGENT
+
+Provider health gate completed. `commscanary` is now the non-user-facing
+CommsOps proof lane:
+
+- Gateway: `hermes-gateway-commscanary.service`.
+- API bind: `127.0.0.1:8675`.
+- Provider/model: NVIDIA NIM `qwen/qwen3.5-397b-a17b`.
+- Hermes CLI proof returned `COMMSCANARY OK`.
+- API sync proof returned `API SYNC OK`.
+- API stream proof emitted assistant content.
+- Session persistence contains both user and assistant rows.
+
+Current provider blockers are account/quota related: DeepSeek balance,
+OpenRouter credits, Gemini quota, xAI account/credit authorization, and
+Cerebras tested-model availability.
+
 ## 2026-05-31 08:13:16 - SIGNED_BY_AGENT
 
 ## Current Posture

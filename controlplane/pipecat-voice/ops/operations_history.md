@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 09:01:31 — SIGNED_BY_AGENT
+Completed `46-commsops-provider-health-gate`: created the non-user-facing `commscanary` Hermes profile, proved NVIDIA NIM `qwen/qwen3.5-397b-a17b` as the current CommsOps provider lane, installed and started `hermes-gateway-commscanary.service`, verified API sync and streaming session replies, and confirmed user plus assistant rows persisted for both proof sessions.
+
 ## 2026-05-31 08:47:58 — SIGNED_BY_AGENT
 Started `46-commsops-provider-health-gate` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will establish one low-cost known-good provider lane before Task 42 promotes native Hermes API-session delivery.
 

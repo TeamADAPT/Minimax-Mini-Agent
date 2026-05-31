@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 09:01:31 — SIGNED_BY_AGENT
+Decision: Use NVIDIA NIM `qwen/qwen3.5-397b-a17b` as the CommsOps canary lane instead of Groq.
+Reason: Groq passed direct HTTP canary quickly, but the standard Hermes agent payload exceeded that route's request limits; NVIDIA Qwen passed direct provider proof, Hermes CLI proof, API sync proof, API stream proof, and session persistence proof with a large-context lane.
+
 ## 2026-05-31 08:47:58 — SIGNED_BY_AGENT
 Decision: Probe direct provider APIs before changing more Hermes profile configs.
 Reason: Direct one-token canaries isolate account/model health from Hermes cold-start, memory, tool, and gateway behavior, reducing quota burn and avoiding unnecessary service churn.
