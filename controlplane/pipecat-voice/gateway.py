@@ -55,6 +55,12 @@ from direct_nats_session_hook import build_direct_nats_session_hook, build_dry_r
 from kanban import kanban_board
 from session_state_api import build_session_state
 from tui_mirror import build_tui_mirror
+from turn_events import (
+    append_turn_event,
+    build_turn_event,
+    build_turn_event_from_room_event,
+    read_turn_events,
+)
 from veyra_extensions import read_agent_logs, read_session_activity, dg_key
 
 ROOT = Path(__file__).parent
@@ -649,6 +655,13 @@ def _agentops_handoff() -> dict[str, Any]:
     return {"blocked": blocked, "acceptance_checks": checks}
 
 
+def _append_canonical_turn_event(event: dict[str, Any]) -> None:
+    try:
+        append_turn_event(event)
+    except Exception as exc:
+        logger.warning(f"canonical turn event append failed: {exc}")
+
+
 def _append_room_event(event: dict[str, Any]) -> None:
     try:
         ROOM_HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -656,6 +669,7 @@ def _append_room_event(event: dict[str, Any]) -> None:
             fh.write(json.dumps(event, ensure_ascii=True) + "\n")
     except Exception as exc:
         logger.warning(f"room history append failed: {exc}")
+    _append_canonical_turn_event(build_turn_event_from_room_event(event))
 
 
 def _room_history(limit: int = 40) -> list[dict[str, Any]]:
@@ -808,6 +822,7 @@ def _activity_snapshot() -> dict[str, Any]:
     monitor = _nats_monitor_snapshot()
     room_events = _room_history(200)
     session_events = read_session_activity(lines=500).get("events", [])
+    turn_events = read_turn_events(limit=500)
 
     health_by_name = {row["name"]: row for row in health.get("agents", [])}
     roster_agents = [
@@ -905,6 +920,7 @@ def _activity_snapshot() -> dict[str, Any]:
             "nats_subjects": monitor.get("count", 0),
             "room_events": len(room_events),
             "session_events": len(session_events),
+            "turn_events": len(turn_events),
         },
         "charts": {
             "status_counts": status_counts,
@@ -914,6 +930,9 @@ def _activity_snapshot() -> dict[str, Any]:
             "message_counts": message_counts,
             "room_kind_counts": _room_kind_counts(room_events),
             "kanban_counts": _kanban_counts(),
+            "turn_status_counts": dict(
+                Counter(str(event.get("status") or "unknown") for event in turn_events)
+            ),
         },
         "agents": agents,
         "tier1": tier_rows,
@@ -923,6 +942,7 @@ def _activity_snapshot() -> dict[str, Any]:
             for event in room_events[-40:]
             if isinstance(event, dict) and event.get("route")
         ],
+        "recent_turn_events": turn_events[-40:],
     }
 
 
@@ -1128,6 +1148,24 @@ async def chat_completions(
                 nc = await _get_nats()
             except Exception as exc:
                 logger.error(f"NATS unavailable for group completions: {exc}")
+                _append_canonical_turn_event(
+                    build_turn_event(
+                        turn_id=turn_id,
+                        timestamp=datetime.now(timezone.utc).isoformat(),
+                        role="user",
+                        actor="chase",
+                        text=text,
+                        source="gateway.chat_completions",
+                        channel="room",
+                        direction="inbound",
+                        status="error",
+                        failure={
+                            "class": "nats_unavailable",
+                            "component": "gateway",
+                            "message": str(exc),
+                        },
+                    )
+                )
                 yield f'data: {{"error":"NATS unavailable"}}\n\n'
                 yield "data: [DONE]\n\n"
                 return
@@ -1136,6 +1174,24 @@ async def chat_completions(
             requested_targets = _parse_agent_csv(agents)
             targets = requested_targets or _configured_group_targets(roster)
             if not targets:
+                _append_canonical_turn_event(
+                    build_turn_event(
+                        turn_id=turn_id,
+                        timestamp=datetime.now(timezone.utc).isoformat(),
+                        role="user",
+                        actor="chase",
+                        text=text,
+                        source="gateway.chat_completions",
+                        channel="room",
+                        direction="inbound",
+                        status="error",
+                        failure={
+                            "class": "no_targets",
+                            "component": "gateway",
+                            "message": "no roster agents are available for group routing",
+                        },
+                    )
+                )
                 yield _sse("No roster agents are available for group routing.")
                 yield "data: [DONE]\n\n"
                 return
@@ -1160,10 +1216,12 @@ async def chat_completions(
                 }
             )
 
-            async def _request_agent(agent: str, message: str, group: str | None = None) -> str:
+            async def _request_agent(
+                agent: str, message: str, group: str | None = None
+            ) -> dict[str, Any]:
                 agent_runtime = _runtime_for_agent(agent, runtime_clean)
                 reply_to = nc.new_inbox()
-                q: asyncio.Queue[str | None] = asyncio.Queue()
+                q: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
 
                 async def _on_chunk(msg: Any) -> None:
                     try:
@@ -1173,9 +1231,9 @@ async def chat_completions(
                     chunk = payload.get("chunk", "")
                     final = bool(payload.get("final", False))
                     if chunk:
-                        q.put_nowait(chunk)
+                        q.put_nowait({"chunk": chunk})
                     if final:
-                        q.put_nowait(None)
+                        q.put_nowait({"final": True, "route": payload.get("route")})
 
                 sub = await nc.subscribe(reply_to, cb=_on_chunk)
                 envelope = {
@@ -1198,36 +1256,57 @@ async def chat_completions(
                 await nc.flush()
 
                 chunks: list[str] = []
+                route_meta: dict[str, Any] | None = None
+                timed_out = False
                 try:
                     while True:
                         try:
-                            chunk = await asyncio.wait_for(q.get(), timeout=NATS_REPLY_TIMEOUT)
+                            item = await asyncio.wait_for(q.get(), timeout=NATS_REPLY_TIMEOUT)
                         except asyncio.TimeoutError:
                             logger.warning(f"NATS group reply timeout waiting on {agent}")
+                            timed_out = True
                             break
-                        if chunk is None:
+                        if item.get("final"):
+                            route = item.get("route")
+                            if isinstance(route, dict):
+                                route_meta = route
                             break
+                        chunk = str(item.get("chunk") or "")
                         chunks.append(chunk)
                 finally:
                     try:
                         await sub.unsubscribe()
                     except Exception:
                         pass
-                return "".join(chunks).strip()
+                reply = "".join(chunks).strip()
+                return {
+                    "agent": agent,
+                    "reply": reply,
+                    "runtime": agent_runtime,
+                    "subject": subject,
+                    "route": route_meta,
+                    "status": "ok" if reply else "timeout",
+                    "failure": {
+                        "class": "reply_timeout" if timed_out else "empty_reply",
+                        "component": "nats_reply",
+                        "message": f"no reply from {agent}",
+                    }
+                    if not reply
+                    else None,
+                }
 
             fanout_targets = list(targets)
             if mode_clean in {"moderated", "moderator"} and len(fanout_targets) > 1:
                 fanout_targets = [agent for agent in fanout_targets if agent != moderator_name] or fanout_targets
 
-            async def _fanout_one(agent: str) -> tuple[str, str]:
+            async def _fanout_one(agent: str) -> dict[str, Any]:
                 prompt_text = text
                 if addressed_name not in {"", "all", "everyone"}:
                     prompt_text = (
                         f"Chase is addressing {addressed_name}. All room members can hear this. "
                         f"Reply only if you are {addressed_name} or have essential context.\n\n{text}"
                     )
-                reply = await _request_agent(agent, prompt_text, peer.lower())
-                return agent, reply
+                return await _request_agent(agent, prompt_text, peer.lower())
 
             try:
                 if mode_clean in {"moderated", "moderator"}:
@@ -1236,21 +1315,49 @@ async def chat_completions(
                         f"moderator={moderator_name} | {text[:80]!r}"
                     )
                     results = await asyncio.gather(*[_fanout_one(agent) for agent in fanout_targets])
-                    usable = [(agent, reply) for agent, reply in results if reply]
-                    for agent, reply in usable:
+                    usable = [result for result in results if result["reply"]]
+                    for result in usable:
                         _append_room_event(
                             {
                                 "turn_id": turn_id,
                                 "ts": datetime.now(timezone.utc).isoformat(),
                                 "kind": "agent",
-                                "agent": agent,
-                                "message": reply,
+                                "agent": result["agent"],
+                                "runtime": result["runtime"],
+                                "subject": result["subject"],
+                                "route": result["route"],
+                                "status": result["status"],
+                                "message": result["reply"],
                             }
+                        )
+                    for result in results:
+                        if result["reply"]:
+                            continue
+                        _append_canonical_turn_event(
+                            build_turn_event(
+                                turn_id=turn_id,
+                                timestamp=datetime.now(timezone.utc).isoformat(),
+                                role="agent",
+                                actor=result["agent"],
+                                text="",
+                                source="gateway.nats_group",
+                                channel=mode_clean,
+                                direction="outbound",
+                                status=result["status"],
+                                target_agent=result["agent"],
+                                targets=targets,
+                                runtime=result["runtime"],
+                                subject=result["subject"],
+                                route=result["route"],
+                                failure=result["failure"],
+                            )
                         )
                     if not usable:
                         yield _sse("No room replies came back before timeout.")
                     else:
-                        transcript = "\n".join(f"{agent}: {reply}" for agent, reply in usable)
+                        transcript = "\n".join(
+                            f"{result['agent']}: {result['reply']}" for result in usable
+                        )
                         prompt = (
                             "You are moderating the live nova voice room for Chase. "
                             "Synthesize the agent replies into one concise spoken answer. "
@@ -1258,19 +1365,45 @@ async def chat_completions(
                             f"Chase asked: {text}\n\nAgent replies:\n{transcript}"
                         )
                         summary = await _request_agent(moderator_name, prompt, peer.lower())
-                        if summary:
+                        if summary["reply"]:
                             _append_room_event(
                                 {
                                     "turn_id": turn_id,
                                     "ts": datetime.now(timezone.utc).isoformat(),
                                     "kind": "moderator",
                                     "agent": moderator_name,
-                                    "message": summary,
+                                    "runtime": summary["runtime"],
+                                    "subject": summary["subject"],
+                                    "route": summary["route"],
+                                    "status": summary["status"],
+                                    "message": summary["reply"],
                                 }
                             )
-                            yield _sse(f"{moderator_name.capitalize()}: {summary} ")
+                            yield _sse(f"{moderator_name.capitalize()}: {summary['reply']} ")
                         else:
-                            fallback = " ".join(f"{agent.capitalize()}: {reply}" for agent, reply in usable)
+                            _append_canonical_turn_event(
+                                build_turn_event(
+                                    turn_id=turn_id,
+                                    timestamp=datetime.now(timezone.utc).isoformat(),
+                                    role="moderator",
+                                    actor=moderator_name,
+                                    text="",
+                                    source="gateway.nats_group",
+                                    channel=mode_clean,
+                                    direction="outbound",
+                                    status=summary["status"],
+                                    target_agent=moderator_name,
+                                    targets=targets,
+                                    runtime=summary["runtime"],
+                                    subject=summary["subject"],
+                                    route=summary["route"],
+                                    failure=summary["failure"],
+                                )
+                            )
+                            fallback = " ".join(
+                                f"{result['agent'].capitalize()}: {result['reply']}"
+                                for result in usable
+                            )
                             yield _sse(fallback)
                 else:
                     logger.info(
@@ -1278,18 +1411,42 @@ async def chat_completions(
                     )
                     tasks = [asyncio.create_task(_fanout_one(agent)) for agent in fanout_targets]
                     for task in asyncio.as_completed(tasks):
-                        agent, reply = await task
-                        if reply:
+                        result = await task
+                        if result["reply"]:
                             _append_room_event(
                                 {
                                     "turn_id": turn_id,
                                     "ts": datetime.now(timezone.utc).isoformat(),
                                     "kind": "agent",
-                                    "agent": agent,
-                                    "message": reply,
+                                    "agent": result["agent"],
+                                    "runtime": result["runtime"],
+                                    "subject": result["subject"],
+                                    "route": result["route"],
+                                    "status": result["status"],
+                                    "message": result["reply"],
                                 }
                             )
-                            yield _sse(f"{agent.capitalize()}: {reply} ")
+                            yield _sse(f"{result['agent'].capitalize()}: {result['reply']} ")
+                        else:
+                            _append_canonical_turn_event(
+                                build_turn_event(
+                                    turn_id=turn_id,
+                                    timestamp=datetime.now(timezone.utc).isoformat(),
+                                    role="agent",
+                                    actor=result["agent"],
+                                    text="",
+                                    source="gateway.nats_group",
+                                    channel=mode_clean,
+                                    direction="outbound",
+                                    status=result["status"],
+                                    target_agent=result["agent"],
+                                    targets=targets,
+                                    runtime=result["runtime"],
+                                    subject=result["subject"],
+                                    route=result["route"],
+                                    failure=result["failure"],
+                                )
+                            )
             finally:
                 yield "data: [DONE]\n\n"
 
@@ -1301,10 +1458,50 @@ async def chat_completions(
 
     async def _stream_nats():
         runtime_clean = _runtime_for_agent(peer, runtime)
+        subject = _runtime_subject(peer, channel, runtime_clean)
+        direct_turn_id = (
+            f"direct-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}"
+        )
+        _append_canonical_turn_event(
+            build_turn_event(
+                turn_id=direct_turn_id,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                role="user",
+                actor="chase",
+                text=text,
+                source="gateway.chat_completions",
+                channel=channel,
+                direction="inbound",
+                target_agent=peer,
+                runtime=runtime_clean,
+                subject=subject,
+            )
+        )
         try:
             nc = await _get_nats()
         except Exception as exc:
             logger.error(f"NATS unavailable for completions: {exc}")
+            _append_canonical_turn_event(
+                build_turn_event(
+                    turn_id=direct_turn_id,
+                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    role="system",
+                    actor="gateway",
+                    text="NATS unavailable for direct completion",
+                    source="gateway.chat_completions",
+                    channel=channel,
+                    direction="outbound",
+                    status="error",
+                    target_agent=peer,
+                    runtime=runtime_clean,
+                    subject=subject,
+                    failure={
+                        "class": "nats_unavailable",
+                        "component": "gateway",
+                        "message": str(exc),
+                    },
+                )
+            )
             yield f'data: {{"error":"NATS unavailable"}}\n\n'
             yield "data: [DONE]\n\n"
             return
@@ -1334,7 +1531,6 @@ async def chat_completions(
             "to": peer,
             "runtime": runtime_clean,
         }
-        subject = _runtime_subject(peer, channel, runtime_clean)
         logger.info(
             f"NATS publish -> {subject} ({_runtime_label(runtime_clean)}) | {text[:80]!r}"
         )
@@ -1343,12 +1539,14 @@ async def chat_completions(
 
         chunks: list[str] = []
         route_meta: dict[str, Any] | None = None
+        timed_out = False
         try:
             while True:
                 try:
                     item = await asyncio.wait_for(q.get(), timeout=NATS_REPLY_TIMEOUT)
                 except asyncio.TimeoutError:
                     logger.warning(f"NATS reply timeout waiting on {peer} via {runtime_clean}")
+                    timed_out = True
                     break
                 if item.get("final"):
                     route = item.get("route")
@@ -1363,13 +1561,21 @@ async def chat_completions(
         finally:
             _append_room_event(
                 {
-                    "turn_id": f"direct-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}",
+                    "turn_id": direct_turn_id,
                     "ts": datetime.now(timezone.utc).isoformat(),
                     "kind": "direct",
                     "agent": peer,
                     "runtime": runtime_clean,
                     "subject": subject,
                     "route": route_meta,
+                    "status": "ok" if chunks else "timeout",
+                    "failure": {
+                        "class": "reply_timeout" if timed_out else "empty_reply",
+                        "component": "nats_reply",
+                        "message": f"no reply from {peer}",
+                    }
+                    if not chunks
+                    else None,
                     "message": "".join(chunks).strip(),
                 }
             )
@@ -1549,6 +1755,12 @@ async def get_agent_logs(name: str, lines: int = 50):
 async def get_session_activity(lines: int = 200):
     """Return the last N lines from the session events JSONL file."""
     return read_session_activity(lines=lines)
+
+
+@app.get("/api/turn-events")
+async def get_turn_events(limit: int = 200) -> dict:
+    """Return canonical CommsOps turn events for memory/analytics consumers."""
+    return {"events": read_turn_events(limit=limit)}
 
 
 @app.get("/dashboard", include_in_schema=False)

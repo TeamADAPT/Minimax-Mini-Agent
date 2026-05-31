@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-31 10:11:43 — SIGNED_BY_AGENT
+Decision: Complete Task 44 with local canonical JSONL plus API handoff, leaving Temporal and RedPanda as downstream consumers rather than blocking the gateway on them.
+Reason: The gateway must not block hot voice turns on workflow or streaming infrastructure; a scoped append-only file gives memory and analytics an immediate durable contract while Temporal/RedPanda can tail, replay, and enrich `comms.turn.v1` events independently.
+
+## 2026-05-31 10:07:29 — SIGNED_BY_AGENT
+Decision: Grant `pipecat-voice.service` write access to `/adapt/novas/active/_shared` instead of moving canonical turn events under repo runtime.
+Reason: The shared nova path is the right memory handoff boundary; keeping events only under repo-local runtime would make memory consumers scrape or copy a less canonical source.
+
 ## 2026-05-31 10:01:52 — SIGNED_BY_AGENT
 Decision: Start transcript-memory work immediately after observability and make canonical event emission the next promotion surface.
 Reason: The activity page now exposes derived session and room metrics, but memory and analytics should consume normalized turn events instead of scraping UI text, room-history rows, or Hermes session tables directly.

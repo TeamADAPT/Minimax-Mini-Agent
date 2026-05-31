@@ -1,0 +1,26 @@
+[Unit]
+Description=Pipecat voice gateway (Deepgram Voice Agent API <-> NATS) on pipe.adaptdev.ai
+After=network-online.target nats-server.service cloudflared.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=x
+Group=x
+WorkingDirectory=/adapt/platform/novaops/controlplane/pipecat-voice
+EnvironmentFile=-/adapt/secrets/db.env
+EnvironmentFile=-/adapt/secrets/m2.env
+EnvironmentFile=-/adapt/platform/novaops/controlplane/pipecat-voice/.env
+ExecStart=/usr/bin/python3 /adapt/platform/novaops/controlplane/pipecat-voice/gateway.py --host 127.0.0.1 --port 18085
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+# tighten what the service can touch
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/adapt/platform/novaops/controlplane/pipecat-voice /adapt/novas/active/_shared
+
+[Install]
+WantedBy=multi-user.target

@@ -265,6 +265,7 @@
         ["CLI", summary.cli_open, "visible sessions"],
         ["NATS", summary.nats_subjects, "nova subscriptions"],
         ["Room", summary.room_events, "history events"],
+        ["Turns", summary.turn_events, "canonical events"],
       ];
       document.getElementById("summaryStrip").innerHTML = items.map(([label,value,note]) => `
         <article class="activity-metric">

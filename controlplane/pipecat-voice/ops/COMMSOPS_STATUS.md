@@ -1,5 +1,21 @@
 # CommsOps Status
 
+## 2026-05-31 10:11:43 - SIGNED_BY_AGENT
+
+Task 44 is complete. Canonical transcript-memory handoff is live:
+
+- New schema: `comms.turn.v1`.
+- Durable handoff: `/adapt/novas/active/_shared/turn_events.jsonl`.
+- API handoff: `/api/turn-events?limit=N`.
+- Gateway emits direct inbound user turns, direct outbound agent turns, room
+  user/agent/moderator turns, and timeout/error rows.
+- Direct Rust route proof against `commscanary` wrote two service-owned rows
+  with route subject, delivery, bridge event id, and Hermes session id.
+- Backfill normalized 194 existing CX Pipe room-history rows; canonical file
+  now contains 196 rows after proof plus backfill.
+- `pipecat-voice.service` keeps `ProtectSystem=strict` and has scoped write
+  access only to the repo and `/adapt/novas/active/_shared`.
+
 ## 2026-05-31 09:57:08 - SIGNED_BY_AGENT
 
 Task 45 is complete. The gateway now exposes `/activity`, `/api/activity`,

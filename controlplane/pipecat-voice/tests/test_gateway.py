@@ -195,6 +195,21 @@ class TestActivityMetrics:
         assert response.status_code == 200
         assert response.json()["summary"]["roster_agents"] == 1
 
+    def test_turn_events_endpoint_returns_canonical_events(self, monkeypatch):
+        import gateway
+
+        monkeypatch.setattr(
+            gateway,
+            "read_turn_events",
+            lambda limit=200: [{"schema": "comms.turn.v1", "event_id": "turn-1"}],
+        )
+        client = TestClient(gateway.app)
+
+        response = client.get("/api/turn-events?limit=1")
+
+        assert response.status_code == 200
+        assert response.json()["events"] == [{"schema": "comms.turn.v1", "event_id": "turn-1"}]
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

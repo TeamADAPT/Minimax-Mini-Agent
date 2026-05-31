@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-31 10:11:43 — SIGNED_BY_AGENT
+Completed `44-transcript-memory-pipeline`: added canonical `comms.turn.v1` turn-event emission, durable JSONL handoff at `/adapt/novas/active/_shared/turn_events.jsonl`, `/api/turn-events`, bounded room-history backfill, systemd write-scope repair, live `commscanary` Rust route proof, and 194-row CX Pipe history normalization.
+
+## 2026-05-31 10:07:29 — SIGNED_BY_AGENT
+Updated `pipecat-voice.service` write scope so the hardened gateway can append canonical turn events to `/adapt/novas/active/_shared/turn_events.jsonl` while keeping `ProtectSystem=strict`.
+
 ## 2026-05-31 10:01:52 — SIGNED_BY_AGENT
 Started `44-transcript-memory-pipeline` by moving it from `ops/to_do/` into `ops/in_progress/`. The task will define and emit canonical CommsOps turn events from existing gateway/session/room sources first, then add durable handoff points for memory and analytics consumers without blocking hot voice routes.
 
