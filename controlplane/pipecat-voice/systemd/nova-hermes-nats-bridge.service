@@ -1,0 +1,27 @@
+[Unit]
+Description=Nova Hermes NATS Bridge (Rust) - multi-agent push delivery
+After=network.target nats-server.service
+Wants=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/adapt/platform/novaops/controlplane/pipecat-voice/rust/nova-hermes-nats-bridge/.env.systemd
+Environment=BRIDGE_RUNTIME=rust
+Environment=HERMES_AGENT_NAMES=stratum,skipper,iris,tecton,echo,vaeris,commscanary
+Environment=HERMES_MAX_TURNS=20
+Environment=HERMES_TURN_TIMEOUT_SECONDS=120
+Environment=RUST_LOG=info
+Environment=HERMES_BIN=/home/x/.local/bin/hermes
+Environment=HERMES_PROFILE_ROOT=/home/x/.hermes/profiles
+Environment=NOVA_ACTIVE_ROOT=/adapt/novas/active
+Environment=SUBJECT_NS=nova
+WorkingDirectory=/adapt/platform/novaops/controlplane/pipecat-voice/rust/nova-hermes-nats-bridge
+ExecStart=/adapt/platform/novaops/controlplane/pipecat-voice/rust/nova-hermes-nats-bridge/target/release/nova-hermes-nats-bridge
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nova-hermes-nats-bridge
+
+[Install]
+WantedBy=default.target

@@ -14,7 +14,7 @@ use clap::Parser;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -108,7 +108,7 @@ struct AgentConfig {
 }
 
 impl AgentConfig {
-    fn from_profile(name: &str, profile_root: &PathBuf) -> Self {
+    fn from_profile(name: &str, profile_root: &Path) -> Self {
         let (api_port, api_key) = read_api_config(profile_root, name);
         Self {
             name: name.to_string(),
@@ -123,7 +123,7 @@ impl AgentConfig {
     }
 }
 
-fn read_api_config(profile_root: &PathBuf, agent: &str) -> (Option<u16>, Option<String>) {
+fn read_api_config(profile_root: &Path, agent: &str) -> (Option<u16>, Option<String>) {
     let config_path = profile_root.join(agent).join("config.yaml");
     let content = match std::fs::read_to_string(&config_path) {
         Ok(c) => c,
@@ -244,6 +244,13 @@ struct BridgeWork {
     reply_to: Option<String>,
 }
 
+#[derive(Debug, Clone)]
+struct HermesReply {
+    message: String,
+    session_id: Option<String>,
+    delivery: &'static str,
+}
+
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "lowercase")]
 enum Channel {
@@ -260,6 +267,20 @@ struct ReplyChunk<'a> {
     final_chunk: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    route: Option<ReplyRouteMetadata>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct ReplyRouteMetadata {
+    event_id: String,
+    agent: String,
+    sender: String,
+    runtime: String,
+    channel: Channel,
+    delivery: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hermes_session_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -453,7 +474,7 @@ async fn run_work_subscription(
     work_tx: mpsc::Sender<BridgeWork>,
 ) -> Result<()> {
     while let Some(message) = subscriber.next().await {
-        let work = match parse_work(message.payload.as_ref(), channel.clone(), &agent) {
+        let work = match parse_work(message.payload.as_ref(), channel, &agent) {
             Ok(Some(w)) => w,
             Ok(None) => continue, // filtered out (ping-pong, empty, etc.)
             Err(error) => {
@@ -593,7 +614,9 @@ async fn run_worker(
             Ok(reply) => {
                 let reply_agent = &work.target_agent; // the agent who replied
                 if let Some(reply_to) = work.reply_to.as_deref() {
-                    if let Err(error) = publish_reply_words(&client, reply_to, &reply).await {
+                    if let Err(error) =
+                        publish_reply_words(&client, reply_to, &reply, &work, &args).await
+                    {
                         warn!(error = %error, "failed to publish reply");
                     }
                 } else {
@@ -603,7 +626,7 @@ async fn run_worker(
                         from: reply_agent.to_string(),
                         to: work.sender.clone(),
                         msg_type: "text".to_string(),
-                        message: reply.clone(),
+                        message: reply.message.clone(),
                         timestamp: now.clone(),
                         via: BRIDGE_VIA.to_string(),
                     };
@@ -625,7 +648,7 @@ async fn run_worker(
                         from: reply_agent.to_string(),
                         to: "room".to_string(),
                         msg_type: "room_reply".to_string(),
-                        message: reply,
+                        message: reply.message,
                         timestamp: now,
                         heard_by,
                         via: BRIDGE_VIA.to_string(),
@@ -658,7 +681,10 @@ async fn run_worker(
 
 // ── Hermes invocation ────────────────────────────────────────────────────
 
-async fn invoke_hermes_subprocess(args: &Args, work: &BridgeWork) -> Result<String, BridgeError> {
+async fn invoke_hermes_subprocess(
+    args: &Args,
+    work: &BridgeWork,
+) -> Result<HermesReply, BridgeError> {
     let agent = &work.target_agent;
 
     // Check if profile exists
@@ -732,7 +758,11 @@ async fn invoke_hermes_subprocess(args: &Args, work: &BridgeWork) -> Result<Stri
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    Ok(clean_hermes_output(&stdout))
+    Ok(HermesReply {
+        message: clean_hermes_output(&stdout),
+        session_id: None,
+        delivery: "subprocess",
+    })
 }
 
 // ── API delivery (push, internal session) ────────────────────────────────
@@ -741,7 +771,7 @@ async fn invoke_hermes_api_session(
     config: &AgentConfig,
     work: &BridgeWork,
     timeout_secs: u64,
-) -> Result<String, BridgeError> {
+) -> Result<HermesReply, BridgeError> {
     let base = config
         .api_base()
         .ok_or_else(|| BridgeError::ApiUnavailable {
@@ -824,7 +854,11 @@ async fn invoke_hermes_api_session(
         chars = content.len(),
         "API session delivery succeeded"
     );
-    Ok(content)
+    Ok(HermesReply {
+        message: content,
+        session_id: Some(session_id),
+        delivery: "api_session",
+    })
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -888,13 +922,30 @@ fn clean_hermes_output(output: &str) -> String {
         .join(" ")
 }
 
-async fn publish_reply_words(client: &Client, reply_to: &str, text: &str) -> Result<()> {
-    let words = text.split_whitespace().collect::<Vec<_>>();
+async fn publish_reply_words(
+    client: &Client,
+    reply_to: &str,
+    reply: &HermesReply,
+    work: &BridgeWork,
+    args: &Args,
+) -> Result<()> {
+    let words = reply.message.split_whitespace().collect::<Vec<_>>();
+    let route = ReplyRouteMetadata {
+        event_id: work.event_id.clone(),
+        agent: work.target_agent.clone(),
+        sender: work.sender.clone(),
+        runtime: args.bridge_runtime.clone(),
+        channel: work.channel,
+        delivery: reply.delivery.to_string(),
+        hermes_session_id: reply.session_id.clone(),
+    };
+
     if words.is_empty() {
         let payload = ReplyChunk {
             chunk: "",
             final_chunk: true,
             error: None,
+            route: Some(route),
         };
         publish_json(client, reply_to, &payload).await?;
         return Ok(());
@@ -906,6 +957,7 @@ async fn publish_reply_words(client: &Client, reply_to: &str, text: &str) -> Res
             chunk: text_chunk.as_str(),
             final_chunk: false,
             error: None,
+            route: None,
         };
         publish_json(client, reply_to, &payload).await?;
     }
@@ -914,6 +966,7 @@ async fn publish_reply_words(client: &Client, reply_to: &str, text: &str) -> Res
         chunk: "",
         final_chunk: true,
         error: None,
+        route: Some(route),
     };
     publish_json(client, reply_to, &payload).await?;
     Ok(())
@@ -924,6 +977,7 @@ async fn publish_error(client: &Client, reply_to: &str, message: &str) -> Result
         chunk: "",
         final_chunk: true,
         error: Some(message),
+        route: None,
     };
     publish_json(client, reply_to, &payload).await
 }

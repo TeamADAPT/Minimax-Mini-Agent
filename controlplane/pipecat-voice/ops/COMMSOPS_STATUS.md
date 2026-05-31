@@ -1,5 +1,19 @@
 # CommsOps Status
 
+## 2026-05-31 09:11:23 - SIGNED_BY_AGENT
+
+Rust runtime route proof promoted for `commscanary`:
+
+- `nova-hermes-nats-bridge.service` restarted with the release binary.
+- Rust bridge roster now includes `commscanary`.
+- Live `nova.commscanary.rust.direct` returned streamed chunks.
+- Final reply chunk carries route metadata: event id, agent, sender, runtime,
+  channel, delivery path, and Hermes session id.
+- Hermes API session `nats_commscanary_codex` contains user and assistant rows.
+
+Task 47 now owns user-facing provider repair before Iris, Echo, Tecton, Vaeris,
+Veyra, Zap, or Vox are promoted onto this path.
+
 ## 2026-05-31 09:01:31 - SIGNED_BY_AGENT
 
 Provider health gate completed. `commscanary` is now the non-user-facing

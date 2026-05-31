@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 09:11:23 — SIGNED_BY_AGENT
+Decision: Promote the Rust API-session path only for `commscanary` and create Task 47 for user-facing provider repair.
+Reason: The native bridge path is now proven with streamed chunks, route metadata, and session persistence, but user-facing profiles still fail on provider/account/model state; separating provider repair prevents a transport win from being hidden behind unrelated upstream failures.
+
 ## 2026-05-31 09:01:31 — SIGNED_BY_AGENT
 Decision: Use NVIDIA NIM `qwen/qwen3.5-397b-a17b` as the CommsOps canary lane instead of Groq.
 Reason: Groq passed direct HTTP canary quickly, but the standard Hermes agent payload exceeded that route's request limits; NVIDIA Qwen passed direct provider proof, Hermes CLI proof, API sync proof, API stream proof, and session persistence proof with a large-context lane.

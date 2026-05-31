@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 09:11:23 — SIGNED_BY_AGENT
+Advanced `42-native-hermes-session-push`: added route metadata to Rust bridge final reply chunks, rebuilt the release binary, restarted `nova-hermes-nats-bridge.service`, added `commscanary` to the Rust runtime roster, proved live `nova.commscanary.rust.direct` returns streamed chunks through Hermes API-session delivery, and verified Hermes session `nats_commscanary_codex` persisted user and assistant rows.
+
 ## 2026-05-31 09:01:31 — SIGNED_BY_AGENT
 Completed `46-commsops-provider-health-gate`: created the non-user-facing `commscanary` Hermes profile, proved NVIDIA NIM `qwen/qwen3.5-397b-a17b` as the current CommsOps provider lane, installed and started `hermes-gateway-commscanary.service`, verified API sync and streaming session replies, and confirmed user plus assistant rows persisted for both proof sessions.
 
