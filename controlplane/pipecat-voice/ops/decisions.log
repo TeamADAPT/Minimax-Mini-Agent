@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 09:51:11 — SIGNED_BY_AGENT
+Decision: Implement CommsOps observability from existing live surfaces before adding new storage.
+Reason: NATS monitor state, route metadata in room history, profile `state.db` files, systemd health, and task directories already provide enough high-value reporting; using them first gives immediate operator visibility while Task 44 defines canonical transcript ingestion.
+
 ## 2026-05-31 09:35:13 — SIGNED_BY_AGENT
 Decision: Route repaired Iris, Echo, and Tecton `auto` phone/browser turns to the Rust runtime by default.
 Reason: Task 42 and Task 47 proved the Rust API-session path, provider health, streamed chunks, route metadata, and session persistence for these agents; keeping auto on older routes would preserve avoidable TUI/daemon fragility.
