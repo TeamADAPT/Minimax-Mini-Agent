@@ -1,37 +1,41 @@
 # pipecat-voice
 
-Speech-to-speech bridge between a browser at **https://pipe.adaptdev.ai** and
-NATS-resident agents (`adapt.<peer>.<channel>`).
+CommsOps control plane for speech, text, room routing, NATS delivery, and Hermes
+agent sessions behind **https://pipe.adaptdev.ai**.
 
 ```
-Browser ─WebRTC─► SmallWebRTCTransport ─► STT (Deepgram / Groq Whisper)
-                                          │
-                                          ▼
-                                   NATSAgentProcessor ─► adapt.<peer>.<channel>
-                                          │              ◄── reply_to inbox (streaming)
-                                          ▼
-                                  TTS (Deepgram Aura-2 / ElevenLabs)
-                                          │
-                                          ▼
-                                  SmallWebRTCTransport ─► Browser audio
+Browser/Phone -> Voice Gateway -> STT/TTS provider
+                         |
+                         v
+                     NATS request/reply
+                         |
+                         v
+        nova.<agent>.<runtime>.<channel> -> Hermes/Nova agent
+                         |
+                         v
+              transcript, metrics, memory handoff
 ```
 
 ## Subjects
 
-| Subject                 | Direction | Purpose                                           |
-| ----------------------- | --------- | ------------------------------------------------- |
-| `adapt.<peer>.direct`   | publish   | 1:1 send from `chase` to a single agent           |
-| `adapt.<peer>.meet`     | publish   | group send (when client uses `?channel=meet`)     |
-| `adapt.chase.direct`    | subscribe | inbound non-streaming replies (legacy nova style) |
-| `adapt.chase.meet`      | subscribe | inbound non-streaming meeting traffic             |
-| `_INBOX.<nuid>`         | subscribe | per-request streaming reply inbox                 |
+| Subject                              | Direction | Purpose |
+| ------------------------------------ | --------- | ------- |
+| `nova.<agent>.<runtime>.direct`      | publish   | 1:1 turn to one agent/runtime |
+| `nova.<agent>.<runtime>.meet`        | publish   | room or group turn to one agent/runtime |
+| `nova.<agent>.<runtime>.ping`        | request   | health check for one runtime owner |
+| `_INBOX.<nuid>`                      | subscribe | per-request streaming reply inbox |
 
-Default peer is `echo`. Override per session: `https://pipe.adaptdev.ai/?to=vertex`
-or `https://pipe.adaptdev.ai/?to=alice&channel=meet`.
+Runtime labels are `tui`, `hermes`, `fresh`, and `rust`. The browser can also
+request `auto`, which lets the gateway select the configured default for the
+chosen agent.
+
+Default peer selection is controlled by gateway configuration and the roster.
+The phone/browser can override peer, channel, and runtime through the UI or
+query parameters.
 
 ## Reply contract (agent side)
 
-The agent receives this envelope on its subject (`adapt.<peer>.<channel>`):
+The agent receives this envelope on its runtime subject:
 
 ```json
 {
@@ -52,9 +56,18 @@ To stream a spoken reply, publish chunks on `reply_to`:
 {"chunk": "",            "final": true}
 ```
 
-If the agent prefers single-shot replies on the legacy `adapt.chase.<channel>`
-subject (no `reply_to`), the bot still speaks the `message` field as one
-utterance. Both modes are supported.
+Streaming replies should publish chunks on `reply_to`. Legacy non-runtime
+subjects are historical compatibility paths and should not be used for new
+CommsOps promotion work.
+
+## CommsOps Ownership
+
+CommsOps owns the voice, text, NATS routing, Hermes session delivery,
+transcript, and communication observability surfaces for this repo. The charter
+and current promotion gates live in:
+
+- `ops/COMMSOPS_CHARTER.md`
+- `ops/COMMSOPS_STATUS.md`
 
 ## Service ops
 

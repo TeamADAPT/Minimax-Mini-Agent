@@ -1,5 +1,11 @@
 # Operations History
 
+## 2026-05-31 08:14:38 — SIGNED_BY_AGENT
+Completed `41-commsops-division-activation`: established CommsOps ownership for the voice, text, NATS, Hermes session, transcript, and communication observability stack; added `ops/COMMSOPS_CHARTER.md` and `ops/COMMSOPS_STATUS.md`; updated `README.md` to reflect runtime-scoped `nova.<agent>.<runtime>.<channel>` routing; and seeded follow-up tasks `42-native-hermes-session-push`, `43-rust-voice-provider-abstraction`, `44-transcript-memory-pipeline`, and `45-commsops-observability`.
+
+## 2026-05-31 08:13:16 — SIGNED_BY_AGENT
+Started `41-commsops-division-activation` after Chase granted T1 authority for CommsOps decisions and execution inside the communication domain. The task scope was limited to creating durable ownership docs, current-state posture, executable follow-up tasks, README route correction, and signed ops records without touching unrelated dirty worktree changes.
+
 ## 2026-05-20 16:35:27 — SIGNED_BY_AGENT
 Completed `39-crew-consensus-protocol`: upgraded `scripts/crew_consensus_service.py` from single-active skeleton to a proposal registry with explicit `PROPOSED → VOTING → BIND | NO_QUORUM | NO_BIND` resolution, YES/NO/ABSTAIN tallies, invalid quorum rejection, unknown-voter filtering, timeout monitors, and wildcard `nova.crew.consensus.vote.*` handling. Updated `ops/crew-coordination-architecture.md` with the final Consensus Protocol section, including the ephemeral in-memory persistence decision, message schemas, quorum rules, and failure handling. Verification passed with `python3 -m py_compile scripts/crew_consensus_service.py tests/test_crew_consensus_service.py` and `pytest -q tests/test_crew_consensus_service.py` (`4 passed`), including real NATS pub/sub proof proposals `proof-bind-001` → `BIND` and `proof-timeout-001` → `NO_QUORUM`.
 

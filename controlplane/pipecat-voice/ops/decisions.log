@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-31 08:14:38 — SIGNED_BY_AGENT
+Decision: Make native Hermes session push, Rust voice provider abstraction, transcript memory pipeline, and CommsOps observability separate follow-up tasks instead of one umbrella rebuild.
+Reason: Each lane has different proof gates, rollback mechanics, and owners; splitting them preserves forward motion while preventing voice-provider experiments or dashboard work from blocking the core route-promotion path.
+
+## 2026-05-31 08:13:16 — SIGNED_BY_AGENT
+Decision: Accept CommsOps ownership as a formal operating boundary and record it in repo docs before changing live services.
+Reason: Chase granted T1 authority for the communication domain; durable authority, owned surfaces, and promotion gates reduce recurring ambiguity and give future agents a concrete control surface for voice, NATS, Hermes sessions, transcripts, and observability.
+
 ## 2026-05-19 22:54:10 — SIGNED_BY_AGENT
 Decision: Start Task 34 as a no-prompt resume-gate preparation task while leaving Task 25 locked.
 Reason: Testova remains under operator hold, so the only valid Testova work is state inspection and a documented pass/fail gate; Task 25 cannot be accepted until Testova is explicitly released and returns usable validation outputs.
