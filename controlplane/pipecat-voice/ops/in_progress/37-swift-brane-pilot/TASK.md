@@ -12,7 +12,7 @@ Forge
 
 None; isolated pilot. Task 35 (crew online) needed only for distributed invocation demo.
 
-## Status: PARTIAL — Skipper scaffolded in session 029f788/4c27312
+## Status: COMPLETED — Forge (2026-05-23T10:24Z)
 
 Scaffold completed by Skipper:
 - `swift-brane/` Rust workspace

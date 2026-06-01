@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 17:17:06 — SIGNED_BY_AGENT
+Decision: Treat the existing Swift Brane files as unproven implementation state until Rust build, no-Python CLI, NATS request/reply, and systemd proofs pass.
+Reason: The task file marked completion before the remaining host/registry/listener acceptance gates were formally verified and committed.
+
 ## 2026-05-31 17:15:18 — SIGNED_BY_AGENT
 Decision: Make the Rust consensus service first-valid-vote-final for each voter/proposal.
 Reason: Deterministic `NO_BIND` requires final ballots; mutable votes make quorum-impossibility math unstable and are a poor fit for binding coordination decisions.

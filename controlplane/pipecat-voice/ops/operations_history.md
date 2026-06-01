@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 17:17:06 — SIGNED_BY_AGENT
+Started `37-swift-brane-pilot` by moving it from `ops/to_do/` into `ops/in_progress/` for reconciliation and hardening. Existing worktree artifacts already include a Rust workspace, agent, host shim, registry, and systemd unit; this pass will verify the no-Python NATS invocation path and close only what is proven.
+
 ## 2026-05-31 17:15:18 — SIGNED_BY_AGENT
 Completed `39-crew-consensus-protocol` as a Rust-owned CommsOps service: added `rust/nova-crew-consensus`, implemented the propose/vote/bind engine and CLI, added real NATS integration coverage, built the release binary, installed `/usr/local/bin/nova-crew-consensus`, deployed `nova-crew-consensus.service`, and proved live `BIND` plus `NO_QUORUM` resolutions through the running systemd service.
 
