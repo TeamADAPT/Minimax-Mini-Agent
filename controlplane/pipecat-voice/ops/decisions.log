@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-31 17:39:07 — SIGNED_BY_AGENT
+Decision: Keep Task 35 open after bridge ping success.
+Reason: The NATS/systemd bridge layer is green, but the acceptance criteria also require durable visible terminal sessions; new Hermes visible launches still exit after startup on this desktop.
+
+## 2026-05-31 17:39:07 — SIGNED_BY_AGENT
+Decision: Use `nova-tui-bridge@<agent>.service` instances as the crew bridge owner instead of the older ad hoc per-agent unit files.
+Reason: The template removes hardcoded local credentials, standardizes runtime and legacy subject coverage, and gives one repeatable rollback/start pattern for the crew.
+
 ## 2026-05-31 17:23:17 — SIGNED_BY_AGENT
 Decision: Begin Task 35 with inventory before any visible terminal launch or xdotool input.
 Reason: Existing visible sessions and bridge services may already be partially configured; launching duplicates would make NATS/window ownership less reliable instead of more reliable.

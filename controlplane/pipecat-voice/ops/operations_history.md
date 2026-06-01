@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 17:39:07 — SIGNED_BY_AGENT
+Advanced `35-crew-online-sixway`: installed and started clean `nova-tui-bridge@<agent>.service` user instances for echo, skipper, iris, zap, forge, synergy, and tecton; enabled legacy plus runtime TUI subjects; proved all seven `nova.<agent>.ping` and `nova.<agent>.tui.ping` subjects return unique `pong:<agent>:tui`; created the missing Zap active directory; and documented the remaining visible-window blocker.
+
 ## 2026-05-31 17:23:17 — SIGNED_BY_AGENT
 Started `35-crew-online-sixway` by moving it from `ops/to_do/` into `ops/in_progress/`. First gate is non-destructive inventory of existing Hermes visible sessions, bridge services, and NATS subjects before launching or typing into any terminal windows.
 
