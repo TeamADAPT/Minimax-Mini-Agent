@@ -1,5 +1,9 @@
 # Decisions Log
 
+## 2026-05-31 17:23:17 — SIGNED_BY_AGENT
+Decision: Begin Task 35 with inventory before any visible terminal launch or xdotool input.
+Reason: Existing visible sessions and bridge services may already be partially configured; launching duplicates would make NATS/window ownership less reliable instead of more reliable.
+
 ## 2026-05-31 17:21:48 — SIGNED_BY_AGENT
 Decision: Restrict Swift Brane `file_read` host I/O to `SWIFT_BRANE_ROOT`.
 Reason: A NATS-callable read tool must not expose `/adapt/secrets` or arbitrary system paths; the wasm64 tool validates inputs, and the Rust host function enforces the filesystem boundary.

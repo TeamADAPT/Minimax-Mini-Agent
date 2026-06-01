@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 17:23:17 — SIGNED_BY_AGENT
+Started `35-crew-online-sixway` by moving it from `ops/to_do/` into `ops/in_progress/`. First gate is non-destructive inventory of existing Hermes visible sessions, bridge services, and NATS subjects before launching or typing into any terminal windows.
+
 ## 2026-05-31 17:21:48 — SIGNED_BY_AGENT
 Completed `37-swift-brane-pilot`: verified the Rust workspace, added the wasm64 panic handler needed for bare `wasm64-unknown-unknown`, passed native Rust gates and nightly build-std wasm64 build, installed `swift-brane-agent` and `swift-brane-host`, deployed `swift-brane-agent.service`, proved NATS request/reply on `nova.crew.swift.invoke`, and added a sandbox root so repo reads work while `/adapt/secrets/db.env` and traversal attempts are denied.
 
