@@ -1,5 +1,18 @@
 # CommsOps Status
 
+## 2026-05-31 17:21:48 - SIGNED_BY_AGENT
+
+Task 37 is complete as a Rust/no-Python Swift Brane pilot:
+
+- Added and verified the `swift-brane` workspace host/agent path.
+- wasm64 `file_read` builds with nightly `build-std`.
+- Installed `/usr/local/bin/swift-brane-agent` and
+  `/usr/local/bin/swift-brane-host`.
+- Deployed `swift-brane-agent.service`.
+- Live NATS request/reply on `nova.crew.swift.invoke` returns file content.
+- `SWIFT_BRANE_ROOT` confines file reads to the repo root.
+- `/adapt/secrets/db.env` and traversal attempts were denied in live proofs.
+
 ## 2026-05-31 17:15:18 - SIGNED_BY_AGENT
 
 Task 39 is complete as a Rust-owned crew consensus service:

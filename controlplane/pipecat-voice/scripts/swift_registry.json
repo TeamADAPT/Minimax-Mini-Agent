@@ -1,0 +1,30 @@
+{
+  "format_version": 1,
+  "host": "swift-brane",
+  "description": "Swift Brane native tool registry — ADR-002 envelope shim + host function interface",
+  "agents": [
+    {
+      "name": "swift-brane-agent",
+      "version": "0.1.0",
+      "description": "Envelope shim + host function provider. Receives ADR-002 envelopes, validates via wasm64 tool export, performs I/O via host functions, returns envelope.",
+      "binary": "swift-brane-agent",
+      "invoke_subject": "nova.crew.swift.invoke",
+      "host_functions": ["host_file_read"],
+      "status": "active"
+    }
+  ],
+  "tools": [
+    {
+      "name": "file_read",
+      "version": "0.1.0",
+      "description": "wasm64 file_read tool — validates UTF-8 paths (pure, no I/O). I/O provided by host functions per L010.",
+      "binary": "swift-brane-file-read",
+      "export": "file_read",
+      "target": "wasm64-unknown-unknown",
+      "invoke_subject": "nova.crew.swift.invoke",
+      "host_shim": "swift-brane-agent",
+      "host_imports": ["host_file_read"],
+      "status": "active"
+    }
+  ]
+}

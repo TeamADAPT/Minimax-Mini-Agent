@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-31 17:21:48 — SIGNED_BY_AGENT
+Decision: Restrict Swift Brane `file_read` host I/O to `SWIFT_BRANE_ROOT`.
+Reason: A NATS-callable read tool must not expose `/adapt/secrets` or arbitrary system paths; the wasm64 tool validates inputs, and the Rust host function enforces the filesystem boundary.
+
+## 2026-05-31 17:21:48 — SIGNED_BY_AGENT
+Decision: Promote Swift Brane as a Rust request/reply service before adding more tools.
+Reason: The first durable value is a proven no-Python invocation path with sandboxing, systemd ownership, and rollback; additional tool types should build on the same host-function boundary.
+
 ## 2026-05-31 17:17:06 — SIGNED_BY_AGENT
 Decision: Treat the existing Swift Brane files as unproven implementation state until Rust build, no-Python CLI, NATS request/reply, and systemd proofs pass.
 Reason: The task file marked completion before the remaining host/registry/listener acceptance gates were formally verified and committed.

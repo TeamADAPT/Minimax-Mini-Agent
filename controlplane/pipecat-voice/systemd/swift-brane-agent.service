@@ -1,0 +1,23 @@
+[Unit]
+Description=Swift Brane Rust NATS tool agent
+After=network-online.target nats-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/adapt/platform/novaops/controlplane/pipecat-voice
+EnvironmentFile=-/adapt/secrets/db.env
+Environment=SWIFT_BRANE_SUBJECT=nova.crew.swift.invoke
+Environment=SWIFT_BRANE_QUEUE=swift-brane-workers
+Environment=SWIFT_BRANE_ROOT=/adapt/platform/novaops/controlplane/pipecat-voice
+ExecStart=/usr/local/bin/swift-brane-agent --listen
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadOnlyPaths=/adapt
+
+[Install]
+WantedBy=multi-user.target

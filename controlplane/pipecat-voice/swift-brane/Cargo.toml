@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/file-read"]
+members = ["crates/file-read", "host", "agent"]
 resolver = "2"
 
 [profile.release]
