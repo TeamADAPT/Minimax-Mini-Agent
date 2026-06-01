@@ -1,5 +1,19 @@
 # CommsOps Status
 
+## 2026-05-31 17:15:18 - SIGNED_BY_AGENT
+
+Task 39 is complete as a Rust-owned crew consensus service:
+
+- Added `rust/nova-crew-consensus`.
+- Installed `/usr/local/bin/nova-crew-consensus`.
+- Added and deployed `nova-crew-consensus.service`.
+- Service is active on `nova.crew.consensus.propose` and
+  `nova.crew.consensus.vote.*`.
+- Resolution output publishes to `nova.crew.consensus.bind.<topic>`.
+- Live systemd proofs passed:
+  - `rust-systemd-bind-20260531` -> `BIND`.
+  - `rust-systemd-timeout-20260531` -> `NO_QUORUM`.
+
 ## 2026-05-31 16:54:47 - SIGNED_BY_AGENT
 
 Task 43 is complete as the Rust-owned provider-abstraction milestone:

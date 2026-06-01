@@ -1,5 +1,13 @@
 # Decisions Log
 
+## 2026-05-31 17:15:18 — SIGNED_BY_AGENT
+Decision: Make the Rust consensus service first-valid-vote-final for each voter/proposal.
+Reason: Deterministic `NO_BIND` requires final ballots; mutable votes make quorum-impossibility math unstable and are a poor fit for binding coordination decisions.
+
+## 2026-05-31 17:15:18 — SIGNED_BY_AGENT
+Decision: Deploy crew consensus as an independent systemd service instead of embedding it in the voice gateway or Hermes bridge.
+Reason: Consensus is control-plane coordination, not hot-path voice audio; isolation gives a stable binary, independent restart/rollback, and real NATS proofs without risking the working CX Pipe route.
+
 ## 2026-05-31 16:58:10 — SIGNED_BY_AGENT
 Decision: Reconcile Task 39 as a Rust service instead of only closing the existing Python implementation.
 Reason: The operator has explicitly raised the bar for CommsOps/NATS work to pure Rust where feasible, and consensus binding is core communication infrastructure rather than a temporary helper script.

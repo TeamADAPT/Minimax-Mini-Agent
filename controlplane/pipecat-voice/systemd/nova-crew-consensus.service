@@ -1,0 +1,23 @@
+[Unit]
+Description=Nova Crew Consensus Rust Service
+After=network-online.target nats-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/adapt/platform/novaops/controlplane/pipecat-voice
+EnvironmentFile=-/adapt/secrets/db.env
+Environment=SUBJECT_NS=nova
+Environment=CONSENSUS_VOTERS=skipper,echo,iris,zap,forge,synergy,tecton
+Environment=CONSENSUS_POLL_MS=250
+ExecStart=/usr/local/bin/nova-crew-consensus serve
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadOnlyPaths=/adapt/platform/novaops/controlplane/pipecat-voice /adapt/secrets
+
+[Install]
+WantedBy=multi-user.target

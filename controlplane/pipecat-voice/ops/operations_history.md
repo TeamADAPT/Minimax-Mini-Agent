@@ -1,5 +1,8 @@
 # Operations History
 
+## 2026-05-31 17:15:18 — SIGNED_BY_AGENT
+Completed `39-crew-consensus-protocol` as a Rust-owned CommsOps service: added `rust/nova-crew-consensus`, implemented the propose/vote/bind engine and CLI, added real NATS integration coverage, built the release binary, installed `/usr/local/bin/nova-crew-consensus`, deployed `nova-crew-consensus.service`, and proved live `BIND` plus `NO_QUORUM` resolutions through the running systemd service.
+
 ## 2026-05-31 16:58:10 — SIGNED_BY_AGENT
 Reopened `39-crew-consensus-protocol` through `ops/in_progress/` after finding the task directory still in `ops/to_do/` despite prior implementation notes. Current execution will promote the consensus protocol to a Rust-owned service/CLI while preserving the existing NATS subject contract.
 

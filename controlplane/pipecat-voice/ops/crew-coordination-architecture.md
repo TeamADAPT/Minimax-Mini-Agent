@@ -29,19 +29,21 @@ All inter-nova communication flows through NATS. No nova talks directly to anoth
 
 ## 2. Consensus Protocol
 
+Decision: use an ephemeral in-memory Rust consensus service, not fjall/redb persistence. Consensus messages are coordination traffic, and only the final bind/no-bind event needs to fan out live over NATS; if the service restarts, proposals must be re-issued explicitly rather than replayed from storage.
+
 ### State Machine
 
 ```
 IDLE → PROPOSED → VOTING → BIND | NO_QUORUM | NO_BIND
 ```
 
-- **PROPOSED**: consensus service receives proposal, starts vote collection
-- **VOTING**: votes arrive on `nova.crew.consensus.vote.<name>`, counted until quorum or timeout
-- **BIND**: YES votes ≥ quorum → binding result published
-- **NO_QUORUM**: timeout expired without reaching quorum
-- **NO_BIND**: explicit NO-BIND if proposal rejected
+- **PROPOSED**: consensus service accepts a proposal envelope and validates quorum against the configured voter set.
+- **VOTING**: votes arrive on `nova.crew.consensus.vote.*`; the service accepts `proposal_id`-keyed votes and tolerates either `vote.<name>` or `vote.<topic>` subject suffixes as long as the payload identifies the proposal and voter.
+- **BIND**: YES votes meet or exceed quorum; the service publishes a binding decision immediately.
+- **NO_QUORUM**: timeout expires before quorum is met.
+- **NO_BIND**: rejection becomes mathematically certain because too many NO votes have arrived for quorum to remain reachable.
 
-### Payload Schemas
+### Message Types and Schemas
 
 **Proposal:**
 ```json
@@ -59,13 +61,14 @@ IDLE → PROPOSED → VOTING → BIND | NO_QUORUM | NO_BIND
 ```json
 {
   "proposal_id": "string",
+  "topic": "optional-string",
   "voter": "name",
   "decision": "YES|NO|ABSTAIN",
   "reasoning": "string"
 }
 ```
 
-**Binding:**
+**Binding / Resolution:**
 ```json
 {
   "proposal_id": "string",
@@ -73,17 +76,42 @@ IDLE → PROPOSED → VOTING → BIND | NO_QUORUM | NO_BIND
   "decision": "BIND|NO_QUORUM|NO_BIND",
   "quorum": 3,
   "yes_votes": 3,
-  "voters": ["iris", "zap", "forge"],
-  "bound_at": "ISO8601"
+  "no_votes": 1,
+  "abstain_votes": 0,
+  "votes_received": 4,
+  "voters": ["iris", "zap", "forge", "synergy"],
+  "state": "BIND|NO_QUORUM|NO_BIND",
+  "bound_at": "ISO8601",
+  "reason": "optional explanation"
 }
 ```
 
-### Service: `scripts/crew_consensus_service.py`
+### Quorum Rules
 
-- Written by Skipper, owned by **Synergy**
+- Crew voter roster is configured via `CONSENSUS_VOTERS`; default roster is `skipper, echo, iris, zap, forge, synergy, tecton`.
+- `YES` votes count toward quorum.
+- `NO` votes do not count toward quorum and can force `NO_BIND` once quorum is no longer mathematically reachable.
+- `ABSTAIN` votes are recorded but never count toward quorum.
+- The first valid vote from a voter is final for that proposal; duplicate votes are ignored.
+- Proposals with quorum less than 1 or greater than the eligible voter set are rejected as invalid inputs.
+
+### Failure Handling
+
+- Non-JSON proposal or vote payloads are ignored and logged.
+- Votes from unknown voters are ignored and logged.
+- Votes that do not reference an active proposal are ignored.
+- On timeout, the service publishes `NO_QUORUM` with current tallies so downstream consumers can see partial participation.
+- On process restart, unresolved proposals are dropped; callers must re-propose. This is intentional because the service is ephemeral coordination state, not a durable ledger.
+
+### Service: `rust/nova-crew-consensus`
+
+- Rust-owned CommsOps service, implemented/validated by **Synergy**
 - Subscribes to `nova.crew.consensus.propose` + `nova.crew.consensus.vote.*`
 - Publishes to `nova.crew.consensus.bind.<topic>`
-- Uses in-memory state with no persistence (ephemeral coordination)
+- Uses in-memory state with timeout polling per active proposal
+- Runtime binary: `/usr/local/bin/nova-crew-consensus`
+- Systemd unit: `nova-crew-consensus.service`
+- Verified with Rust unit coverage, real local NATS integration, and live systemd proofs for `BIND` and `NO_QUORUM`
 
 ---
 
